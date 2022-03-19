@@ -109,7 +109,7 @@ class OfferItemInline(CompactInline):
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if not request.user.is_superuser:
-            fields += ('claimed_by',)
+            fields += ('received', 'claimed_by',)
         return fields
 
 

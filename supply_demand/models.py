@@ -102,6 +102,7 @@ class OfferItem(models.Model):
                              help_text=_('Any extra information that can help a donor decide if they have something '
                                          'that can help you'))
 
+    received = models.BooleanField(verbose_name=_('received'), default=False)
     claimed_by = models.ForeignKey(verbose_name=_('claimed by'), to=Contact, blank=True, null=True,
                                    related_name='claimed_items', on_delete=models.SET_NULL)
 
