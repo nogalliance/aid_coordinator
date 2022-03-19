@@ -133,12 +133,15 @@ class OfferAdmin(admin.ModelAdmin):
     def admin_items(self, offer: Offer):
         lines = []
         for item in offer.items.all():
+            marker = mark_safe('<span style="color:green">✔︎</span>&nbsp') if item.received else ''
             if item.claimed_by_id:
-                lines.append((format_html('<s>{}</s>', str(item)),))
+                description = format_html('<s>{}</s>', str(item))
             else:
-                lines.append((str(item),))
+                description = str(item)
 
-        return format_html_join(mark_safe('<br>'), '{}', lines)
+            lines.append((marker, description))
+
+        return format_html_join(mark_safe('<br>'), '{} {}', lines)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
