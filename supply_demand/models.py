@@ -12,6 +12,13 @@ class ItemType(models.IntegerChoices):
     SERVICE = 300, _('Service')
 
 
+class DeliveryMethod(models.IntegerChoices):
+    UNKNOWN = 0, _('Unknown')
+    SEND_TO_GNA = 100, _('Send to GNA by donor')
+    PICKUP_REQUESTED = 200, _('Pickup requested')
+    OTHER = 999, _('Other')
+
+
 class Request(models.Model):
     contact = models.ForeignKey(verbose_name=_('contact'), to=Contact, related_name='requests',
                                 on_delete=models.RESTRICT)
@@ -77,6 +84,10 @@ class Offer(models.Model):
     contact = models.ForeignKey(verbose_name=_('contact'), to=Contact, related_name='offers', on_delete=models.RESTRICT)
     description = models.CharField(verbose_name=_('description'), max_length=100,
                                    help_text=_('Give a short description of what this offer is'))
+    location = models.TextField(verbose_name=_('location'), blank=True,
+                                help_text=_('Where is the equipment coming from?'))
+    delivery_method = models.IntegerField(verbose_name=_('delivery method'), choices=DeliveryMethod.choices,
+                                          default=DeliveryMethod.UNKNOWN)
     internal_notes = models.TextField(verbose_name=_('internal notes'), blank=True,
                                       help_text=_('Internal notes that will NOT be shown publicly'))
 
