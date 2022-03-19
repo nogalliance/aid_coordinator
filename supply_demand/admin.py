@@ -1,19 +1,16 @@
 from typing import Iterable
 
-from django.utils.html import format_html_join
+from django.contrib import admin
+from django.db.models import Q
+from django.forms import TextInput, NumberInput
+from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from django.contrib import admin
-from django.forms import TextInput, NumberInput
 
-from supply_demand.models import Request, RequestItem
+from supply_demand.models import Request, RequestItem, OfferItem, Offer
 
 
-class RequestItemInline(admin.TabularInline):
-    model = RequestItem
-    min_num = 1
-    extra = 0
-
+class CompactInline(admin.TabularInline):
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         field = super().formfield_for_dbfield(db_field, request, **kwargs)
 
@@ -27,6 +24,12 @@ class RequestItemInline(admin.TabularInline):
             field.widget = NumberInput(attrs={'style': 'width: 3em', 'min': 0, 'max': 999})
 
         return field
+
+
+class RequestItemInline(CompactInline):
+    model = RequestItem
+    min_num = 1
+    extra = 0
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         field = super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -44,21 +47,30 @@ class RequestItemInline(admin.TabularInline):
 
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
-    list_display = ('organisation', 'goal', 'admin_items')
-    autocomplete_fields = ('organisation', 'contact')
+    list_display = ('admin_organisation', 'goal', 'admin_items')
+    autocomplete_fields = ('contact',)
     inlines = (RequestItemInline,)
+
+    @admin.display(description=_('organisation'), ordering='contact__organisation__name')
+    def admin_organisation(self, offer: Offer):
+        if offer.contact.organisation_id:
+            return offer.contact.organisation
 
     @admin.display(description=_('items'))
     def admin_items(self, request: Request):
         def alts(alt_items: Iterable[RequestItem]) -> str:
-            alt_out = ' or '.join([str(alt_item) + alts(alt_item.requestitem_set.all()) for alt_item in alt_items])
+            alt_out = ' or '.join([str(alt_item) + alts(alt_item.alternatives.all()) for alt_item in alt_items])
             if not alt_out:
                 return ''
             return ' or ' + alt_out
 
         items = []
-        for item in request.requestitem_set.filter(alternative_for=None):
-            out = str(item) + alts(item.requestitem_set.all())
+        for item in request.items.all():
+            # Don't filter the query, it will ruin the prefetch_related we already did, this is much faster
+            if item.alternative_for_id:
+                continue
+
+            out = str(item) + alts(item.alternatives.all())
             items.append((out,))
 
         return format_html_join(
@@ -73,19 +85,72 @@ class RequestAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
+        queryset = queryset.prefetch_related('items__alternatives__alternatives', 'contact__organisation')
+
         if request.user.is_superuser:
             return queryset
 
         if request.user.organisation_id:
-            return queryset.filter(organisation_id=request.user.organisation_id)
+            return queryset.filter(
+                Q(contact__organisation_id=request.user.organisation_id) |
+                Q(contact=request.user)
+            )
 
-        return queryset.none()
+        return queryset.filter(contact=request.user)
 
-    def has_add_permission(self, request):
-        return request.user.is_superuser or request.user.organisation_id
 
-    def has_change_permission(self, request, obj=None):
-        return request.user.is_superuser or request.user.organisation_id
+class OfferItemInline(CompactInline):
+    model = OfferItem
+    min_num = 1
+    extra = 0
 
-    def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser or request.user.organisation_id
+    autocomplete_fields = ('claimed_by',)
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        if not request.user.is_superuser:
+            fields += ('claimed_by',)
+        return fields
+
+
+@admin.register(Offer)
+class OfferAdmin(admin.ModelAdmin):
+    list_display = ('description', 'admin_organisation', 'admin_contact', 'admin_items')
+    list_filter = ('contact__organisation',)
+    autocomplete_fields = ('contact',)
+    inlines = (OfferItemInline,)
+
+    @admin.display(description=_('organisation'), ordering='contact__organisation__name')
+    def admin_organisation(self, offer: Offer):
+        if offer.contact.organisation_id:
+            return offer.contact.organisation
+
+    @admin.display(description=_('contact'), ordering='contact__first_name')
+    def admin_contact(self, offer: Offer):
+        return offer.contact.display_name()
+
+    @admin.display(description=_('items'))
+    def admin_items(self, offer: Offer):
+        lines = []
+        for item in offer.items.all():
+            if item.claimed_by_id:
+                lines.append((format_html('<s>{}</s>', str(item)),))
+            else:
+                lines.append((str(item),))
+
+        return format_html_join(mark_safe('<br>'), '{}', lines)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.prefetch_related('items', 'contact__organisation')
+
+        if request.user.is_superuser:
+            return queryset
+
+        if request.user.organisation_id:
+            return queryset.filter(
+                Q(contact__organisation_id=request.user.organisation_id) |
+                Q(contact=request.user)
+            )
+
+        return queryset.filter(contact=request.user)

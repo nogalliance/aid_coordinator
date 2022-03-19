@@ -137,3 +137,8 @@ DEBUG_TOOLBAR_CONFIG = {
 
 AUTH_USER_MODEL = 'contacts.Contact'
 LOGIN_URL = '/admin/login'
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass
