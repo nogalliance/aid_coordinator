@@ -79,6 +79,14 @@ class RequestAdmin(admin.ModelAdmin):
             items
         )
 
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if request.user.is_superuser:
+            return fields
+
+        # Non-superusers don't see notes
+        return [field for field in fields if field != 'internal_notes']
+
     def get_form(self, request, obj=None, **kwargs):
         request.parent_obj = obj
         return super().get_form(request, obj, **kwargs)
@@ -142,6 +150,14 @@ class OfferAdmin(admin.ModelAdmin):
             lines.append((marker, description))
 
         return format_html_join(mark_safe('<br>'), '{} {}', lines)
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if request.user.is_superuser:
+            return fields
+
+        # Non-superusers don't see notes
+        return [field for field in fields if field != 'internal_notes']
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
