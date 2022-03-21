@@ -18,10 +18,13 @@ from django.contrib.auth.views import PasswordResetView
 from django.urls import path, include
 from rest_framework import routers
 
+from contacts.api import OrganisationViewSet, ContactViewSet
 from supply_demand.api import OfferItemViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
+router.register(r'personal_donors', ContactViewSet)
+router.register(r'donor_organisations', OrganisationViewSet)
 router.register(r'offered_items', OfferItemViewSet)
 
 urlpatterns = [

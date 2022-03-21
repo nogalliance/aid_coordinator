@@ -24,6 +24,8 @@ class OrgType(models.IntegerChoices):
 class Organisation(models.Model):
     name = models.CharField(verbose_name=_('name'), max_length=100)
     type = models.PositiveIntegerField(verbose_name=_('type'), choices=OrgType.choices, default=OrgType.OTHER)
+    listed = models.BooleanField(verbose_name=_('listed'), default=False,
+                                 help_text=_('Shown as a donor organisation on the website'))
     website = models.URLField(verbose_name=_('website'), blank=True)
 
     class Meta:
@@ -40,6 +42,8 @@ class Contact(AbstractUser):
     organisation = models.ForeignKey(verbose_name=_('organisation'), to=Organisation, blank=True, null=True,
                                      related_name='contacts', on_delete=models.SET_NULL)
     role = models.CharField(verbose_name=_('role'), max_length=50, blank=True)
+    listed = models.BooleanField(verbose_name=_('listed'), default=False,
+                                 help_text=_('Shown as a personal donor on the website'))
     phone = models.CharField(verbose_name=_('phone'), max_length=50, blank=True)
 
     class Meta:

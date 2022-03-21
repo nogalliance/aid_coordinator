@@ -16,15 +16,38 @@ class ContactAdmin(UserAdmin):
     list_filter = ("is_superuser", "is_active", "groups")
     search_fields = ('username', 'first_name', 'last_name', 'organisation__name')
     readonly_fields = ("last_login", "date_joined")
-    fieldsets = (
+    superuser_fieldsets = (
         (None, {
             "fields": ("username", "password")
         }),
         (_("Personal info"), {
-            "fields": ("first_name", "last_name", "organisation", "role", "email", "phone")
+            "fields": ("first_name", "last_name", "listed")
+        }),
+        (_("Contact"), {
+            "fields": ("email", "phone"),
+        }),
+        (_("Organisation"), {
+            "fields": ("organisation", "role"),
         }),
         (_("Permissions"), {
             "fields": ("is_active", "is_superuser", "groups"),
+        }),
+        (_("Important dates"), {
+            "fields": ("last_login", "date_joined")
+        }),
+    )
+    fieldsets = (
+        (None, {
+            "fields": ("username",)
+        }),
+        (_("Personal info"), {
+            "fields": ("first_name", "last_name", "listed")
+        }),
+        (_("Contact"), {
+            "fields": ("email", "phone"),
+        }),
+        (_("Organisation"), {
+            "fields": ("organisation", "role"),
         }),
         (_("Important dates"), {
             "fields": ("last_login", "date_joined")
@@ -36,7 +59,10 @@ class ContactAdmin(UserAdmin):
             "fields": ("username",)
         }),
         (_("Personal info"), {
-            "fields": ("first_name", "last_name", "organisation", "role", "email", "phone")
+            "fields": ("first_name", "last_name")
+        }),
+        (_("Contact"), {
+            "fields": ("email", "phone"),
         }),
         (_("Permissions"), {
             "fields": ("is_superuser", "groups"),
@@ -79,6 +105,18 @@ class ContactAdmin(UserAdmin):
             )
 
         return queryset.filter(pk=request.user.pk)
+
+    def get_fieldsets(self, request, obj=None):
+        if request.user.is_superuser:
+            return self.superuser_fieldsets
+        else:
+            return self.fieldsets
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        if not request.user.is_superuser:
+            fields += ('password', 'organisation', 'is_active', 'is_superuser', 'groups')
+        return fields
 
 
 @admin.register(Organisation)
