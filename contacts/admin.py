@@ -64,6 +64,9 @@ class ContactAdmin(UserAdmin):
         (_("Contact"), {
             "fields": ("email", "phone"),
         }),
+        (_("Organisation"), {
+            "fields": ("organisation", "role"),
+        }),
         (_("Permissions"), {
             "fields": ("is_superuser", "groups"),
         })
@@ -107,7 +110,9 @@ class ContactAdmin(UserAdmin):
         return queryset.filter(pk=request.user.pk)
 
     def get_fieldsets(self, request, obj=None):
-        if request.user.is_superuser:
+        if not obj:
+            return self.add_fieldsets
+        elif request.user.is_superuser:
             return self.superuser_fieldsets
         else:
             return self.fieldsets
