@@ -50,6 +50,9 @@ class RequestAdmin(admin.ModelAdmin):
     list_display = ('admin_organisation', 'goal', 'admin_items')
     autocomplete_fields = ('contact',)
     inlines = (RequestItemInline,)
+    search_fields = ('goal', 'description',
+                     'contact__first_name', 'contact__last_name', 'contact__organisation__name',
+                     'items__brand', 'items__model', 'items__notes')
 
     @admin.display(description=_('organisation'), ordering='contact__organisation__name')
     def admin_organisation(self, offer: Offer):
@@ -135,6 +138,9 @@ class OfferAdmin(admin.ModelAdmin):
     list_filter = ('contact__organisation',)
     autocomplete_fields = ('contact',)
     inlines = (OfferItemInline,)
+    search_fields = ('description',
+                     'contact__first_name', 'contact__last_name', 'contact__organisation__name',
+                     'items__brand', 'items__model', 'items__notes')
 
     @admin.display(description=_('organisation'), ordering='contact__organisation__name')
     def admin_organisation(self, offer: Offer):
