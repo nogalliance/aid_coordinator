@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'supply_demand.apps.SupplyDemandConfig',
     'contacts.apps.ContactsConfig',
     'debug_toolbar',
+    'rest_framework',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -137,6 +139,18 @@ DEBUG_TOOLBAR_CONFIG = {
 
 AUTH_USER_MODEL = 'contacts.Contact'
 LOGIN_URL = '/admin/login'
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+    ],
+}
 
 try:
     from .local_settings import *
