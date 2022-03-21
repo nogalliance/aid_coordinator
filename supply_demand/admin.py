@@ -114,6 +114,14 @@ class OfferItemInline(CompactInline):
 
     autocomplete_fields = ('claimed_by',)
 
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if request.user.is_superuser:
+            return fields
+
+        # Non-superusers don't see notes
+        return [field for field in fields if field != 'claimed_by']
+
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if not request.user.is_superuser:
