@@ -25,7 +25,7 @@ class Request(models.Model):
 
     goal = models.CharField(verbose_name=_('goal'), max_length=100,
                             help_text=_('Give a short description of what this request is for'))
-    description = models.TextField(verbose_name=_('description'),
+    description = models.TextField(verbose_name=_('description'), blank=True,
                                    help_text=_('Provide more detail on this request, this is your elevator pitch!'))
     internal_notes = models.TextField(verbose_name=_('internal notes'), blank=True,
                                       help_text=_('Internal notes that will NOT be shown publicly'))
@@ -82,7 +82,7 @@ class RequestItem(models.Model):
 
 class Offer(models.Model):
     contact = models.ForeignKey(verbose_name=_('contact'), to=Contact, related_name='offers', on_delete=models.RESTRICT)
-    description = models.CharField(verbose_name=_('description'), max_length=100,
+    description = models.CharField(verbose_name=_('description'), max_length=100, blank=True,
                                    help_text=_('Give a short description of what this offer is'))
     location = models.TextField(verbose_name=_('location'), blank=True,
                                 help_text=_('Where is the equipment coming from?'))
