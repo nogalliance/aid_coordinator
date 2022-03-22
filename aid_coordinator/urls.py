@@ -19,13 +19,14 @@ from django.urls import path, include
 from rest_framework import routers
 
 from contacts.api import DonorOrganisationViewSet, PersonalDonorViewSet
-from supply_demand.api import OfferItemViewSet
+from supply_demand.api import OfferItemViewSet, RequestItemViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
 router.register(r'personal_donors', PersonalDonorViewSet)
 router.register(r'donor_organisations', DonorOrganisationViewSet)
 router.register(r'offered_items', OfferItemViewSet)
+router.register(r'requested_items', RequestItemViewSet)
 
 urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
