@@ -19,6 +19,17 @@ class DeliveryMethod(models.IntegerChoices):
     OTHER = 999, _('Other')
 
 
+class ChangeAction(models.IntegerChoices):
+    ADD = 1, _('Add')
+    CHANGE = 2, _('Change')
+    DELETE = 3, _('Delete')
+
+
+class ChangeType(models.IntegerChoices):
+    OFFER = 1, _('Offer')
+    REQUEST = 2, _('Request')
+
+
 class Request(models.Model):
     contact = models.ForeignKey(verbose_name=_('contact'), to=Contact, related_name='requests',
                                 on_delete=models.RESTRICT)
@@ -30,6 +41,11 @@ class Request(models.Model):
     internal_notes = models.TextField(verbose_name=_('internal notes'), blank=True,
                                       help_text=_('Internal notes that will NOT be shown publicly'))
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.change_before = None
+        self.change_id = None
+
     class Meta:
         ordering = ('contact__organisation__name', 'contact__last_name', 'contact__first_name', 'goal')
         verbose_name = _('request')
@@ -38,9 +54,25 @@ class Request(models.Model):
     def __str__(self):
         return self.goal
 
+    def change_log_entry(self):
+        out = f'Contact: {self.contact}'
+        out += f'\nGoal: {self.goal}'
+        out += f'\nDescription:\n{self.description}'
+        out += '\nItems:'
+        if self.pk:
+            for item in RequestItem.objects.filter(request_id=self.pk):
+                out += f'\n- {item}'
+        return out
+
+    def save(self, *args, **kwargs):
+        self.change_id = self.pk
+        self.change_before = Request.objects.get(pk=self.pk).change_log_entry() if self.pk else ''
+
+        super().save(*args, **kwargs)
+
 
 class RequestItem(models.Model):
-    request = models.ForeignKey(verbose_name=_('request'), to=Request, related_name='items', on_delete=models.RESTRICT)
+    request = models.ForeignKey(verbose_name=_('request'), to=Request, related_name='items', on_delete=models.CASCADE)
     type = models.PositiveIntegerField(verbose_name=_('type'), choices=ItemType.choices, default=ItemType.OTHER)
     brand = models.CharField(verbose_name=_('brand'), max_length=50, blank=True,
                              help_text=_('Either a brand name or a description of the kind of brand'))
@@ -66,7 +98,7 @@ class RequestItem(models.Model):
     def __str__(self):
         if self.up_to:
             return f"{self.up_to}x {self.brand} {self.model}".replace('  ', ' ')
-        else :
+        else:
             return f"{self.amount}x {self.brand} {self.model}".replace('  ', ' ')
 
     def clean(self):
@@ -94,6 +126,11 @@ class Offer(models.Model):
     internal_notes = models.TextField(verbose_name=_('internal notes'), blank=True,
                                       help_text=_('Internal notes that will NOT be shown publicly'))
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.change_before = None
+        self.change_id = None
+
     class Meta:
         ordering = ('description', 'contact__organisation__name', 'contact__first_name', 'contact__last_name')
         verbose_name = _('offer')
@@ -105,9 +142,26 @@ class Offer(models.Model):
         else:
             return f"{self.contact}: {self.description}"
 
+    def change_log_entry(self):
+        out = f'Contact: {self.contact}'
+        if self.location:
+            out += f'\nLocation:\n{self.location}'
+        out += f'\nDelivery method: {self.get_delivery_method_display()}'
+        out += '\nItems:'
+        if self.pk:
+            for item in OfferItem.objects.filter(offer_id=self.pk):
+                out += f'\n- {item}'
+        return out
+
+    def save(self, *args, **kwargs):
+        self.change_id = self.pk
+        self.change_before = Offer.objects.get(pk=self.pk).change_log_entry() if self.pk else ''
+
+        super().save(*args, **kwargs)
+
 
 class OfferItem(models.Model):
-    offer = models.ForeignKey(verbose_name=_('offer'), to=Offer, related_name='items', on_delete=models.RESTRICT)
+    offer = models.ForeignKey(verbose_name=_('offer'), to=Offer, related_name='items', on_delete=models.CASCADE)
     type = models.PositiveIntegerField(verbose_name=_('type'), choices=ItemType.choices, default=ItemType.OTHER)
     brand = models.CharField(verbose_name=_('brand'), max_length=50, blank=True)
     model = models.CharField(verbose_name=_('model'), max_length=50)
@@ -130,3 +184,21 @@ class OfferItem(models.Model):
             return f"{self.amount}x {self.brand} {self.model}"
 
         return f"Multiple {self.brand} {self.model}"
+
+
+class Change(models.Model):
+    when = models.DateTimeField(verbose_name=_('when'), auto_now_add=True)
+    who = models.ForeignKey(verbose_name=_('who'), to=Contact, on_delete=models.RESTRICT, related_name='changes')
+    action = models.PositiveIntegerField(verbose_name=_('action'), choices=ChangeAction.choices)
+    type = models.PositiveIntegerField(verbose_name=_('type'), choices=ChangeType.choices)
+    what = models.CharField(verbose_name=_('what'), max_length=250)
+    before = models.TextField(verbose_name=_('before'), blank=True)
+    after = models.TextField(verbose_name=_('after'), blank=True)
+
+    class Meta:
+        ordering = ('when', 'who')
+        verbose_name = _('change')
+        verbose_name_plural = _('changes')
+
+    def __str__(self):
+        return f"{self.who} - {self.what}"

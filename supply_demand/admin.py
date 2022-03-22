@@ -7,7 +7,7 @@ from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from supply_demand.models import Request, RequestItem, OfferItem, Offer
+from supply_demand.models import Request, RequestItem, OfferItem, Offer, Change, ChangeAction, ChangeType
 
 
 class CompactInline(admin.TabularInline):
@@ -108,6 +108,35 @@ class RequestAdmin(admin.ModelAdmin):
             )
 
         return queryset.filter(contact=request.user)
+
+    def save_related(self, request, form, *args, **kwargs):
+        super().save_related(request, form, *args, **kwargs)
+
+        # Now everything is saved, so we can add the change entry
+        before = form.instance.change_before
+        after = form.instance.change_log_entry()
+        if before != after:
+            Change(
+                who=request.user,
+                action=ChangeAction.CHANGE if form.instance.change_id else ChangeAction.ADD,
+                type=ChangeType.REQUEST,
+                what=str(form.instance),
+                before=before,
+                after=after,
+            ).save()
+
+    def delete_model(self, request, obj):
+        before = obj.change_log_entry()
+        after = ''
+        Change(
+            who=request.user,
+            action=ChangeAction.DELETE,
+            type=ChangeType.REQUEST,
+            what=str(obj),
+            before=before,
+            after=after,
+        ).save()
+        super().delete_model(request, obj)
 
 
 class OfferItemInline(CompactInline):
@@ -210,3 +239,52 @@ class OfferAdmin(admin.ModelAdmin):
             )
 
         return queryset.filter(contact=request.user)
+
+    def save_related(self, request, form, *args, **kwargs):
+        super().save_related(request, form, *args, **kwargs)
+
+        # Now everything is saved, so we can add the change entry
+        before = form.instance.change_before
+        after = form.instance.change_log_entry()
+        if before != after:
+            Change(
+                who=request.user,
+                action=ChangeAction.CHANGE if form.instance.change_id else ChangeAction.ADD,
+                type=ChangeType.OFFER,
+                what=str(form.instance),
+                before=before,
+                after=after,
+            ).save()
+
+    def delete_model(self, request, obj):
+        before = obj.change_log_entry()
+        after = ''
+        Change(
+            who=request.user,
+            action=ChangeAction.DELETE,
+            type=ChangeType.OFFER,
+            what=str(obj),
+            before=before,
+            after=after,
+        ).save()
+        super().delete_model(request, obj)
+
+
+@admin.register(Change)
+class ChangeAdmin(admin.ModelAdmin):
+    list_display = ('when', 'who', 'action', 'type', 'what')
+    list_filter = (
+        'action',
+        'type',
+        ('who', admin.RelatedOnlyFieldListFilter),
+    )
+    date_hierarchy = 'when'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
