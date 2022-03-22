@@ -15,6 +15,8 @@ mysqlclient = "^2.1.0"
 djangorestframework = "^3.13.1"
 Markdown = "^3.3.6"
 django-filter = "^21.1"
+Jinja2 = "^3.0.3"
+Pillow = "^9.0.1"
 
 [tool.poetry.dev-dependencies]
 

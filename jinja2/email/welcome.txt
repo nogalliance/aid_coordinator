@@ -1,0 +1,97 @@
+Hello {{ contact.first_name }},
+
+Thank you for getting in touch with the Keep Ukraine Connected
+(https://keepukraineconnected.org) task force.
+
+{% if contact.organisation_id -%}
+You have been registered as a contact for {{ contact.organisation }}.
+{%- endif %}
+
+{% filter trim -%}
+{% if 'donors' in groups -%}
+Thank you for offering to donate to the network operators in Ukraine!
+{%- endif %}
+
+{% if 'requesters' in groups -%}
+We hope we can help you keep the internet working in Ukraine.
+{%- endif %}
+{%- endfilter %}
+
+This is an automated message from our donation tracking system.
+We are keeping track of offers and requests for this task force on behalf
+of the Global NOG Alliance, the voluntary group and foundation behind this
+campaign.
+
+{% if 'donors' in groups and 'requesters' in groups -%}
+Accessing your offers and requests:
+{%- elif 'donors' in groups -%}
+Accessing your offers:
+{%- elif 'requesters' in groups -%}
+Accessing your requests:
+{%- else -%}
+Accessing your information:
+{%- endif %}
+
+{% if not contact.password or not contact.has_usable_password() -%}
+We have created an account for you on our tracking system. Your username is
+{{ contact.username }}. You can set your account password by following the
+following link:
+{{ password_reset_url }}
+{%- else -%}
+You have an account on our tracking system. You can log in at
+https://keepukraineconnected.org/admin/
+Your username is {{ contact.username }}. If you have forgotten your
+password you can reset it there.
+{%- endif %}
+
+{% filter trim -%}
+{% if 'donors' in groups -%}
+Please go to https://keepukraineconnected.org/admin/supply_demand/offer/
+and provide as many details as you can on the items you're offering. The
+more details we have, such as exact type numbers and number of items, the
+easier it is to help network operators in Ukraine keep the internet running!
+
+Also, please provide information on where the offered items are now, and
+whether you need assistance with shipping them to our collection point
+near Berlin.
+
+{% if contact.organisation_id -%}
+Get featured on our website:
+
+Finally, please go to https://keepukraineconnected.org/admin/contacts/contact/
+and https://keepukraineconnected.org/admin/contacts/organisation/ to indicate
+whether you want to be listed on our website as a donor to our Keep Ukraine
+Connected task force.
+{%- else -%}
+Finally, please go to https://keepukraineconnected.org/admin/contacts/contact/
+to indicate whether you want to be listed on our website as a donor to our
+Keep Ukraine Connected task force.
+{%- endif %}
+{%- endif %}
+
+{% if 'requesters' in groups -%}
+Request what you need:
+
+We are trying to get the exact things you need to keep the network running,
+and we can do that best if you give us a detailed description on what you
+need!
+
+Please go to https://keepukraineconnected.org/admin/supply_demand/request/
+and update your requests. The system allows you to request alternatives for
+each item, so instead of asking for a range/type of items please enter exact
+part numbers and the order of preference. That way we can send precise
+questions to our donors and get you the best support!
+
+If you know other network operators in Ukraine that need help, please ask
+them to contact ukraine@nogalliance.org so that we can give them an account
+as well. We want to help as many people as possible!
+{%- endif %}
+{%- endfilter %}
+
+Yours,
+
+
+Everyone at Keep Ukraine Connected
+
+A task force from the Global NOG Alliance
+https://www.nogalliance.org

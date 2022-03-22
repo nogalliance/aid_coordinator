@@ -1,10 +1,17 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin import ModelAdmin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.tokens import default_token_generator
 from django.db import models
 from django.db.models import Q
+from django.http import HttpRequest
+from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.encoding import force_bytes
 from django.utils.html import format_html, format_html_join
+from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 
 from contacts.models import Organisation, Contact
@@ -16,6 +23,7 @@ class ContactAdmin(UserAdmin):
     list_filter = ("is_superuser", "is_active", "groups")
     search_fields = ('username', 'first_name', 'last_name', 'organisation__name')
     readonly_fields = ("last_login", "date_joined")
+    actions = ('send_welcome_email',)
     superuser_fieldsets = (
         (None, {
             "fields": ("username", "password")
@@ -69,11 +77,39 @@ class ContactAdmin(UserAdmin):
         }),
         (_("Permissions"), {
             "fields": ("is_superuser", "groups"),
-        })
+        }),
     )
     formfield_overrides = {
         models.ManyToManyField: {'widget': forms.CheckboxSelectMultiple},
     }
+
+    def send_welcome_email(self, request: HttpRequest, queryset: Contact.objects):
+        queryset = queryset.prefetch_related('groups')
+        queryset = queryset.select_related('organisation')
+        for contact in queryset:
+            if contact.is_superuser:
+                self.message_user(request, f"Not sending a message to superuser {contact}", level=messages.WARNING)
+                continue
+
+            groups = [str(group).lower() for group in contact.groups.all()]
+            if 'donors' not in groups and 'requesters' not in groups:
+                self.message_user(request, f"User {contact} is neither a donor nor a requester, not sending message",
+                                  level=messages.ERROR)
+                continue
+
+            password_reset_url = 'https://' + request.get_host() + reverse('password_reset_confirm', kwargs={
+                'uidb64': urlsafe_base64_encode(force_bytes(contact.pk)),
+                'token': default_token_generator.make_token(contact)
+            })
+            message = render_to_string("email/welcome.txt", {
+                'request': request,
+                'contact': contact,
+                'groups': groups,
+                'password_reset_url': password_reset_url,
+            }, request)
+            request.user.email_user("Your keepukraineconnected.org account", message)
+
+            self.message_user(request, f"Sent welcome message to {contact}")
 
     def get_form(self, request, obj=None, **kwargs):
         return ModelAdmin.get_form(self, request, obj, **kwargs)
