@@ -107,7 +107,7 @@ class ContactAdmin(UserAdmin):
                 'groups': groups,
                 'password_reset_url': password_reset_url,
             }, request)
-            request.user.email_user("Your keepukraineconnected.org account", message)
+            contact.email_user("Your keepukraineconnected.org account", message)
 
             self.message_user(request, f"Sent welcome message to {contact}")
 
