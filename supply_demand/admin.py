@@ -165,19 +165,42 @@ class OfferAdmin(admin.ModelAdmin):
 
         return format_html_join(mark_safe('<br>'), '{} {}', lines)
 
+    def get_list_display(self, request):
+        fields = super().get_list_display(request)
+
+        # Non-donors don't see donor info
+        groups = [str(group.name).lower() for group in request.user.groups.all()]
+        if 'donors' not in groups:
+            fields = [field for field in fields if field not in ('admin_organisation', 'admin_contact')]
+
+        return fields
+
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         if request.user.is_superuser:
             return fields
 
-        # Non-superusers don't see notes
-        return [field for field in fields if field != 'internal_notes']
+        # Non-superusers don't see internal notes
+        fields = [field for field in fields if field not in ('internal_notes',)]
+
+        # Non-donors don't see donor info
+        groups = [str(group.name).lower() for group in request.user.groups.all()]
+        if 'donors' not in groups:
+            fields = [field for field in fields if field not in ('organisation', 'contact',
+                                                                 'location', 'delivery_method')]
+
+        return fields
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.prefetch_related('items', 'contact__organisation')
 
         if request.user.is_superuser:
+            return queryset
+
+        # Requesters may see every offer
+        groups = [str(group.name).lower() for group in request.user.groups.all()]
+        if 'requesters' in groups:
             return queryset
 
         if request.user.organisation_id:
