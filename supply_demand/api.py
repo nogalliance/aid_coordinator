@@ -45,10 +45,11 @@ class OfferItemSerializer(HyperlinkedModelSerializer):
 
 class RequestItemSerializer(HyperlinkedModelSerializer):
     type = CharField(source='get_type_display')
+    line = CharField(source='__str__')
 
     class Meta:
         model = RequestItem
-        fields = ['type', 'brand', 'model', 'amount', 'up_to', 'notes']
+        fields = ['type', 'brand', 'model', 'amount', 'up_to', 'notes', 'line']
 
 
 # ViewSets define the view behavior.

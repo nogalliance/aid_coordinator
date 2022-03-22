@@ -64,7 +64,10 @@ class RequestItem(models.Model):
         verbose_name_plural = _('request items')
 
     def __str__(self):
-        return f"{self.amount}x {self.brand} {self.model}"
+        if self.up_to:
+            return f"{self.up_to}x {self.brand} {self.model}".replace('  ', ' ')
+        else :
+            return f"{self.amount}x {self.brand} {self.model}".replace('  ', ' ')
 
     def clean(self):
         super().clean()
