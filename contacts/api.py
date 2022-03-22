@@ -14,7 +14,7 @@ class ContactSerializer(HyperlinkedModelSerializer):
 class OrganisationSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = Organisation
-        fields = ['name', 'website']
+        fields = ['name', 'logo', 'website']
 
 
 # ViewSets define the view behavior.

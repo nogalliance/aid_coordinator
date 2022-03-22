@@ -27,6 +27,7 @@ class Organisation(models.Model):
     listed = models.BooleanField(verbose_name=_('listed'), default=False,
                                  help_text=_('Shown as a donor organisation on the website'))
     website = models.URLField(verbose_name=_('website'), blank=True)
+    logo = models.ImageField(verbose_name=_('logo'), blank=True)
 
     class Meta:
         ordering = ('name',)
