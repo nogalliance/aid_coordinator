@@ -159,6 +159,10 @@ class ContactAdmin(UserAdmin):
         return fields
 
     def response_add(self, request, obj, post_url_continue=None):
+        # Redirect to the list after creation
+        if not post_url_continue:
+            post_url_continue = reverse("admin:contacts_contact_changelist")
+
         response = super().response_add(request, obj, post_url_continue)
         if request.POST.get('send_welcome_email') == 'on':
             # Insert a hook to send the welcome email
