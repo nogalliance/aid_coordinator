@@ -183,7 +183,7 @@ class OfferItem(models.Model):
         if self.amount:
             return f"{self.amount}x {self.brand} {self.model}"
 
-        return f"Multiple {self.brand} {self.model}"
+        return f"{_('Multiple')} {self.brand} {self.model}"
 
 
 class Change(models.Model):
@@ -201,4 +201,13 @@ class Change(models.Model):
         verbose_name_plural = _('changes')
 
     def __str__(self):
-        return f"{self.who} - {self.what}"
+        if self.action == ChangeAction.ADD:
+            action = _('added')
+        elif self.action == ChangeAction.CHANGE:
+            action = _('changed')
+        elif self.action == ChangeAction.DELETE:
+            action = _('removed')
+        else:
+            action = _('did something to')
+
+        return f"{self.who.display_name()} {action} {self.get_type_display().lower()} {_('of')} {self.what}"
