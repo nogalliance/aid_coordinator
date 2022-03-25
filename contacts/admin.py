@@ -1,12 +1,10 @@
 from django import forms
 from django.contrib import admin, messages
-from django.contrib.admin import ModelAdmin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.tokens import default_token_generator
 from django.db import models
 from django.db.models import Q
 from django.http import HttpRequest
-from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.encoding import force_bytes
@@ -14,6 +12,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 
+from contacts.forms import ContactForm, AddContactForm
 from contacts.models import Organisation, Contact
 
 
@@ -24,12 +23,13 @@ class ContactAdmin(UserAdmin):
     search_fields = ('username', 'first_name', 'last_name', 'organisation__name')
     readonly_fields = ("last_login", "date_joined")
     actions = ('send_welcome_email',)
+    form = ContactForm
     superuser_fieldsets = (
         (None, {
-            "fields": ("username", "password")
+            "fields": ("username", "password", "send_welcome_email"),
         }),
         (_("Personal info"), {
-            "fields": ("first_name", "last_name", "listed")
+            "fields": ("first_name", "last_name", "listed"),
         }),
         (_("Contact"), {
             "fields": ("email", "phone"),
@@ -41,15 +41,15 @@ class ContactAdmin(UserAdmin):
             "fields": ("is_active", "is_superuser", "groups"),
         }),
         (_("Important dates"), {
-            "fields": ("last_login", "date_joined")
+            "fields": ("last_login", "date_joined"),
         }),
     )
     fieldsets = (
         (None, {
-            "fields": ("username",)
+            "fields": ("username",),
         }),
         (_("Personal info"), {
-            "fields": ("first_name", "last_name", "listed")
+            "fields": ("first_name", "last_name", "listed"),
         }),
         (_("Contact"), {
             "fields": ("email", "phone"),
@@ -58,16 +58,17 @@ class ContactAdmin(UserAdmin):
             "fields": ("organisation", "role"),
         }),
         (_("Important dates"), {
-            "fields": ("last_login", "date_joined")
+            "fields": ("last_login", "date_joined"),
         }),
     )
     add_form_template = None
+    add_form = AddContactForm
     add_fieldsets = (
         (None, {
-            "fields": ("username",)
+            "fields": ("username", "send_welcome_email"),
         }),
         (_("Personal info"), {
-            "fields": ("first_name", "last_name")
+            "fields": ("first_name", "last_name"),
         }),
         (_("Contact"), {
             "fields": ("email", "phone"),
@@ -83,6 +84,7 @@ class ContactAdmin(UserAdmin):
         models.ManyToManyField: {'widget': forms.CheckboxSelectMultiple},
     }
 
+    @admin.display(description=_('Send welcome email'))
     def send_welcome_email(self, request: HttpRequest, queryset: Contact.objects):
         queryset = queryset.prefetch_related('groups')
         queryset = queryset.select_related('organisation')
@@ -93,7 +95,7 @@ class ContactAdmin(UserAdmin):
 
             groups = [str(group).lower() for group in contact.groups.all()]
             if 'donors' not in groups and 'requesters' not in groups:
-                self.message_user(request, f"User {contact} is neither a donor nor a requester, not sending message",
+                self.message_user(request, f"{contact} is neither a donor nor a requester, not sending welcome message",
                                   level=messages.ERROR)
                 continue
 
@@ -110,9 +112,6 @@ class ContactAdmin(UserAdmin):
             contact.email_user("Your keepukraineconnected.org account", message)
 
             self.message_user(request, f"Sent welcome message to {contact}")
-
-    def get_form(self, request, obj=None, **kwargs):
-        return ModelAdmin.get_form(self, request, obj, **kwargs)
 
     @admin.display(description=_('groups'))
     def admin_groups(self, contact: Contact):
@@ -158,6 +157,22 @@ class ContactAdmin(UserAdmin):
         if not request.user.is_superuser:
             fields += ('password', 'organisation', 'is_active', 'is_superuser', 'groups')
         return fields
+
+    def response_add(self, request, obj, post_url_continue=None):
+        response = super().response_add(request, obj, post_url_continue)
+        if request.POST.get('send_welcome_email') == 'on':
+            # Insert a hook to send the welcome email
+            queryset = Contact.objects.filter(pk=obj.pk)
+            self.send_welcome_email(request, queryset)
+        return response
+
+    def response_change(self, request, obj):
+        response = super().response_change(request, obj)
+        if request.user.is_superuser and request.POST.get('send_welcome_email') == 'on':
+            # Insert a hook to send the welcome email
+            queryset = Contact.objects.filter(pk=obj.pk)
+            self.send_welcome_email(request, queryset)
+        return response
 
 
 @admin.register(Organisation)
