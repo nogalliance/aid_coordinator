@@ -2,12 +2,38 @@ from typing import Iterable
 
 from django.contrib import admin
 from django.db.models import Q
-from django.forms import TextInput, NumberInput
-from django.utils.html import format_html_join, format_html
+from django.forms import NumberInput, TextInput
+from django.urls import reverse
+from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from supply_demand.models import Request, RequestItem, OfferItem, Offer, Change, ChangeAction, ChangeType
+from supply_demand.models import Change, ChangeAction, ChangeType, Offer, OfferItem, Request, RequestItem
+
+
+class SuperUserOnlyModelAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+class ReadOnlyModelAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class CompactInline(admin.TabularInline):
@@ -270,8 +296,22 @@ class OfferAdmin(admin.ModelAdmin):
         super().delete_model(request, obj)
 
 
+@admin.register(OfferItem)
+class OfferItemAdmin(SuperUserOnlyModelAdmin):
+    list_display = ('brand', 'model', 'amount', 'received', 'item_of')
+    list_filter = ('received',)
+    autocomplete_fields = ('offer', 'claimed_by')
+    ordering = ('brand', 'model')
+
+    @admin.display(description=_('item of'))
+    def item_of(self, item: OfferItem):
+        return format_html('<a href="{url}">{name}</a>',
+                           url=reverse('admin:supply_demand_offer_change', args=(item.offer.id,)),
+                           name=item.offer)
+
+
 @admin.register(Change)
-class ChangeAdmin(admin.ModelAdmin):
+class ChangeAdmin(ReadOnlyModelAdmin):
     list_display = ('when', 'who', 'action', 'type', 'what')
     list_filter = (
         'action',
@@ -279,12 +319,4 @@ class ChangeAdmin(admin.ModelAdmin):
         ('who', admin.RelatedOnlyFieldListFilter),
     )
     date_hierarchy = 'when'
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
+    ordering = ('-when', 'who')
