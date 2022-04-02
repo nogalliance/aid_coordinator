@@ -11,6 +11,8 @@
             <excludedPath path="__pycache__" />
             <excludedPath path="/private/aid_coordinator/static" />
             <excludedPath local="true" path="$PROJECT_DIR$/db.sqlite3" />
+            <excludedPath local="true" path="__pycache__" />
+            <excludedPath path="/private/aid_coordinator/media" />
           </excludedPaths>
         </serverdata>
       </paths>
