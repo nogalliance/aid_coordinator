@@ -103,7 +103,7 @@ class ContactAdmin(UserAdmin):
                 'uidb64': urlsafe_base64_encode(force_bytes(contact.pk)),
                 'token': default_token_generator.make_token(contact)
             })
-            message = render_to_string("email/welcome.txt", {
+            message = render_to_string("email/welcome.txt.j2", {
                 'request': request,
                 'contact': contact,
                 'groups': groups,
