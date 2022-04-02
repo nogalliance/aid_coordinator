@@ -2,8 +2,8 @@ import ipaddress
 import sys
 
 from django.conf import settings
-from django.core.exceptions import SuspiciousOperation, ImproperlyConfigured
-from django.http import HttpRequest, HttpResponseBadRequest
+from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
+from django.http import HttpRequest
 
 
 def show_toolbar(request: HttpRequest):
