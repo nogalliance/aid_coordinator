@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Exclude migrations" pattern="file[aid_coordinator]:*/&amp;&amp;!file[aid_coordinator]:media//*&amp;&amp;!file[aid_coordinator]:contacts/migrations//*&amp;&amp;!file[aid_coordinator]:supply_demand/migrations//*" />
+</component>
