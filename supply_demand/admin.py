@@ -96,7 +96,6 @@ class RequestAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.prefetch_related('items__alternatives__alternatives', 'contact__organisation')
 
         if request.user.is_superuser:
             return queryset
@@ -223,7 +222,6 @@ class OfferAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.prefetch_related('items', 'contact__organisation')
 
         if request.user.is_superuser:
             return queryset

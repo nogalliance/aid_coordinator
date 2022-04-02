@@ -131,7 +131,6 @@ class ContactAdmin(UserAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.prefetch_related('organisation', 'groups')
 
         if request.user.is_superuser:
             return queryset

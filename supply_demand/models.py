@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from contacts.models import Organisation, Contact
+from contacts.models import Contact, Organisation
 
 
 class ItemType(models.IntegerChoices):
@@ -30,6 +30,11 @@ class ChangeType(models.IntegerChoices):
     REQUEST = 2, _('Request')
 
 
+class RequestManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('items__alternatives__alternatives', 'contact__organisation')
+
+
 class Request(models.Model):
     contact = models.ForeignKey(verbose_name=_('contact'), to=Contact, related_name='requests',
                                 on_delete=models.RESTRICT)
@@ -40,6 +45,8 @@ class Request(models.Model):
                                    help_text=_('Provide more detail on this request, this is your elevator pitch!'))
     internal_notes = models.TextField(verbose_name=_('internal notes'), blank=True,
                                       help_text=_('Internal notes that will NOT be shown publicly'))
+
+    objects = RequestManager()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -115,6 +122,11 @@ class RequestItem(models.Model):
                 alt = alt.alternative_for if alt.alternative_for_id else None
 
 
+class OfferManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('items', 'contact__organisation')
+
+
 class Offer(models.Model):
     contact = models.ForeignKey(verbose_name=_('contact'), to=Contact, related_name='offers', on_delete=models.RESTRICT)
     description = models.CharField(verbose_name=_('description'), max_length=100, blank=True,
@@ -125,6 +137,8 @@ class Offer(models.Model):
                                           default=DeliveryMethod.UNKNOWN)
     internal_notes = models.TextField(verbose_name=_('internal notes'), blank=True,
                                       help_text=_('Internal notes that will NOT be shown publicly'))
+
+    objects = OfferManager()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -160,6 +174,11 @@ class Offer(models.Model):
         super().save(*args, **kwargs)
 
 
+class OfferItemManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('offer__contact__organisation')
+
+
 class OfferItem(models.Model):
     offer = models.ForeignKey(verbose_name=_('offer'), to=Offer, related_name='items', on_delete=models.CASCADE)
     type = models.PositiveIntegerField(verbose_name=_('type'), choices=ItemType.choices, default=ItemType.OTHER)
@@ -174,6 +193,8 @@ class OfferItem(models.Model):
     claimed_by = models.ForeignKey(verbose_name=_('claimed by'), to=Contact, blank=True, null=True,
                                    related_name='claimed_items', on_delete=models.SET_NULL)
 
+    objects = OfferItemManager()
+
     class Meta:
         ordering = ('type', 'brand', 'model')
         verbose_name = _('offer item')
@@ -181,9 +202,14 @@ class OfferItem(models.Model):
 
     def __str__(self):
         if self.amount:
-            return f"{self.amount}x {self.brand} {self.model}"
+            return f"{self.amount}x {self.brand} {self.model}".replace('  ', ' ')
 
-        return f"{_('Multiple')} {self.brand} {self.model}"
+        return f"{_('Multiple')} {self.brand} {self.model}".replace('  ', ' ')
+
+
+class ChangeManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('who__organisation')
 
 
 class Change(models.Model):
@@ -194,6 +220,8 @@ class Change(models.Model):
     what = models.CharField(verbose_name=_('what'), max_length=250)
     before = models.TextField(verbose_name=_('before'), blank=True)
     after = models.TextField(verbose_name=_('after'), blank=True)
+
+    object = ChangeManager()
 
     class Meta:
         ordering = ('when', 'who')

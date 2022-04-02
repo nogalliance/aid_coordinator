@@ -38,6 +38,11 @@ class Organisation(models.Model):
         return self.name
 
 
+class ContactManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('groups', 'organisation')
+
+
 class Contact(AbstractUser):
     is_staff = True
     organisation = models.ForeignKey(verbose_name=_('organisation'), to=Organisation, blank=True, null=True,
@@ -46,6 +51,8 @@ class Contact(AbstractUser):
     listed = models.BooleanField(verbose_name=_('listed'), default=False,
                                  help_text=_('Shown as a personal donor on the website'))
     phone = models.CharField(verbose_name=_('phone'), max_length=50, blank=True)
+
+    objects = ContactManager()
 
     class Meta:
         ordering = ('first_name', 'last_name', 'username')
