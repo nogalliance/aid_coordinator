@@ -109,6 +109,7 @@ class RequestAdmin(admin.ModelAdmin):
 
         return queryset.filter(contact=request.user)
 
+    # noinspection DuplicatedCode
     def save_related(self, request, form, *args, **kwargs):
         super().save_related(request, form, *args, **kwargs)
 
@@ -240,6 +241,7 @@ class OfferAdmin(admin.ModelAdmin):
 
         return queryset.filter(contact=request.user)
 
+    # noinspection DuplicatedCode
     def save_related(self, request, form, *args, **kwargs):
         super().save_related(request, form, *args, **kwargs)
 
