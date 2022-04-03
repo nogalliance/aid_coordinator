@@ -19,6 +19,14 @@ class DeliveryMethod(models.IntegerChoices):
     OTHER = 999, _('Other')
 
 
+class UnusedItemsHandling(models.IntegerChoices):
+    NO_PREFERENCE = 0, _('No preference given')
+    CONTACT = 5, _('Contact the donor')
+    RETURN = 10, _('Return them to donor')
+    DESTROY = 20, _('Destroy them')
+    SELL = 50, _('Sell them and donate funds to Ukraine')
+
+
 class ChangeAction(models.IntegerChoices):
     ADD = 1, _('Add')
     CHANGE = 2, _('Change')
@@ -133,8 +141,14 @@ class Offer(models.Model):
                                    help_text=_('Give a short description of what this offer is'))
     location = models.TextField(verbose_name=_('location'), blank=True,
                                 help_text=_('Where is the equipment coming from?'))
-    delivery_method = models.IntegerField(verbose_name=_('delivery method'), choices=DeliveryMethod.choices,
-                                          default=DeliveryMethod.UNKNOWN)
+    delivery_method = models.PositiveIntegerField(verbose_name=_('delivery method'), choices=DeliveryMethod.choices,
+                                                  default=DeliveryMethod.UNKNOWN)
+    unused_item_handling = models.PositiveIntegerField(verbose_name=_('unused item handling'),
+                                                       choices=UnusedItemsHandling.choices,
+                                                       default=UnusedItemsHandling.NO_PREFERENCE,
+                                                       help_text=_("If we can't find a Ukrainian organisation that can "
+                                                                   "use these items in a reasonable time, what should "
+                                                                   "we do with them?"))
     internal_notes = models.TextField(verbose_name=_('internal notes'), blank=True,
                                       help_text=_('Internal notes that will NOT be shown publicly'))
 
