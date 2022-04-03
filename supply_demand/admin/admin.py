@@ -2,54 +2,16 @@ from typing import Iterable
 
 from django.contrib import admin
 from django.db.models import Q
-from django.forms import NumberInput, TextInput
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+from import_export.admin import ExportActionModelAdmin
 
+from supply_demand.admin.base import CompactInline, ReadOnlyMixin, SuperUserOnlyMixin
+from supply_demand.admin.filters import ClaimedFilter
+from supply_demand.admin.resources import OfferItemResource
 from supply_demand.models import Change, ChangeAction, ChangeType, Offer, OfferItem, Request, RequestItem
-
-
-class SuperUserOnlyModelAdmin(admin.ModelAdmin):
-    def has_add_permission(self, request):
-        return request.user.is_superuser
-
-    def has_view_permission(self, request, obj=None):
-        return request.user.is_superuser
-
-    def has_change_permission(self, request, obj=None):
-        return request.user.is_superuser
-
-    def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser
-
-
-class ReadOnlyModelAdmin(admin.ModelAdmin):
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-
-class CompactInline(admin.TabularInline):
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        field = super().formfield_for_dbfield(db_field, request, **kwargs)
-
-        if db_field.name == 'brand':
-            field.widget = TextInput(attrs={'style': 'width: 5em', 'maxlength': 50})
-        elif db_field.name == 'model':
-            field.widget = TextInput(attrs={'style': 'width: 8em', 'maxlength': 50})
-        elif db_field.name == 'notes':
-            field.widget = TextInput(attrs={'style': 'width: 16em', 'maxlength': 250})
-        elif db_field.name in ['amount', 'up_to']:
-            field.widget = NumberInput(attrs={'style': 'width: 3em', 'min': 0, 'max': 999})
-
-        return field
 
 
 class RequestItemInline(CompactInline):
@@ -297,11 +259,12 @@ class OfferAdmin(admin.ModelAdmin):
 
 
 @admin.register(OfferItem)
-class OfferItemAdmin(SuperUserOnlyModelAdmin):
-    list_display = ('brand', 'model', 'amount', 'received', 'item_of')
-    list_filter = ('received',)
+class OfferItemAdmin(SuperUserOnlyMixin, ExportActionModelAdmin):
+    list_display = ('brand', 'model', 'amount', 'received', 'claimed', 'item_of')
+    list_filter = ('received', ClaimedFilter)
     autocomplete_fields = ('offer', 'claimed_by')
     ordering = ('brand', 'model')
+    resource_class = OfferItemResource
 
     @admin.display(description=_('item of'))
     def item_of(self, item: OfferItem):
@@ -309,9 +272,13 @@ class OfferItemAdmin(SuperUserOnlyModelAdmin):
                            url=reverse('admin:supply_demand_offer_change', args=(item.offer.id,)),
                            name=item.offer)
 
+    @admin.display(description=_('claimed'), boolean=True)
+    def claimed(self, item: OfferItem):
+        return item.claimed_by_id is not None
+
 
 @admin.register(Change)
-class ChangeAdmin(ReadOnlyModelAdmin):
+class ChangeAdmin(ReadOnlyMixin, admin.ModelAdmin):
     list_display = ('when', 'who', 'action', 'type', 'what')
     list_filter = (
         'action',

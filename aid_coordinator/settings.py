@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'rest_framework',
     'django_filters',
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -160,6 +161,11 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
     ],
 }
+
+IMPORT_EXPORT_USE_TRANSACTIONS = True
+IMPORT_EXPORT_SKIP_ADMIN_LOG = True
+IMPORT_EXPORT_IMPORT_PERMISSION_CODE = 'add'
+IMPORT_EXPORT_EXPORT_PERMISSION_CODE = 'view'
 
 try:
     from .local_settings import *
