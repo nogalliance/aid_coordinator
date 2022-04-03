@@ -22,7 +22,6 @@ class ContactAdmin(UserAdmin):
     list_filter = ("is_superuser", "is_active", "groups")
     search_fields = ('username', 'first_name', 'last_name', 'organisation__name')
     readonly_fields = ("last_login", "date_joined")
-    actions = ('send_welcome_email',)
     form = ContactForm
     superuser_fieldsets = (
         (None, {
@@ -84,7 +83,13 @@ class ContactAdmin(UserAdmin):
         models.ManyToManyField: {'widget': forms.CheckboxSelectMultiple},
     }
 
-    @admin.display(description=_('Send welcome email'))
+    actions = ('send_welcome_email',)
+
+    # noinspection PyMethodMayBeStatic
+    def has_mail_permission(self, request):
+        return request.user.is_superuser
+
+    @admin.action(description=_('Send welcome email'), permissions=['mail'])
     def send_welcome_email(self, request: HttpRequest, queryset: Contact.objects):
         queryset = queryset.prefetch_related('groups')
         queryset = queryset.select_related('organisation')
