@@ -1,7 +1,11 @@
 from typing import Iterable
 
+from admin_wizard.admin import UpdateAction
 from django.contrib import admin
-from django.db.models import Q
+from django.contrib.admin.helpers import ActionForm
+from django.db.models import Q, QuerySet
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import render
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
@@ -10,6 +14,7 @@ from import_export.admin import ExportActionModelAdmin
 
 from supply_demand.admin.base import CompactInline, ReadOnlyMixin, SuperUserOnlyMixin
 from supply_demand.admin.filters import ClaimedFilter
+from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import OfferItemResource, RequestItemResource
 from supply_demand.models import Change, ChangeAction, ChangeType, Offer, OfferItem, Request, RequestItem
 
@@ -35,17 +40,13 @@ class RequestItemInline(CompactInline):
 
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
-    list_display = ('admin_organisation', 'goal', 'admin_items')
+    list_display = ('contact', 'goal', 'admin_items')
+    list_filter = ('contact__organisation',)
     autocomplete_fields = ('contact',)
     inlines = (RequestItemInline,)
     search_fields = ('goal', 'description',
                      'contact__first_name', 'contact__last_name', 'contact__organisation__name',
                      'items__brand', 'items__model', 'items__notes')
-
-    @admin.display(description=_('organisation'), ordering='contact__organisation__name')
-    def admin_organisation(self, offer: Offer):
-        if offer.contact.organisation_id:
-            return offer.contact.organisation
 
     @admin.display(description=_('items'))
     def admin_items(self, request: Request):
@@ -77,6 +78,12 @@ class RequestAdmin(admin.ModelAdmin):
 
         # Non-superusers don't see notes
         return [field for field in fields if field != 'internal_notes']
+
+    def get_list_filter(self, request: HttpRequest):
+        if not request.user.is_superuser:
+            return []
+
+        return super().get_list_filter(request)
 
     def get_form(self, request, obj=None, **kwargs):
         request.parent_obj = obj
@@ -133,6 +140,7 @@ class RequestItemAdmin(SuperUserOnlyMixin, ExportActionModelAdmin):
     autocomplete_fields = ('request',)
     ordering = ('brand', 'model')
     resource_class = RequestItemResource
+    actions = (UpdateAction(form_class=MoveToRequestForm, title=_('Move to other request')),)
 
     @admin.display(description=_('item of'))
     def item_of(self, item: RequestItem):
@@ -195,6 +203,12 @@ class OfferAdmin(admin.ModelAdmin):
             lines.append((marker, description))
 
         return format_html_join(mark_safe('<br>'), '{} {}', lines)
+
+    def get_list_filter(self, request: HttpRequest):
+        if not request.user.is_superuser:
+            return []
+
+        return super().get_list_filter(request)
 
     def get_list_display(self, request):
         fields = super().get_list_display(request)
@@ -279,6 +293,7 @@ class OfferItemAdmin(SuperUserOnlyMixin, ExportActionModelAdmin):
     autocomplete_fields = ('offer', 'claimed_by')
     ordering = ('brand', 'model')
     resource_class = OfferItemResource
+    actions = (UpdateAction(form_class=MoveToOfferForm, title=_('Move to other offer')),)
 
     @admin.display(description=_('item of'))
     def item_of(self, item: OfferItem):

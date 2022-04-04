@@ -67,7 +67,10 @@ class Request(models.Model):
         verbose_name_plural = _('requests')
 
     def __str__(self):
-        return self.goal
+        if self.contact.organisation_id:
+            return f"{self.contact.organisation}: {self.goal}"
+        else:
+            return f"{self.contact}: {self.goal}"
 
     def change_log_entry(self):
         out = f'Contact: {self.contact}'
@@ -84,6 +87,11 @@ class Request(models.Model):
         self.change_before = Request.objects.get(pk=self.pk).change_log_entry() if self.pk else ''
 
         super().save(*args, **kwargs)
+
+
+class RequestItemManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('request__contact__organisation')
 
 
 class RequestItem(models.Model):
@@ -104,6 +112,8 @@ class RequestItem(models.Model):
     alternative_for = models.ForeignKey(verbose_name=_('alternative for'), to='RequestItem', blank=True, null=True,
                                         related_name='alternatives', on_delete=models.CASCADE,
                                         help_text=_('In case there are multiple options to solve your problem'))
+
+    objects = RequestItemManager()
 
     class Meta:
         ordering = ('type', 'brand', 'model')

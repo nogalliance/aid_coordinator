@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'import_export',
+    'admin_wizard',
 ]
 
 MIDDLEWARE = [

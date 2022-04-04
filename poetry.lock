@@ -163,6 +163,17 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-admin-wizard"
+version = "0.3.0"
+description = "Wizard implementation for Django admin"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+Django = ">=2.2,<4.1"
+
+[[package]]
 name = "django-debug-toolbar"
 version = "3.2.4"
 description = "A configurable set of panels that display various debug information about the current request/response."
@@ -614,7 +625,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "6af73676b26d0f8276a9402ab95eab83377e163b8b608ab49c41a3d79c5b2cb7"
+content-hash = "34edbf62bd33efd745b831653af6cf90bef9a55409a05d447b74e3b0f1390911"
 
 [metadata.files]
 asgiref = [
@@ -743,6 +754,10 @@ diff-match-patch = [
 django = [
     {file = "Django-4.0.3-py3-none-any.whl", hash = "sha256:1239218849e922033a35d2a2f777cb8bee18bd725416744074f455f34ff50d0c"},
     {file = "Django-4.0.3.tar.gz", hash = "sha256:77ff2e7050e3324c9b67e29b6707754566f58514112a9ac73310f60cd5261930"},
+]
+django-admin-wizard = [
+    {file = "django-admin-wizard-0.3.0.tar.gz", hash = "sha256:8f18af41b97a38efd099f2419f0aeabbc8b3f9700cfe196f27e7cbe39e809966"},
+    {file = "django_admin_wizard-0.3.0-py3-none-any.whl", hash = "sha256:143c8fbbe9473dd948c56646e056ebbe2948cc430460339eeaf0f929fa8a58c8"},
 ]
 django-debug-toolbar = [
     {file = "django-debug-toolbar-3.2.4.tar.gz", hash = "sha256:644bbd5c428d3283aa9115722471769cac1bec189edf3a0c855fd8ff870375a9"},
