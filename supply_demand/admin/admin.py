@@ -10,7 +10,7 @@ from import_export.admin import ExportActionModelAdmin
 
 from supply_demand.admin.base import CompactInline, ReadOnlyMixin, SuperUserOnlyMixin
 from supply_demand.admin.filters import ClaimedFilter
-from supply_demand.admin.resources import OfferItemResource
+from supply_demand.admin.resources import OfferItemResource, RequestItemResource
 from supply_demand.models import Change, ChangeAction, ChangeType, Offer, OfferItem, Request, RequestItem
 
 
@@ -125,6 +125,20 @@ class RequestAdmin(admin.ModelAdmin):
             after=after,
         ).save()
         super().delete_model(request, obj)
+
+
+@admin.register(RequestItem)
+class RequestItemAdmin(SuperUserOnlyMixin, ExportActionModelAdmin):
+    list_display = ('brand', 'model', 'amount', 'up_to', 'item_of')
+    autocomplete_fields = ('request',)
+    ordering = ('brand', 'model')
+    resource_class = RequestItemResource
+
+    @admin.display(description=_('item of'))
+    def item_of(self, item: RequestItem):
+        return format_html('<a href="{url}">{name}</a>',
+                           url=reverse('admin:supply_demand_request_change', args=(item.request.id,)),
+                           name=item.request)
 
 
 class OfferItemInline(CompactInline):
