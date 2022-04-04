@@ -20,8 +20,7 @@ class DeliveryMethod(models.IntegerChoices):
 
 
 class UnusedItemsHandling(models.IntegerChoices):
-    NO_PREFERENCE = 0, _('No preference given')
-    CONTACT = 5, _('Contact the donor')
+    CONTACT = 0, _('Contact the donor')
     RETURN = 10, _('Return them to donor')
     DESTROY = 20, _('Destroy them')
     SELL = 50, _('Sell them and donate funds to Ukraine')
@@ -155,7 +154,7 @@ class Offer(models.Model):
                                                   default=DeliveryMethod.UNKNOWN)
     unused_item_handling = models.PositiveIntegerField(verbose_name=_('unused item handling'),
                                                        choices=UnusedItemsHandling.choices,
-                                                       default=UnusedItemsHandling.NO_PREFERENCE,
+                                                       default=UnusedItemsHandling.CONTACT,
                                                        help_text=_("If we can't find a Ukrainian organisation that can "
                                                                    "use these items in a reasonable time, what should "
                                                                    "we do with them?"))
