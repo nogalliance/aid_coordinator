@@ -244,7 +244,7 @@ class Change(models.Model):
     before = models.TextField(verbose_name=_('before'), blank=True)
     after = models.TextField(verbose_name=_('after'), blank=True)
 
-    object = ChangeManager()
+    objects = ChangeManager()
 
     class Meta:
         ordering = ('when', 'who')
