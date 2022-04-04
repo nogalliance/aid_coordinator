@@ -12,8 +12,8 @@ from django.utils.html import format_html, format_html_join
 from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 
-from contacts.forms import ContactForm, AddContactForm
-from contacts.models import Organisation, Contact
+from contacts.forms import AddContactForm, ContactForm
+from contacts.models import Contact, Organisation
 
 
 @admin.register(Contact)

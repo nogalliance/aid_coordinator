@@ -1,7 +1,7 @@
 from rest_framework.serializers import HyperlinkedModelSerializer
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from contacts.models import Organisation, Contact
+from contacts.models import Contact, Organisation
 
 
 # Serializers define the API representation.
