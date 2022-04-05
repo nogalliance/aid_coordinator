@@ -103,6 +103,10 @@ class RequestAdmin(ContactOnlyAdmin):
                 after=after,
             ).save()
 
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            self.delete_model(request, obj)
+
     def delete_model(self, request, obj):
         before = obj.change_log_entry()
         after = ''
@@ -290,6 +294,10 @@ class OfferAdmin(ContactOnlyAdmin):
                 before=before,
                 after=after,
             ).save()
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            self.delete_model(request, obj)
 
     def delete_model(self, request, obj):
         before = obj.change_log_entry()
