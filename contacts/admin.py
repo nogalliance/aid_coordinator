@@ -4,9 +4,9 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.tokens import default_token_generator
 from django.db import models
 from django.db.models import Q
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseRedirect
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import path, reverse
 from django.utils.encoding import force_bytes
 from django.utils.html import format_html, format_html_join
 from django.utils.http import urlsafe_base64_encode
@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 from contacts.forms import AddContactForm, ContactForm
 from contacts.models import Contact, Organisation
+from contacts.views import EmailView
 
 
 @admin.register(Contact)
@@ -83,7 +84,12 @@ class ContactAdmin(UserAdmin):
         models.ManyToManyField: {'widget': forms.CheckboxSelectMultiple},
     }
 
-    actions = ('send_welcome_email',)
+    actions = ('send_welcome_email', 'send_custom_email')
+
+    def get_urls(self):
+        return [
+                   path('email/', self.admin_site.admin_view(EmailView.as_view()))
+               ] + super().get_urls()
 
     # noinspection PyMethodMayBeStatic
     def has_mail_permission(self, request):
@@ -117,6 +123,14 @@ class ContactAdmin(UserAdmin):
             contact.email_user("Your keepukraineconnected.org account", message)
 
             self.message_user(request, f"Sent welcome message to {contact}")
+
+    # noinspection PyUnusedLocal
+    @admin.action(description=_('Send custom email'), permissions=['mail'])
+    def send_custom_email(self, request: HttpRequest, queryset: Contact.objects):
+        selected = queryset.values_list('pk', flat=True)
+        return HttpResponseRedirect('email/?contacts=%s' % (
+            ','.join(str(pk) for pk in selected),
+        ))
 
     @admin.display(description=_('groups'))
     def admin_groups(self, contact: Contact):
