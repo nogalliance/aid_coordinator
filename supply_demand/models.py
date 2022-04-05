@@ -5,12 +5,6 @@ from django.utils.translation import gettext_lazy as _
 from contacts.models import Contact, Organisation
 
 
-class UnrollDeleteQuerySet(models.QuerySet):
-    def delete(self):
-        for obj in self:
-            obj.delete()
-
-
 class ItemType(models.IntegerChoices):
     OTHER = 0, _('Other')
     HARDWARE = 100, _('Hardware')
@@ -45,8 +39,7 @@ class ChangeType(models.IntegerChoices):
 
 class RequestManager(models.Manager):
     def get_queryset(self):
-        qs = UnrollDeleteQuerySet(model=self.model, using=self._db, hints=self._hints)
-        return qs.prefetch_related('items__alternatives__alternatives', 'contact__organisation')
+        return super().get_queryset().prefetch_related('items__alternatives__alternatives', 'contact__organisation')
 
 
 class Request(models.Model):
@@ -97,8 +90,7 @@ class Request(models.Model):
 
 class RequestItemManager(models.Manager):
     def get_queryset(self):
-        qs = UnrollDeleteQuerySet(model=self.model, using=self._db, hints=self._hints)
-        return qs.prefetch_related('request__contact__organisation')
+        return super().get_queryset().prefetch_related('request__contact__organisation')
 
 
 class RequestItem(models.Model):
@@ -149,8 +141,7 @@ class RequestItem(models.Model):
 
 class OfferManager(models.Manager):
     def get_queryset(self):
-        qs = UnrollDeleteQuerySet(model=self.model, using=self._db, hints=self._hints)
-        return qs.prefetch_related('items', 'contact__organisation')
+        return super().get_queryset().prefetch_related('items', 'contact__organisation')
 
 
 class Offer(models.Model):
@@ -208,8 +199,7 @@ class Offer(models.Model):
 
 class OfferItemManager(models.Manager):
     def get_queryset(self):
-        qs = UnrollDeleteQuerySet(model=self.model, using=self._db, hints=self._hints)
-        return qs.prefetch_related('offer__contact__organisation')
+        return super().get_queryset().prefetch_related('offer__contact__organisation')
 
 
 class OfferItem(models.Model):
