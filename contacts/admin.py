@@ -98,8 +98,7 @@ class ContactAdmin(UserAdmin):
                 self.message_user(request, f"Not sending a message to superuser {contact}", level=messages.WARNING)
                 continue
 
-            groups = [str(group).lower() for group in contact.groups.all()]
-            if 'donors' not in groups and 'requesters' not in groups:
+            if not contact.is_donor and not contact.is_requester:
                 self.message_user(request, f"{contact} is neither a donor nor a requester, not sending welcome message",
                                   level=messages.ERROR)
                 continue

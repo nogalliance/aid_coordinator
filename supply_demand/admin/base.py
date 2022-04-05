@@ -1,23 +1,25 @@
 from django.contrib import admin
+from django.db.models import Q, QuerySet
 from django.forms import NumberInput, TextInput
 
 
-# noinspection PyMethodMayBeStatic
-class SuperUserOnlyMixin:
-    def has_add_permission(self, request):
-        return request.user.is_superuser
+class ContactOnlyAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
 
-    def has_view_permission(self, request, obj=None):
-        return request.user.is_superuser
+        if request.user.is_superuser:
+            return queryset
 
-    def has_change_permission(self, request, obj=None):
-        return request.user.is_superuser
+        if request.user.organisation_id:
+            return queryset.filter(
+                Q(contact__organisation_id=request.user.organisation_id) |
+                Q(contact=request.user)
+            )
 
-    def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser
+        return queryset.filter(contact=request.user)
 
 
-# noinspection PyMethodMayBeStatic
+# noinspection PyMethodMayBeStatic,PyUnusedLocal
 class ReadOnlyMixin:
     def has_add_permission(self, request):
         return False

@@ -68,3 +68,13 @@ class Contact(AbstractUser):
             return f"{self.display_name()} ({self.organisation.name})"
         else:
             return self.display_name()
+
+    @property
+    def is_donor(self):
+        groups = [str(group.name).lower() for group in self.groups.all()]
+        return 'donors' in groups
+
+    @property
+    def is_requester(self):
+        groups = [str(group.name).lower() for group in self.groups.all()]
+        return 'requesters' in groups
