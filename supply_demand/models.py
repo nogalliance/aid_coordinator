@@ -23,6 +23,7 @@ class UnusedItemsHandling(models.IntegerChoices):
     CONTACT = 0, _('Contact the donor')
     RETURN = 10, _('Return them to donor')
     DESTROY = 20, _('Destroy them')
+    OTHER = 30, _('Donate to another worthy cause')
     SELL = 50, _('Sell them and donate funds to Ukraine')
 
 
