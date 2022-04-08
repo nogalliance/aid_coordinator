@@ -117,8 +117,8 @@ class RequestItem(models.Model):
 
     class Meta:
         ordering = ('type', 'brand', 'model')
-        verbose_name = _('request item')
-        verbose_name_plural = _('request items')
+        verbose_name = _('requested item')
+        verbose_name_plural = _('requested items')
 
     def __str__(self):
         if self.up_to:
@@ -221,8 +221,8 @@ class OfferItem(models.Model):
 
     class Meta:
         ordering = ('type', 'brand', 'model')
-        verbose_name = _('offer item')
-        verbose_name_plural = _('offer items')
+        verbose_name = _('offered item')
+        verbose_name_plural = _('offered items')
 
     def __str__(self):
         if self.amount:

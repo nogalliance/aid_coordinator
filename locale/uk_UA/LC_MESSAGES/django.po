@@ -1,0 +1,621 @@
+# GNA backend system for Keep Ukraine Connected.
+# Copyright (C) 2022 Global NOG Alliance
+# This file is distributed under the same license as the aid_coordinator package.
+# Sander Steffann <sander@nogalliance.org>, 2022.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-08 16:19+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+# Project name
+#: aid_coordinator/urls.py:11
+msgid "Keep Ukraine Connected"
+msgstr ""
+
+# Webpage title
+#: aid_coordinator/urls.py:12
+msgid "GNA Keep Ukraine Connected back-end"
+msgstr ""
+
+# Webpage title
+#: aid_coordinator/urls.py:13
+msgid "Donation administration"
+msgstr ""
+
+# Section in form containing first name, last name etc
+#: contacts/admin.py:31 contacts/admin.py:51 contacts/admin.py:70
+msgid "Personal info"
+msgstr ""
+
+# Section in form containing email and phone
+#: contacts/admin.py:34 contacts/admin.py:54 contacts/admin.py:73
+msgid "Contact"
+msgstr ""
+
+# Section in form containing organisation name and role
+#: contacts/admin.py:37 contacts/admin.py:57 contacts/admin.py:76
+msgid "Organisation"
+msgstr ""
+
+# Section in form containing whether somebody is superuser/donor/requester
+#: contacts/admin.py:40 contacts/admin.py:79
+msgid "Permissions"
+msgstr ""
+
+# Section in form showing account creation and last login dates
+#: contacts/admin.py:43 contacts/admin.py:60
+msgid "Important dates"
+msgstr ""
+
+# Menu option to send welcome email
+#: contacts/admin.py:98 contacts/forms.py:37 contacts/forms.py:45
+msgid "Send welcome email"
+msgstr ""
+
+# Menu option to send custom email
+#: contacts/admin.py:128
+msgid "Send custom email"
+msgstr ""
+
+# Column in user list showing group names
+#: contacts/admin.py:135
+msgid "groups"
+msgstr ""
+
+# Column in user list showing email address
+#: contacts/admin.py:146
+msgid "email"
+msgstr ""
+
+# Column in organisation list showing website link
+#: contacts/admin.py:206 contacts/models.py:30
+msgid "website"
+msgstr ""
+
+# Name of the module containing organisation and contact information
+#: contacts/apps.py:8
+msgid "Contacts"
+msgstr ""
+
+# Label used for "other" organisation type, item type etc
+#: contacts/models.py:7 supply_demand/models.py:9 supply_demand/models.py:19
+msgid "Other"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:9
+msgid "Commercial (generic)"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:10
+msgid "Internet Provider"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:11
+msgid "Internet Exchange"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:12
+msgid "Equipment vendor"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:14
+msgid "Non-Profit (generic)"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:15
+msgid "Association"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:16
+msgid "Foundation"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:18
+msgid "Educational (generic)"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:19
+msgid "University"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:21
+msgid "Government (generic)"
+msgstr ""
+
+# Organisation type
+#: contacts/models.py:22
+msgid "Regulator"
+msgstr ""
+
+# Field containing the name of something
+#: contacts/models.py:26
+msgid "name"
+msgstr ""
+
+# Field containing the type of something (type of organisation, type of request,
+# type of item etc)
+#: contacts/models.py:27 supply_demand/models.py:99 supply_demand/models.py:208
+#: supply_demand/models.py:243
+msgid "type"
+msgstr ""
+
+# Field whether a contact or organisation is listed on our website
+#: contacts/models.py:28 contacts/models.py:52
+msgid "listed"
+msgstr ""
+
+# Help text for the "listed" field for organisations
+#: contacts/models.py:29
+msgid "Shown as a donor organisation on the website"
+msgstr ""
+
+# Upload field for organisation logo
+#: contacts/models.py:31
+msgid "logo"
+msgstr ""
+
+# Name of the "organisation" item
+#: contacts/models.py:35 contacts/models.py:49 supply_demand/admin/admin.py:267
+msgid "organisation"
+msgstr ""
+
+# Plural name of the "organisation" item
+#: contacts/models.py:36
+msgid "organisations"
+msgstr ""
+
+# Field for the role of a user
+#: contacts/models.py:51
+msgid "role"
+msgstr ""
+
+# Help text for the "listed" field for people
+#: contacts/models.py:53
+msgid "Shown as a personal donor on the website"
+msgstr ""
+
+# Field for contact phone number
+#: contacts/models.py:54
+msgid "phone"
+msgstr ""
+
+# Notification message shows after sending email messages
+#: contacts/views.py:43
+#, python-format
+msgid "%(count)s message has been sent"
+msgid_plural "%(count)s messages have been sent"
+msgstr[0] ""
+msgstr[1] ""
+
+# Column name shoring requested/donated items in a list
+#: supply_demand/admin/admin.py:49 supply_demand/admin/admin.py:276
+msgid "items"
+msgstr ""
+
+# Menu option to move requested items to a different request
+#: supply_demand/admin/admin.py:133
+msgid "Move to other request"
+msgstr ""
+
+# Column in the list of items showing what offer it belongs to
+#: supply_demand/admin/admin.py:140 supply_demand/admin/admin.py:455
+msgid "item of"
+msgstr ""
+
+# Notification message shows after changing the type of an item
+#: supply_demand/admin/admin.py:155
+#, python-format
+msgid "%(count)s item set to type %(type)s"
+msgid_plural "%(count)s items set to type %(type)s"
+msgstr[0] ""
+msgstr[1] ""
+
+# Menu option to change the type of an item to "other"
+#: supply_demand/admin/admin.py:163
+msgid "Set type to other"
+msgstr ""
+
+# Menu option to change the type of an item to "hardware"
+#: supply_demand/admin/admin.py:167
+msgid "Set type to hardware"
+msgstr ""
+
+# Menu option to change the type of an item to "software"
+#: supply_demand/admin/admin.py:171
+msgid "Set type to software"
+msgstr ""
+
+# Menu option to change the type of an item to "service"
+#: supply_demand/admin/admin.py:175
+msgid "Set type to service"
+msgstr ""
+
+# Field of request/offer referencing the contact that the request/offer belongs to
+#: supply_demand/admin/admin.py:272 supply_demand/models.py:47
+#: supply_demand/models.py:149
+msgid "contact"
+msgstr ""
+
+# Menu option to move offered items to a different offer
+#: supply_demand/admin/admin.py:361
+msgid "Move to other offer"
+msgstr ""
+
+# Field of offered item to store which requester it is claimed by
+#: supply_demand/admin/admin.py:461 supply_demand/admin/filters.py:7
+msgid "claimed"
+msgstr ""
+
+# Generic yes in "Yes"/"No" selection
+#: supply_demand/admin/filters.py:12
+msgid "Yes"
+msgstr ""
+
+# Generic no in "Yes"/"No" selection
+#: supply_demand/admin/filters.py:13
+msgid "No"
+msgstr ""
+
+# Module name
+#: supply_demand/apps.py:8
+msgid "Supply & Demand"
+msgstr ""
+
+# Name of command to show changes
+#: supply_demand/management/commands/show_changes.py:16
+msgid "Show an overview of changes"
+msgstr ""
+
+# Help text of the field where the date is specified
+#: supply_demand/management/commands/show_changes.py:21
+#, python-brace-format
+msgid "email changes of this day (default: {date})"
+msgstr ""
+
+# Item type
+#: supply_demand/models.py:10
+msgid "Hardware"
+msgstr ""
+
+# Item type
+#: supply_demand/models.py:11
+msgid "Software"
+msgstr ""
+
+# Item type
+#: supply_demand/models.py:12
+msgid "Service"
+msgstr ""
+
+# Item type
+#: supply_demand/models.py:16
+msgid "Unknown"
+msgstr ""
+
+# Transportation option
+#: supply_demand/models.py:17
+msgid "Send to GNA by donor"
+msgstr ""
+
+# Transportation option
+#: supply_demand/models.py:18
+msgid "Pickup requested"
+msgstr ""
+
+# Option what to do with unused donations
+#: supply_demand/models.py:23
+msgid "Contact the donor"
+msgstr ""
+
+# Option what to do with unused donations
+#: supply_demand/models.py:24
+msgid "Return them to donor"
+msgstr ""
+
+# Option what to do with unused donations
+#: supply_demand/models.py:25
+msgid "Destroy them"
+msgstr ""
+
+# Option what to do with unused donations
+#: supply_demand/models.py:26
+msgid "Donate to another worthy cause"
+msgstr ""
+
+# Option what to do with unused donations
+#: supply_demand/models.py:27
+msgid "Sell them and donate funds to Ukraine"
+msgstr ""
+
+# In logging module: type of change made
+#: supply_demand/models.py:31
+msgid "Add"
+msgstr ""
+
+# In logging module: type of change made
+#: supply_demand/models.py:32
+msgid "Change"
+msgstr ""
+
+# In logging module: type of change made
+#: supply_demand/models.py:33
+msgid "Delete"
+msgstr ""
+
+# In logging module: type of thing
+#: supply_demand/models.py:37
+msgid "Offer"
+msgstr ""
+
+# In logging module: type of thing
+#: supply_demand/models.py:38
+msgid "Request"
+msgstr ""
+
+# Field of request containing the goal of a request
+#: supply_demand/models.py:50
+msgid "goal"
+msgstr ""
+
+# Help text for "goal" field
+#: supply_demand/models.py:51
+msgid "Give a short description of what this request is for"
+msgstr ""
+
+# Field for description of a request/offer
+#: supply_demand/models.py:52 supply_demand/models.py:150
+msgid "description"
+msgstr ""
+
+# Help text for "description" field
+#: supply_demand/models.py:53
+msgid "Provide more detail on this request, this is your elevator pitch!"
+msgstr ""
+
+# Field for internal notes
+#: supply_demand/models.py:54 supply_demand/models.py:162
+msgid "internal notes"
+msgstr ""
+
+# Help text for "internal notes"
+#: supply_demand/models.py:55 supply_demand/models.py:163
+msgid "Internal notes that will NOT be shown publicly"
+msgstr ""
+
+# A request for donation
+#: supply_demand/models.py:66 supply_demand/models.py:98
+msgid "request"
+msgstr ""
+
+# Plural of request
+#: supply_demand/models.py:67
+msgid "requests"
+msgstr ""
+
+# Field for brand name of an item
+#: supply_demand/models.py:100 supply_demand/models.py:209
+msgid "brand"
+msgstr ""
+
+# Help text for "brand"
+#: supply_demand/models.py:101
+msgid "Either a brand name or a description of the kind of brand"
+msgstr ""
+
+# Fielf for item model type/number/etc
+#: supply_demand/models.py:102 supply_demand/models.py:210
+msgid "model"
+msgstr ""
+
+# Help text for "model"
+#: supply_demand/models.py:103
+msgid "Either an explicit model or a description of the required features"
+msgstr ""
+
+# Field for number of items
+#: supply_demand/models.py:104
+msgid "# required"
+msgstr ""
+
+# Help text for "# required"
+#: supply_demand/models.py:105
+msgid "The minimal amount that you need"
+msgstr ""
+
+# Field for maximum number of items
+#: supply_demand/models.py:106
+msgid "up to"
+msgstr ""
+
+# Help text for "up to"
+#: supply_demand/models.py:107
+msgid "The maximum amount that you could use"
+msgstr ""
+
+# Field to make notes
+#: supply_demand/models.py:109 supply_demand/models.py:212
+msgid "notes"
+msgstr ""
+
+# Help text for "notes"
+#: supply_demand/models.py:110 supply_demand/models.py:213
+msgid ""
+"Any extra information that can help a donor decide if they have something "
+"that can help you"
+msgstr ""
+
+# Field referencing that this request is an alternative for …
+#: supply_demand/models.py:112
+msgid "alternative for"
+msgstr ""
+
+# Help text for "alternative for"
+#: supply_demand/models.py:114
+msgid "In case there are multiple options to solve your problem"
+msgstr ""
+
+# A single requested item
+#: supply_demand/models.py:120
+msgid "requested item"
+msgstr ""
+
+# Plural, multiple requested items
+#: supply_demand/models.py:121
+msgid "requested items"
+msgstr ""
+
+# Help text for "description"
+#: supply_demand/models.py:151
+msgid "Give a short description of what this offer is"
+msgstr ""
+
+# Field with location of donated items
+#: supply_demand/models.py:152
+msgid "location"
+msgstr ""
+
+# Help text for "location"
+#: supply_demand/models.py:153
+msgid "Where is the equipment coming from?"
+msgstr ""
+
+# Field for delivery method of offer
+#: supply_demand/models.py:154
+msgid "delivery method"
+msgstr ""
+
+# Field for determining what to do with unused items
+#: supply_demand/models.py:156
+msgid "unused item handling"
+msgstr ""
+
+# Help text for "unused item handling"
+#: supply_demand/models.py:159
+msgid ""
+"If we can't find a Ukrainian organisation that can use these items in a "
+"reasonable time, what should we do with them?"
+msgstr ""
+
+# A single offer
+#: supply_demand/models.py:174 supply_demand/models.py:207
+msgid "offer"
+msgstr ""
+
+# Multiple offers
+#: supply_demand/models.py:175
+msgid "offers"
+msgstr ""
+
+# Field for number of items offered
+#: supply_demand/models.py:211
+msgid "# offered"
+msgstr ""
+
+# Field indicating whether an item has been received
+#: supply_demand/models.py:216
+msgid "received"
+msgstr ""
+
+# A field indicating which requester has claimed an item
+#: supply_demand/models.py:217
+msgid "claimed by"
+msgstr ""
+
+# A single offered item
+#: supply_demand/models.py:224
+msgid "offered item"
+msgstr ""
+
+# Multiple donated items
+#: supply_demand/models.py:225
+msgid "offered items"
+msgstr ""
+
+# Logging: when was a change made
+#: supply_demand/models.py:240
+msgid "when"
+msgstr ""
+
+# Logging: who made the change
+#: supply_demand/models.py:241
+msgid "who"
+msgstr ""
+
+# Logging: was it added/changed/deleted
+#: supply_demand/models.py:242
+msgid "action"
+msgstr ""
+
+# Logging: what was changed
+#: supply_demand/models.py:244
+msgid "what"
+msgstr ""
+
+# Logging: what was the data before the change
+#: supply_demand/models.py:245
+msgid "before"
+msgstr ""
+
+# Logging: what was the data after the change
+#: supply_demand/models.py:246
+msgid "after"
+msgstr ""
+
+# A single change
+#: supply_demand/models.py:252
+msgid "change"
+msgstr ""
+
+# Multiple changes
+#: supply_demand/models.py:253
+msgid "changes"
+msgstr ""
+
+# Verb describing action "add"
+#: supply_demand/models.py:257
+msgid "added"
+msgstr ""
+
+# Verb describing action "change"
+#: supply_demand/models.py:259
+msgid "changed"
+msgstr ""
+
+# Verb describing action "delete"
+#: supply_demand/models.py:261
+msgid "removed"
+msgstr ""
+
+# Verb describing unknown action
+#: supply_demand/models.py:263
+msgid "did something to"
+msgstr ""
+
+# Link to home page
+#: templates/admin/email.html:6
+msgid "Home"
+msgstr ""
+
+# Link to email page
+#: templates/admin/email.html:9
+msgid "Email"
+msgstr ""
