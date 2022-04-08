@@ -1,4 +1,3 @@
-import sys
 from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
@@ -7,7 +6,7 @@ from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
@@ -16,7 +15,7 @@ from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import (CustomConfirmImportForm, CustomImportForm, OfferItemExportResource,
                                            OfferItemImportResource,
                                            RequestItemResource)
-from supply_demand.models import Change, ChangeAction, ChangeType, Offer, OfferItem, Request, RequestItem
+from supply_demand.models import Change, ChangeAction, ChangeType, ItemType, Offer, OfferItem, Request, RequestItem
 
 
 class RequestItemInline(CompactInline):
@@ -125,18 +124,57 @@ class RequestAdmin(ContactOnlyAdmin):
 
 @admin.register(RequestItem)
 class RequestItemAdmin(ExportActionModelAdmin):
-    list_display = ('brand', 'model', 'amount', 'up_to', 'item_of')
-    list_filter = ('brand',)
+    list_display = ('type', 'brand', 'model', 'amount', 'up_to', 'item_of')
+    list_filter = ('type', 'brand',)
     autocomplete_fields = ('request',)
     ordering = ('brand', 'model')
     resource_class = RequestItemResource
-    actions = (UpdateAction(form_class=MoveToRequestForm, title=_('Move to other request')),)
+    actions = (
+        UpdateAction(form_class=MoveToRequestForm, title=_('Move to other request')),
+        'set_type_hardware',
+        'set_type_software',
+        'set_type_service',
+        'set_type_other',
+    )
 
     @admin.display(description=_('item of'))
     def item_of(self, item: RequestItem):
         return format_html('<a href="{url}">{name}</a>',
                            url=reverse('admin:supply_demand_request_change', args=(item.request.id,)),
                            name=item.request)
+
+    def set_type_action(self, request: HttpRequest, queryset: RequestItem.objects, item_type: ItemType):
+        count = 0
+        for item in queryset:
+            item.type = item_type
+            item.save()
+
+            count += 1
+
+        self.message_user(request, ngettext(
+            "%(count)s item set to type %(type)s",
+            "%(count)s items set to type %(type)s",
+            count
+        ) % {
+            'count': count,
+            'type': item_type.label,
+        })
+
+    @admin.action(description=_('Set type to other'))
+    def set_type_other(self, request: HttpRequest, queryset: RequestItem.objects):
+        self.set_type_action(request, queryset, ItemType.OTHER)
+
+    @admin.action(description=_('Set type to hardware'))
+    def set_type_hardware(self, request: HttpRequest, queryset: RequestItem.objects):
+        self.set_type_action(request, queryset, ItemType.HARDWARE)
+
+    @admin.action(description=_('Set type to software'))
+    def set_type_software(self, request: HttpRequest, queryset: RequestItem.objects):
+        self.set_type_action(request, queryset, ItemType.SOFTWARE)
+
+    @admin.action(description=_('Set type to service'))
+    def set_type_service(self, request: HttpRequest, queryset: RequestItem.objects):
+        self.set_type_action(request, queryset, ItemType.SERVICE)
 
     def has_add_permission(self, request):
         return request.user.is_superuser
