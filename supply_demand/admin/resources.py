@@ -20,14 +20,14 @@ class RequestItemResource(resources.ModelResource):
 
 class CustomImportForm(ImportForm):
     offer = forms.ModelChoiceField(
-        queryset=Offer.objects.all(),
+        queryset=Offer.objects.order_by('contact__organisation__name', 'contact__last_name', 'description'),
         required=True,
     )
 
 
 class CustomConfirmImportForm(ConfirmImportForm):
     offer = forms.ModelChoiceField(
-        queryset=Offer.objects.all(),
+        queryset=Offer.objects.order_by('contact__organisation__name', 'contact__last_name', 'description'),
         required=True,
     )
 
