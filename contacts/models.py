@@ -9,6 +9,7 @@ class OrgType(models.IntegerChoices):
     COMMERCIAL = 100, _('Commercial (generic)')
     ISP = 101, _('Internet Provider')
     IXP = 102, _('Internet Exchange')
+    VENDOR = 150, _('Equipment vendor')
 
     NON_PROFIT = 200, _('Non-Profit (generic)')
     ASSOCIATION = 201, _('Association')
