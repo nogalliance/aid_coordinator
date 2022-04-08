@@ -44,9 +44,11 @@ class OfferItemImportResource(resources.ModelResource):
 
 
 class OfferItemExportResource(resources.ModelResource):
+    type = fields.Field(attribute='get_type_display', column_name='type')
+
     class Meta:
         model = OfferItem
-        fields = ('type', 'brand', 'model', 'received', 'notes',
+        fields = ('type', 'brand', 'model', 'amount', 'received', 'notes',
                   'offer__contact__first_name', 'offer__contact__last_name', 'offer__contact__email',
                   'offer__contact__organisation__name',
                   'claimed_by__first_name', 'claimed_by__last_name', 'claimed_by__email',
