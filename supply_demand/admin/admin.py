@@ -1,3 +1,4 @@
+import sys
 from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
@@ -7,19 +8,20 @@ from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from import_export.admin import ExportActionModelAdmin
+from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import ClaimedFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
-from supply_demand.admin.resources import OfferItemResource, RequestItemResource
+from supply_demand.admin.resources import (CustomConfirmImportForm, CustomImportForm, OfferItemExportResource,
+                                           OfferItemImportResource,
+                                           RequestItemResource)
 from supply_demand.models import Change, ChangeAction, ChangeType, Offer, OfferItem, Request, RequestItem
 
 
 class RequestItemInline(CompactInline):
     model = RequestItem
-    min_num = 1
-    extra = 0
+    extra = 1
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         field = super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -195,8 +197,7 @@ class RequestItemAdmin(ExportActionModelAdmin):
 
 class OfferItemInline(CompactInline):
     model = OfferItem
-    min_num = 1
-    extra = 0
+    extra = 1
 
     autocomplete_fields = ('claimed_by',)
 
@@ -314,13 +315,42 @@ class OfferAdmin(ContactOnlyAdmin):
 
 
 @admin.register(OfferItem)
-class OfferItemAdmin(ExportActionModelAdmin):
+class OfferItemAdmin(ImportExportActionModelAdmin):
     list_display = ('brand', 'model', 'amount', 'received', 'claimed', 'item_of')
     list_filter = ('received', ClaimedFilter, 'brand')
     autocomplete_fields = ('offer', 'claimed_by')
     ordering = ('brand', 'model')
-    resource_class = OfferItemResource
     actions = (UpdateAction(form_class=MoveToOfferForm, title=_('Move to other offer')),)
+
+    def get_import_resource_class(self):
+        """
+        Returns ResourceClass to use for import.
+        """
+        return OfferItemImportResource
+
+    def get_export_resource_class(self):
+        """
+        Returns ResourceClass to use for import.
+        """
+        return OfferItemExportResource
+
+    def get_import_form(self):
+        return CustomImportForm
+
+    def get_confirm_import_form(self):
+        return CustomConfirmImportForm
+
+    def get_form_kwargs(self, form, *args, **kwargs):
+        initial = super().get_form_kwargs(form, *args, **kwargs)
+        if hasattr(form, 'cleaned_data') and 'offer' in form.cleaned_data:
+            initial['offer'] = form.cleaned_data['offer'].id
+        return initial
+
+    def get_import_data_kwargs(self, request, *args, **kwargs):
+        """
+        Prepare kwargs for import_data.
+        """
+        return kwargs
 
     def has_add_permission(self, request):
         return request.user.is_superuser

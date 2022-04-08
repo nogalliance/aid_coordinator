@@ -1,6 +1,10 @@
-from import_export import fields, resources
+import sys
 
-from supply_demand.models import OfferItem, RequestItem
+from django import forms
+from import_export import fields, resources
+from import_export.forms import ConfirmImportForm, ImportForm
+
+from supply_demand.models import Offer, OfferItem, RequestItem
 
 
 class RequestItemResource(resources.ModelResource):
@@ -14,7 +18,32 @@ class RequestItemResource(resources.ModelResource):
                   'request__contact__organisation__name')
 
 
-class OfferItemResource(resources.ModelResource):
+class CustomImportForm(ImportForm):
+    offer = forms.ModelChoiceField(
+        queryset=Offer.objects.all(),
+        required=True,
+    )
+
+
+class CustomConfirmImportForm(ConfirmImportForm):
+    offer = forms.ModelChoiceField(
+        queryset=Offer.objects.all(),
+        required=True,
+    )
+
+
+class OfferItemImportResource(resources.ModelResource):
+    class Meta:
+        model = OfferItem
+        fields = ('brand', 'model', 'amount', 'notes')
+        force_init_instance = True
+
+    def after_import_instance(self, instance, new, row_number=None, **kwargs):
+        if 'form' in kwargs and 'offer' in kwargs['form'].cleaned_data:
+            instance.offer_id = kwargs['form'].cleaned_data['offer'].id
+
+
+class OfferItemExportResource(resources.ModelResource):
     class Meta:
         model = OfferItem
         fields = ('type', 'brand', 'model', 'received', 'notes',
