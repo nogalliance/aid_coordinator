@@ -24,5 +24,6 @@ urlpatterns = [
     path("admin/password_reset/", PasswordResetView.as_view(), name="admin_password_reset"),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('i18n/', include('django.conf.urls.i18n')),
     path('__debug__/', include('debug_toolbar.urls')),
 ]

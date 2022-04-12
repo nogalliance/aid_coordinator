@@ -1,4 +1,5 @@
 {% extends 'admin/base_site.html' %}
+{% load i18n %}
 
 {% block extrahead %}
     {{ block.super }}
@@ -9,4 +10,22 @@
           sizes="192x192"/>
     <link rel="apple-touch-icon"
           href="https://nogalliance.org/wp-content/uploads/2019/02/Introduction-e1542728995894.png"/>
+{% endblock %}
+
+{% block usertools %}
+    <form action="{% url 'set_language' %}" method="post">{% csrf_token %}
+        <select name="language">
+            {% get_current_language as LANGUAGE_CODE %}
+            {% get_available_languages as LANGUAGES %}
+            {% get_language_info_list for LANGUAGES as languages %}
+            {% for language in languages %}
+                <option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+                    {{ language.name_local }} ({{ language.code }})
+                </option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Go">
+    </form>
+
+    {{ block.super }}
 {% endblock %}

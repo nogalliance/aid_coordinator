@@ -125,7 +125,7 @@ class RequestAdmin(ContactOnlyAdmin):
 @admin.register(RequestItem)
 class RequestItemAdmin(ExportActionModelAdmin):
     list_display = ('type', 'brand', 'model', 'amount', 'up_to', 'item_of')
-    list_filter = ('type', 'brand',)
+    list_filter = ('type', 'brand', 'request__contact__organisation')
     autocomplete_fields = ('request',)
     ordering = ('brand', 'model')
     resource_class = RequestItemResource
@@ -354,11 +354,52 @@ class OfferAdmin(ContactOnlyAdmin):
 
 @admin.register(OfferItem)
 class OfferItemAdmin(ImportExportActionModelAdmin):
-    list_display = ('brand', 'model', 'amount', 'received', 'claimed', 'item_of')
-    list_filter = ('received', ClaimedFilter, 'brand')
+    list_display = ('type', 'brand', 'model', 'notes', 'amount', 'received', 'claimed', 'item_of')
+    list_filter = ('type', 'received', ClaimedFilter, 'brand', 'offer__contact__organisation', 'offer')
     autocomplete_fields = ('offer', 'claimed_by')
     ordering = ('brand', 'model')
-    actions = (UpdateAction(form_class=MoveToOfferForm, title=_('Move to other offer')),)
+    search_fields = ('brand', 'model', 'notes', 'offer__description', 'offer__contact__organisation__name',
+                     'offer__contact__last_name')
+    actions = (
+        UpdateAction(form_class=MoveToOfferForm, title=_('Move to other offer')),
+        'set_type_hardware',
+        'set_type_software',
+        'set_type_service',
+        'set_type_other',
+    )
+
+    def set_type_action(self, request: HttpRequest, queryset: RequestItem.objects, item_type: ItemType):
+        count = 0
+        for item in queryset:
+            item.type = item_type
+            item.save()
+
+            count += 1
+
+        self.message_user(request, ngettext(
+            "%(count)s item set to type %(type)s",
+            "%(count)s items set to type %(type)s",
+            count
+        ) % {
+            'count': count,
+            'type': item_type.label,
+        })
+
+    @admin.action(description=_('Set type to other'))
+    def set_type_other(self, request: HttpRequest, queryset: RequestItem.objects):
+        self.set_type_action(request, queryset, ItemType.OTHER)
+
+    @admin.action(description=_('Set type to hardware'))
+    def set_type_hardware(self, request: HttpRequest, queryset: RequestItem.objects):
+        self.set_type_action(request, queryset, ItemType.HARDWARE)
+
+    @admin.action(description=_('Set type to software'))
+    def set_type_software(self, request: HttpRequest, queryset: RequestItem.objects):
+        self.set_type_action(request, queryset, ItemType.SOFTWARE)
+
+    @admin.action(description=_('Set type to service'))
+    def set_type_service(self, request: HttpRequest, queryset: RequestItem.objects):
+        self.set_type_action(request, queryset, ItemType.SERVICE)
 
     def get_import_resource_class(self):
         """
@@ -430,6 +471,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
         return super().get_actions(request)
 
+    def get_search_fields(self, request):
+        if not request.user.is_superuser:
+            return ['brand', 'model', 'notes']
+
+        return super().get_search_fields(request)
+
     def get_list_display(self, request):
         fields = super().get_list_display(request)
 
@@ -448,7 +495,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
     def get_list_filter(self, request):
         if not request.user.is_superuser:
-            return ['brand']
+            return ['type', 'brand']
 
         return super().get_list_filter(request)
 

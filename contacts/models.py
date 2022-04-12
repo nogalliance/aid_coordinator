@@ -56,6 +56,8 @@ class Contact(AbstractUser):
     objects = ContactManager()
 
     class Meta:
+        verbose_name = _('contact')
+        verbose_name_plural = _('contacts')
         ordering = ('first_name', 'last_name', 'username')
 
     def display_name(self):
