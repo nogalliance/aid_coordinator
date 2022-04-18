@@ -1,5 +1,10 @@
 {% extends 'admin/base_site.html' %}
-{% load i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Keep Ukraine Connected') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('GNA Keep Ukraine Connected back-end') }}</a></h1>
+{% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
@@ -13,19 +18,7 @@
 {% endblock %}
 
 {% block usertools %}
-    <form action="{% url 'set_language' %}" method="post">{% csrf_token %}
-        <select name="language">
-            {% get_current_language as LANGUAGE_CODE %}
-            {% get_available_languages as LANGUAGES %}
-            {% get_language_info_list for LANGUAGES as languages %}
-            {% for language in languages %}
-                <option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
-                    {{ language.name_local }} ({{ language.code }})
-                </option>
-            {% endfor %}
-        </select>
-        <input type="submit" value="Go">
-    </form>
+    {% include "includes/language.html" %}
 
     {{ block.super }}
 {% endblock %}

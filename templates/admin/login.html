@@ -1,0 +1,18 @@
+{% extends 'admin/login.html' %}
+{% load i18n %}
+
+{% block content %}
+    {% include "includes/language.html" %}
+
+    {{ block.super }}
+
+    {% if SETTINGS.REGISTRATION_OPEN %}
+        <div style="text-align: center; padding-top: 2em; clear: both">
+            {% translate "If you don't have an account yet please create one:" %}
+
+            <form method="get" action="{% url 'django_registration_register' %}" style="margin-top: 0.5em">
+                <input type="submit" value="{% translate "Create account" %}">
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}

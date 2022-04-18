@@ -1,0 +1,27 @@
+{% load i18n %}
+
+<style>
+    form#language {
+        float: right;
+    }
+
+    form#language button {
+        cursor: pointer;
+        border: none;
+        background: none;
+        margin: 0;
+        padding: 0;
+        font-size: 150%;
+        text-shadow:
+                -2px 0 3px #ffffff99,
+                0 2px 3px #ffffff99,
+                2px 0 3px #ffffff99,
+                0 -2px 3px #ffffff99;
+    }
+</style>
+
+<form action="{% url 'set_language' %}" method="post" id="language">
+    {% csrf_token %}
+    <button type="submit" name="language" value="uk">🇺🇦</button>
+    <button type="submit" name="language" value="en">🇬🇧</button>
+</form>
