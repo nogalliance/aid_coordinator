@@ -96,7 +96,7 @@ class RequestItemManager(models.Manager):
 
 class RequestItem(models.Model):
     request = models.ForeignKey(verbose_name=_('request'), to=Request, related_name='items', on_delete=models.CASCADE)
-    type = models.PositiveIntegerField(verbose_name=_('type'), choices=ItemType.choices, default=ItemType.OTHER)
+    type = models.PositiveIntegerField(verbose_name=_('type'), choices=ItemType.choices, default=ItemType.HARDWARE)
     brand = models.CharField(verbose_name=_('brand'), max_length=50, blank=True,
                              help_text=_('Either a brand name or a description of the kind of brand'))
     model = models.CharField(verbose_name=_('model'), max_length=50, blank=True,
@@ -205,7 +205,7 @@ class OfferItemManager(models.Manager):
 
 class OfferItem(models.Model):
     offer = models.ForeignKey(verbose_name=_('offer'), to=Offer, related_name='items', on_delete=models.CASCADE)
-    type = models.PositiveIntegerField(verbose_name=_('type'), choices=ItemType.choices, default=ItemType.OTHER)
+    type = models.PositiveIntegerField(verbose_name=_('type'), choices=ItemType.choices, default=ItemType.HARDWARE)
     brand = models.CharField(verbose_name=_('brand'), max_length=50, blank=True)
     model = models.CharField(verbose_name=_('model'), max_length=50)
     amount = models.PositiveIntegerField(verbose_name=_('# offered'), null=True, blank=True)
