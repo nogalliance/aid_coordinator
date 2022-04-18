@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <!--suppress CssUnusedSymbol -->
+    <style>
+        form.registration label {
+            display: inline-block;
+            width: 4.2cm;
+        }
+
+        form.registration .required label {
+            font-weight: bold;
+        }
+
+        form.registration input[type=text],
+        form.registration input[type=email],
+        form.registration input[type=password] {
+            width: 20em;
+        }
+
+        form.registration input[type=radio] {
+            margin-left: 0.5em;
+            width: 1.5em;
+        }
+
+        form.registration span.helptext {
+            display: block;
+            margin-left: 4.4cm;
+            font-size: smaller;
+        }
+
+        form.registration span.helptext ul {
+            display: inline-block;
+        }
+
+        #id_account_type {
+            margin-top: -2em;
+            margin-left: 4.4cm;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1>Self-registration</h1>
+    <form method="post" class="registration">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <br>
+        <input type="submit">
+    </form>
+{% endblock %}

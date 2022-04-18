@@ -2,9 +2,11 @@ from django.contrib import admin
 from django.contrib.auth.views import PasswordResetView
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
+from django_registration.backends.one_step.views import RegistrationView
 from rest_framework import routers
 
 from contacts.api import DonorOrganisationViewSet, PersonalDonorViewSet
+from contacts.forms import ContactRegistrationForm
 from supply_demand.api import OfferItemViewSet, RequestItemViewSet
 
 # Change titles
@@ -20,6 +22,15 @@ router.register(r'offered_items', OfferItemViewSet)
 router.register(r'requested_items', RequestItemViewSet)
 
 urlpatterns = [
+    path(
+        'accounts/register/',
+        RegistrationView.as_view(
+            success_url='/admin/',
+            form_class=ContactRegistrationForm
+        ),
+        name='django_registration_register',
+    ),
+    path('accounts/', include('django_registration.backends.one_step.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
     path("admin/password_reset/", PasswordResetView.as_view(), name="admin_password_reset"),
     path('admin/', admin.site.urls),

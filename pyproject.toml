@@ -19,6 +19,7 @@ Jinja2 = "^3.0.3"
 Pillow = "^9.0.1"
 django-import-export = "^2.8.0"
 django-admin-wizard = "^0.3.0"
+django-registration = "^3.2"
 
 [tool.poetry.dev-dependencies]
 

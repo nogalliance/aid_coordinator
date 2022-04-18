@@ -181,6 +181,8 @@ IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 IMPORT_EXPORT_IMPORT_PERMISSION_CODE = 'add'
 IMPORT_EXPORT_EXPORT_PERMISSION_CODE = 'view'
 
+REGISTRATION_OPEN = True
+
 try:
     from .local_settings import *
 except ImportError:

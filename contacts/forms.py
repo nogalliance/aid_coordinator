@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.models import Group
+from django.core.mail import mail_admins
 from django.utils.translation import gettext_lazy as _
+from django_registration.forms import RegistrationForm, RegistrationFormCaseInsensitive
 
 from contacts.models import Contact
 
@@ -56,3 +59,60 @@ class EmailForm(forms.Form):
     content = forms.CharField(
         widget=forms.Textarea(attrs={"cols": "76", "rows": "30", "style": "font-family: monospace"}),
         initial=email_text)
+
+
+class ContactRegistrationForm(RegistrationFormCaseInsensitive):
+    account_type = forms.ChoiceField(
+        label=_('Account type'), choices=(
+            ('donor', _('Donor')),
+            ('requester', _('Requester')),
+        ),
+        widget=forms.RadioSelect
+    )
+    description = forms.CharField(
+        label=_('Description'),
+        widget=forms.Textarea,
+        help_text=_('Please describe why you create this account, which organisation you represent etc.')
+    )
+
+    class Meta(RegistrationForm.Meta):
+        model = Contact
+        fields = [
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            "password1",
+            "password2",
+        ]
+
+    def save(self, commit=True):
+        account_type = self.cleaned_data.get('account_type')
+        if account_type == 'donor':
+            group = Group.objects.get(name='Donors')
+        elif account_type == 'requester':
+            group = Group.objects.get(name='Requesters')
+        else:
+            group = None
+
+        user = super().save(commit=commit)
+        if group:
+            user.groups.add(group)
+
+        # Notify admins
+        mail_admins(
+            subject=f"New {account_type} user self-registered: {user.username}",
+            message=f"Self-registration details\n"
+                    f"=========================\n"
+                    f"Username:      {user.username}\n"
+                    f"First name:    {user.first_name}\n"
+                    f"Last name:     {user.last_name}\n"
+                    f"Email address: {user.email}\n"
+                    f"\n"
+                    f"Account type:  {account_type}\n"
+                    f"Description:\n"
+                    f"{self.cleaned_data.get('description')}",
+            fail_silently=True,
+        )
+
+        return user
