@@ -30,12 +30,12 @@ msgstr ""
 # Назва проекта
 #: aid_coordinator/urls.py:11
 msgid "Keep Ukraine Connected"
-msgstr "«Keep Ukraine Connected» – «Тримайте Україну на зв'язку»"
+msgstr "Тримайте Україну на зв'язку"
 
 # Назва сторінки
 #: aid_coordinator/urls.py:12
 msgid "GNA Keep Ukraine Connected back-end"
-msgstr "«Keep Ukraine Connected» – «Тримайте Україну на зв'язку»"
+msgstr "Тримайте Україну на зв'язку"
 
 # Назва сторінки
 #: aid_coordinator/urls.py:13
