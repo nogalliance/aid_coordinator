@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'xff.middleware.XForwardedForMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    'aid_coordinator.middleware.LogLocaleMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
