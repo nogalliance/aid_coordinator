@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'supply_demand.apps.SupplyDemandConfig',
     'contacts.apps.ContactsConfig',
+    'logistics.apps.LogisticsConfig',
     'debug_toolbar',
     'rest_framework',
     'django_filters',

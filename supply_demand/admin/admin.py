@@ -2,6 +2,7 @@ from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
+from django.db.models import Sum
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
@@ -161,9 +162,9 @@ class RequestItemAdmin(ExportActionModelAdmin):
             "%(count)s items set to type %(type)s",
             count
         ) % {
-            'count': count,
-            'type': item_type.label,
-        })
+                              'count': count,
+                              'type': item_type.label,
+                          })
 
     @admin.action(description=_('Set type to other'))
     def set_type_other(self, request: HttpRequest, queryset: RequestItem.objects):
@@ -386,6 +387,11 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         'set_type_other',
     )
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.annotate(total_claimed=Sum('claim__amount'))
+        return qs
+
     def set_type_action(self, request: HttpRequest, queryset: RequestItem.objects, item_type: ItemType):
         count = 0
         for item in queryset:
@@ -394,14 +400,17 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
             count += 1
 
-        self.message_user(request, ngettext(
-            "%(count)s item set to type %(type)s",
-            "%(count)s items set to type %(type)s",
-            count
-        ) % {
-            'count': count,
-            'type': item_type.label,
-        })
+        self.message_user(
+            request,
+            ngettext(
+                "%(count)s item set to type %(type)s",
+                "%(count)s items set to type %(type)s",
+                count
+            ) % {
+                'count': count,
+                'type': item_type.label,
+            }
+        )
 
     @admin.action(description=_('Set type to other'))
     def set_type_other(self, request: HttpRequest, queryset: RequestItem.objects):
@@ -529,9 +538,15 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
                            url=reverse('admin:supply_demand_offer_change', args=(item.offer.id,)),
                            name=item.offer)
 
-    @admin.display(description=_('claimed'), boolean=True)
+    @admin.display(description=_('claimed'))
     def claimed(self, item: OfferItem):
-        return item.claimed_by_id is not None
+        if item.total_claimed is None:
+            return None
+
+        if item.amount >= item.total_claimed:
+            return item.total_claimed
+        else:
+            return format_html('<span style="color:red">{amount}</span>', amount=item.total_claimed)
 
 
 @admin.register(Change)
