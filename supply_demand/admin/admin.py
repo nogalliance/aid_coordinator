@@ -2,7 +2,7 @@ from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
-from django.db.models import Sum
+from django.db.models import Exists, OuterRef, Sum
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _, ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
+from logistics.models import Claim
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import (CustomConfirmImportForm, CustomImportForm, OfferItemExportResource,
@@ -130,11 +131,13 @@ class RequestAdmin(ContactOnlyAdmin):
 
 @admin.register(RequestItem)
 class RequestItemAdmin(ExportActionModelAdmin):
-    list_display = ('type', 'brand', 'model', 'amount', 'up_to', 'item_of')
+    list_display = ('type', 'brand', 'model', 'amount', 'up_to', 'claimed', 'delivered', 'created_at', 'item_of')
     list_filter = ('type', 'brand', 'request__contact__organisation')
     autocomplete_fields = ('request',)
     ordering = ('brand', 'model')
     resource_class = RequestItemResource
+    search_fields = ('brand', 'model', 'notes', 'request__description', 'request__contact__organisation__name',
+                     'request__contact__last_name')
     actions = (
         UpdateAction(form_class=MoveToRequestForm, title=_('Move to other request')),
         'set_type_hardware',
@@ -142,6 +145,21 @@ class RequestItemAdmin(ExportActionModelAdmin):
         'set_type_service',
         'set_type_other',
     )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.annotate(claimed=Exists(Claim.objects.filter(requested_item=OuterRef('pk'))))
+        qs = qs.annotate(delivered=Exists(Claim.objects.filter(requested_item=OuterRef('pk'),
+                                                               shipment__is_delivered=True)))
+        return qs
+
+    @admin.display(description=_('claimed'), boolean=True, ordering='assigned')
+    def claimed(self, item: RequestItem):
+        return item.claimed
+
+    @admin.display(description=_('delivered'), boolean=True, ordering='delivered')
+    def delivered(self, item: RequestItem):
+        return item.delivered
 
     @admin.display(description=_('item of'))
     def item_of(self, item: RequestItem):
@@ -226,7 +244,8 @@ class RequestItemAdmin(ExportActionModelAdmin):
         fields = super().get_list_display(request)
 
         if not request.user.is_superuser:
-            fields = [field for field in fields if field not in ('request', 'item_of')]
+            fields = [field for field in fields if field not in ('request', 'created_at', 'assigned', 'delivered',
+                                                                 'item_of')]
 
         return fields
 
