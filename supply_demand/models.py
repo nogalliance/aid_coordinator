@@ -54,6 +54,9 @@ class Request(models.Model):
     internal_notes = models.TextField(verbose_name=_('internal notes'), blank=True,
                                       help_text=_('Internal notes that will NOT be shown publicly'))
 
+    created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
+
     objects = RequestManager()
 
     def __init__(self, *args, **kwargs):
@@ -113,6 +116,9 @@ class RequestItem(models.Model):
                                         related_name='alternatives', on_delete=models.CASCADE,
                                         help_text=_('In case there are multiple options to solve your problem'))
 
+    created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
+
     objects = RequestItemManager()
 
     class Meta:
@@ -161,6 +167,9 @@ class Offer(models.Model):
                                                                    "we do with them?"))
     internal_notes = models.TextField(verbose_name=_('internal notes'), blank=True,
                                       help_text=_('Internal notes that will NOT be shown publicly'))
+
+    created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
 
     objects = OfferManager()
 
@@ -216,6 +225,9 @@ class OfferItem(models.Model):
     received = models.BooleanField(verbose_name=_('received'), default=False)
     claimed_by = models.ForeignKey(verbose_name=_('claimed by'), to=Contact, blank=True, null=True,
                                    related_name='claimed_items', on_delete=models.SET_NULL)
+
+    created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
 
     objects = OfferItemManager()
 

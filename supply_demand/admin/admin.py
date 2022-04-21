@@ -10,7 +10,6 @@ from django.utils.translation import gettext_lazy as _, ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
-from supply_demand.admin.filters import ClaimedFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import (CustomConfirmImportForm, CustomImportForm, OfferItemExportResource,
                                            OfferItemImportResource,
@@ -76,6 +75,12 @@ class RequestAdmin(ContactOnlyAdmin):
 
         # Non-superusers don't see notes
         return [field for field in fields if field != 'internal_notes']
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        if request.user.is_superuser:
+            fields = list(fields) + ['created_at', 'updated_at']
+        return fields
 
     def get_list_filter(self, request: HttpRequest):
         if not request.user.is_superuser:
@@ -224,6 +229,12 @@ class RequestItemAdmin(ExportActionModelAdmin):
 
         return fields
 
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        if request.user.is_superuser:
+            fields = list(fields) + ['created_at', 'updated_at']
+        return fields
+
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         if request.user.is_superuser:
@@ -302,6 +313,12 @@ class OfferAdmin(ContactOnlyAdmin):
 
         return fields
 
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        if request.user.is_superuser:
+            fields = list(fields) + ['created_at', 'updated_at']
+        return fields
+
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         if request.user.is_superuser:
@@ -354,8 +371,9 @@ class OfferAdmin(ContactOnlyAdmin):
 
 @admin.register(OfferItem)
 class OfferItemAdmin(ImportExportActionModelAdmin):
-    list_display = ('type', 'brand', 'model', 'notes', 'amount', 'received', 'claimed', 'item_of')
-    list_filter = ('type', 'received', ClaimedFilter, 'brand', 'offer__contact__organisation', 'offer')
+    list_display = ('type', 'brand', 'model', 'notes', 'amount', 'claimed', 'received', 'item_of')
+    list_filter = ('type', 'received', ('claimed_by', admin.RelatedOnlyFieldListFilter), 'brand',
+                   'offer__contact__organisation', 'offer')
     autocomplete_fields = ('offer', 'claimed_by')
     ordering = ('brand', 'model')
     search_fields = ('brand', 'model', 'notes', 'offer__description', 'offer__contact__organisation__name',
@@ -483,6 +501,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         if not request.user.is_superuser:
             fields = [field for field in fields if field not in ('received', 'claimed', 'item_of')]
 
+        return fields
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        if request.user.is_superuser:
+            fields = list(fields) + ['created_at', 'updated_at']
         return fields
 
     def get_fields(self, request, obj=None):
