@@ -1,11 +1,21 @@
 from django.contrib import admin
 
-from logistics.models import Claim, Shipment
+from logistics.filters import UsedChoicesFieldListFilter
+from logistics.models import Claim, Location, Shipment
+
+
+@admin.register(Location)
+class LocationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'city', 'country')
+    list_filter = (
+        ('country', UsedChoicesFieldListFilter),
+    )
+    ordering = ('name',)
 
 
 @admin.register(Shipment)
 class ShipmentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'when', 'is_delivered')
+    list_display = ('name', 'when', 'current_location', 'is_delivered')
     list_filter = ('is_delivered',)
     date_hierarchy = 'when'
     ordering = ('when',)

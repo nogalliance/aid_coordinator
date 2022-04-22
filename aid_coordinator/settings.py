@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'django_filters',
     'import_export',
     'admin_wizard',
+    'django_countries',
 ]
 
 MIDDLEWARE = [

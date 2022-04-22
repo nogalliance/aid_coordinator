@@ -1,14 +1,32 @@
 from django.db import models
 from django.utils import timezone
+from django_countries.fields import CountryField
 
 from supply_demand.models import OfferItem, RequestItem
 
 from django.utils.translation import gettext_lazy as _
 
 
+class Location(models.Model):
+    name = models.CharField(verbose_name=_('name'), max_length=100)
+    street_address = models.TextField(verbose_name=_('street_address'), blank=True)
+    city = models.CharField(verbose_name=_('city'), max_length=50, blank=True)
+    postcode = models.CharField(verbose_name=_('postcode'), max_length=16, blank=True)
+    country = CountryField(verbose_name=_('country'), blank=True)
+
+    class Meta:
+        verbose_name = _('location')
+        verbose_name_plural = _('locations')
+
+    def __str__(self):
+        return self.name
+
+
 class Shipment(models.Model):
     name = models.CharField(verbose_name=_('name'), max_length=100, unique=True)
     when = models.DateField(verbose_name=_('when'), blank=True, null=True)
+    current_location = models.ForeignKey(verbose_name=_('current location'), to=Location, on_delete=models.RESTRICT,
+                                         blank=True, null=True)
     is_delivered = models.BooleanField(verbose_name=_('is delivered'), default=False)
 
     class Meta:
