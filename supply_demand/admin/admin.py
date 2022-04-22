@@ -268,20 +268,10 @@ class OfferItemInline(CompactInline):
     model = OfferItem
     extra = 1
 
-    autocomplete_fields = ('claimed_by',)
-
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        if request.user.is_superuser:
-            return fields
-
-        # Non-superusers don't see notes
-        return [field for field in fields if field != 'claimed_by']
-
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if not request.user.is_superuser:
-            fields += ('received', 'claimed_by',)
+            fields += ('received',)
         return fields
 
 
@@ -307,9 +297,9 @@ class OfferAdmin(ContactOnlyAdmin):
     @admin.display(description=_('items'))
     def admin_items(self, offer: Offer):
         lines = []
-        for item in offer.items.all():
+        for item in offer.items.all().annotate(total_claimed=Sum('claim__amount')):
             marker = mark_safe('<span style="color:green">✔︎</span>&nbsp') if item.received else ''
-            if item.claimed_by_id:
+            if item.total_claimed >= item.amount:
                 description = format_html('<s>{}</s>', str(item))
             else:
                 description = str(item)
@@ -392,9 +382,8 @@ class OfferAdmin(ContactOnlyAdmin):
 @admin.register(OfferItem)
 class OfferItemAdmin(ImportExportActionModelAdmin):
     list_display = ('type', 'brand', 'model', 'notes', 'amount', 'claimed', 'received', 'item_of')
-    list_filter = ('type', 'received', ('claimed_by', admin.RelatedOnlyFieldListFilter), 'brand',
-                   'offer__contact__organisation', 'offer')
-    autocomplete_fields = ('offer', 'claimed_by')
+    list_filter = ('type', 'received', 'brand', 'offer__contact__organisation', 'offer')
+    autocomplete_fields = ('offer',)
     ordering = ('brand', 'model')
     search_fields = ('brand', 'model', 'notes', 'offer__description', 'offer__contact__organisation__name',
                      'offer__contact__last_name')

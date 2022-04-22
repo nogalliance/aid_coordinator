@@ -219,12 +219,9 @@ class OfferItem(models.Model):
     model = models.CharField(verbose_name=_('model'), max_length=50)
     amount = models.PositiveIntegerField(verbose_name=_('# offered'), null=True, blank=True)
     notes = models.CharField(verbose_name=_('notes'), max_length=250, blank=True,
-                             help_text=_('Any extra information that can help a donor decide if they have something '
-                                         'that can help you'))
+                             help_text=_('Any extra information that can help a requester decide if they can use this'))
 
     received = models.BooleanField(verbose_name=_('received'), default=False)
-    claimed_by = models.ForeignKey(verbose_name=_('claimed by'), to=Contact, blank=True, null=True,
-                                   related_name='claimed_items', on_delete=models.SET_NULL)
 
     created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
