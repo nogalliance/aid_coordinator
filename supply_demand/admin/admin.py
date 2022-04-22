@@ -297,16 +297,10 @@ class OfferAdmin(ContactOnlyAdmin):
     @admin.display(description=_('items'))
     def admin_items(self, offer: Offer):
         lines = []
-        for item in offer.items.all().annotate(total_claimed=Sum('claim__amount')):
-            marker = mark_safe('<span style="color:green">✔︎</span>&nbsp') if item.received else ''
-            if item.total_claimed >= item.amount:
-                description = format_html('<s>{}</s>', str(item))
-            else:
-                description = str(item)
+        for item in offer.items.all():
+            lines.append((str(item),))
 
-            lines.append((marker, description))
-
-        return format_html_join(mark_safe('<br>'), '{} {}', lines)
+        return format_html_join(mark_safe('<br>'), '{}', lines)
 
     def get_list_filter(self, request: HttpRequest):
         if not request.user.is_superuser:
