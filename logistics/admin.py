@@ -1,6 +1,9 @@
+from django.utils.translation import gettext_lazy as _
+from admin_wizard.admin import UpdateAction
 from django.contrib import admin
 
 from logistics.filters import UsedChoicesFieldListFilter
+from logistics.forms import AssignToShipmentForm
 from logistics.models import Claim, Location, Shipment
 
 
@@ -26,3 +29,6 @@ class ClaimAdmin(admin.ModelAdmin):
     list_display = ('offered_item', 'requested_item', 'amount', 'shipment')
     list_filter = ('shipment', 'shipment__is_delivered')
     ordering = ('shipment',)
+    actions = (
+        UpdateAction(form_class=AssignToShipmentForm, title=_('Assign to shipment')),
+    )
