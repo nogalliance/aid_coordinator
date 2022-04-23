@@ -109,7 +109,7 @@ class ContactAdmin(UserAdmin):
                                   level=messages.ERROR)
                 continue
 
-            groups = [str(group.name).lower() for group in request.user.groups.all()]
+            groups = [str(group.name).lower() for group in contact.groups.all()]
             password_reset_url = 'https://' + request.get_host() + reverse('password_reset_confirm', kwargs={
                 'uidb64': urlsafe_base64_encode(force_bytes(contact.pk)),
                 'token': default_token_generator.make_token(contact)
