@@ -39,7 +39,7 @@ class Shipment(models.Model):
 
 class Claim(models.Model):
     offered_item = models.ForeignKey(verbose_name=_('offered item'), to=OfferItem, on_delete=models.RESTRICT)
-    requested_item = models.ForeignKey(verbose_name=_('requested item'), to=RequestItem, on_delete=models.RESTRICT)
+    requested_item = models.ForeignKey(verbose_name=_('requested item'), to=RequestItem, on_delete=models.CASCADE)
     amount = models.PositiveIntegerField(verbose_name=_('amount'), default=1,
                                          help_text=_('The amount of items claimed'))
     when = models.DateField(verbose_name=_('when'), default=timezone.now)
