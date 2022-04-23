@@ -1,10 +1,8 @@
 from django.db import models
-from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
 from supply_demand.models import OfferItem, RequestItem
-
-from django.utils.translation import gettext_lazy as _
 
 
 class Location(models.Model):
@@ -42,7 +40,7 @@ class Claim(models.Model):
     requested_item = models.ForeignKey(verbose_name=_('requested item'), to=RequestItem, on_delete=models.CASCADE)
     amount = models.PositiveIntegerField(verbose_name=_('amount'), default=1,
                                          help_text=_('The amount of items claimed'))
-    when = models.DateField(verbose_name=_('when'), default=timezone.now)
+    when = models.DateField(verbose_name=_('when'), auto_now_add=True)
     shipment = models.ForeignKey(verbose_name=_('shipment'), to=Shipment, blank=True, null=True,
                                  on_delete=models.SET_NULL)
 
