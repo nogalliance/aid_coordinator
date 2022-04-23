@@ -38,7 +38,7 @@ class CompactInline(admin.TabularInline):
         if db_field.name == 'brand':
             field.widget = TextInput(attrs={'style': 'width: 5em', 'maxlength': 50})
         elif db_field.name == 'model':
-            field.widget = TextInput(attrs={'style': 'width: 8em', 'maxlength': 50})
+            field.widget = TextInput(attrs={'style': 'width: 16em', 'maxlength': 50})
         elif db_field.name == 'notes':
             field.widget = TextInput(attrs={'style': 'width: 16em', 'maxlength': 250})
         elif db_field.name in ['amount', 'up_to']:

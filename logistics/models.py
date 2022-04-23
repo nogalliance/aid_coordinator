@@ -50,3 +50,11 @@ class Claim(models.Model):
 
     def __str__(self):
         return f"{self.amount}x {self.offered_item} for request {self.requested_item}"
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
+
+        # If someone claims this, we don't need to reject it anymore
+        if self.offered_item.rejected:
+            self.offered_item.rejected = False
+            self.offered_item.save()

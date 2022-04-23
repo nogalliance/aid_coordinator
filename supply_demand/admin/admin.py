@@ -326,11 +326,28 @@ class OfferItemInline(CompactInline):
     model = OfferItem
     extra = 1
 
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if request.user.is_superuser:
+            fields = [field for field in fields if field not in ('hold',)]
+        else:
+            fields = [field for field in fields if field not in ('rejected',)]
+
+        return fields
+
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if not request.user.is_superuser:
-            fields += ('received',)
+            fields += ('hold', 'rejected', 'received',)
         return fields
+
+    @admin.display(description=_('Please hold'))
+    def hold(self, item: OfferItem):
+        if item.rejected:
+            return format_html('<span style="display: inline-block; width: 20ch; margin-top: -0.7em">{}</span>',
+                               _("Likely not useful for Ukraine, please don't ship"))
+        else:
+            return ''
 
 
 @admin.register(Offer)
@@ -356,9 +373,14 @@ class OfferAdmin(ContactOnlyAdmin):
     def admin_items(self, offer: Offer):
         lines = []
         for item in offer.items.all():
-            lines.append((str(item),))
+            if item.rejected:
+                prefix = '⛔️ '
+            else:
+                prefix = ''
 
-        return format_html_join(mark_safe('<br>'), '{}', lines)
+            lines.append((prefix, item.counted_name,))
+
+        return format_html_join(mark_safe('<br>'), '{}{}', lines)
 
     def get_list_filter(self, request: HttpRequest):
         if not request.user.is_superuser:
@@ -433,8 +455,9 @@ class OfferAdmin(ContactOnlyAdmin):
 
 @admin.register(OfferItem)
 class OfferItemAdmin(ImportExportActionModelAdmin):
-    list_display = ('type', 'brand', 'model', 'notes', 'amount', 'claimed', 'available', 'received', 'item_of')
-    list_filter = ('type', 'received', 'brand', 'offer__contact__organisation', 'offer')
+    list_display = ('type', 'brand', 'model', 'notes', 'amount', 'claimed', 'available',
+                    'rejected', 'received', 'item_of')
+    list_filter = ('type', 'rejected', 'received', 'brand', 'offer__contact__organisation', 'offer')
     autocomplete_fields = ('offer',)
     ordering = ('brand', 'model')
     search_fields = ('brand', 'model', 'notes', 'offer__description', 'offer__contact__organisation__name',
@@ -445,6 +468,10 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         'set_type_software',
         'set_type_service',
         'set_type_other',
+        'set_rejected',
+        'set_not_rejected',
+        'set_received',
+        'set_not_received',
     )
     inlines = (
         ClaimInlineAdmin,
@@ -490,6 +517,22 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     @admin.action(description=_('Set type to service'))
     def set_type_service(self, request: HttpRequest, queryset: RequestItem.objects):
         self.set_type_action(request, queryset, ItemType.SERVICE)
+
+    @admin.action(description=_('Set to rejected'))
+    def set_rejected(self, _request: HttpRequest, queryset: RequestItem.objects):
+        queryset.update(rejected=True)
+
+    @admin.action(description=_('Set to NOT rejected'))
+    def set_not_rejected(self, _request: HttpRequest, queryset: RequestItem.objects):
+        queryset.update(rejected=False)
+
+    @admin.action(description=_('Set to received'))
+    def set_received(self, _request: HttpRequest, queryset: RequestItem.objects):
+        queryset.update(received=True)
+
+    @admin.action(description=_('Set to NOT received'))
+    def set_not_received(self, _request: HttpRequest, queryset: RequestItem.objects):
+        queryset.update(received=False)
 
     def get_import_resource_class(self):
         """
@@ -577,9 +620,11 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         fields = super().get_list_display(request)
 
         if request.user.is_superuser:
-            fields = [field for field in fields if field not in ('available',)]
+            fields = [field for field in fields
+                      if field not in ('available',)]
         else:
-            fields = [field for field in fields if field not in ('received', 'amount', 'claimed', 'item_of')]
+            fields = [field for field in fields
+                      if field not in ('rejected', 'received', 'amount', 'claimed', 'item_of')]
 
         return fields
 
@@ -611,6 +656,9 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
     @admin.display(description=_('claimed'))
     def claimed(self, item: OfferItem):
+        if not item.amount:
+            return None
+
         if item.amount >= item.claimed:
             return item.claimed
         else:

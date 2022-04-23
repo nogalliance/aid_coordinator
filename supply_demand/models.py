@@ -244,6 +244,7 @@ class OfferItem(models.Model):
     notes = models.CharField(verbose_name=_('notes'), max_length=250, blank=True,
                              help_text=_('Any extra information that can help a requester decide if they can use this'))
 
+    rejected = models.BooleanField(verbose_name=_('rejected'), default=False)
     received = models.BooleanField(verbose_name=_('received'), default=False)
 
     created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
