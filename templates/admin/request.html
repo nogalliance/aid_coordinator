@@ -15,13 +15,13 @@
     <h1>{% translate 'Request' %} {{ item }}</h1>
     {% if item.available > 0 %}
         <p>
-            {% blocktranslate %}
+            {% blocktranslate trimmed %}
                 Here you can request items to help you keep the internet working in Ukraine.
                 All items are provided <b>completely free of charge</b> on a best-effort basis.
             {% endblocktranslate %}
         </p>
         <p>
-            {% blocktranslate %}
+            {% blocktranslate trimmed %}
                 Feel free to request anything that you can use. Requesting a reasonable number
                 of spares is also no problem at all. However, requesting items for reselling is
                 <b>NOT</b> allowed. Please give other Ukrainian network operators a chance to get
@@ -31,17 +31,17 @@
         <form method="post">{% csrf_token %}
             {{ form.as_p }}
             <p>
-                {% blocktranslate with description=item.counted_name %}
+                {% blocktranslate with description=item.counted_name trimmed %}
                     We have {{ description }} available.
                 {% endblocktranslate %}
                 {% if not item.received %}
-                    {% blocktranslate %}
+                    {% blocktranslate trimmed %}
                         Please note that this number is based on promises made to us by our donors. We do not
                         have these items in our own warehouse yet. We can therefore not guarantee that we
                         can deliver all items.
                     {% endblocktranslate %}
                 {% endif %}
-                {% blocktranslate %}
+                {% blocktranslate trimmed %}
                     We will do our best to get the requested items to you as quickly as possible, but
                     please give us some time to handle the logistics.
                 {% endblocktranslate %}

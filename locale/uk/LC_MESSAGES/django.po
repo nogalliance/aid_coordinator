@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-10 11:38+0000\n"
+"POT-Creation-Date: 2022-04-23 13:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,26 +19,26 @@ msgstr ""
 "X-Language: uk_UA\n"
 "X-Source-Language: en\n"
 
-#: aid_coordinator/settings.py:142
+#: aid_coordinator/settings.py:146
 msgid "Ukrainian"
 msgstr ""
 
-#: aid_coordinator/settings.py:143
+#: aid_coordinator/settings.py:147
 msgid "English"
 msgstr ""
 
 # Назва проекта
-#: aid_coordinator/urls.py:11
+#: aid_coordinator/urls.py:15 templates/admin/base_site.html:3
 msgid "Keep Ukraine Connected"
 msgstr "Тримайте Україну на зв'язку"
 
 # Назва сторінки
-#: aid_coordinator/urls.py:12
+#: aid_coordinator/urls.py:16 templates/admin/base_site.html:6
 msgid "GNA Keep Ukraine Connected back-end"
 msgstr "Тримайте Україну на зв'язку"
 
 # Назва сторінки
-#: aid_coordinator/urls.py:13
+#: aid_coordinator/urls.py:17
 msgid "Donation administration"
 msgstr "Керування пожертвами"
 
@@ -68,7 +68,7 @@ msgid "Important dates"
 msgstr "Дати важливих змін"
 
 # Menu option to send welcome email
-#: contacts/admin.py:98 contacts/forms.py:37 contacts/forms.py:45
+#: contacts/admin.py:98 contacts/forms.py:40 contacts/forms.py:48
 msgid "Send welcome email"
 msgstr "Відправити привітання електронною поштою"
 
@@ -97,8 +97,36 @@ msgstr "вебсайт"
 msgid "Contacts"
 msgstr "Контакти"
 
+#: contacts/forms.py:66
+msgid "Account type"
+msgstr ""
+
+#: contacts/forms.py:67
+msgid "Donor"
+msgstr ""
+
+# In logging module: type of thing
+#: contacts/forms.py:68
+#, fuzzy
+#| msgid "Request"
+msgid "Requester"
+msgstr "Запит"
+
+# Field for description of a request/offer
+#: contacts/forms.py:73
+#, fuzzy
+#| msgid "description"
+msgid "Description"
+msgstr "опис"
+
+#: contacts/forms.py:75
+msgid ""
+"Please describe why you create this account, which organisation you "
+"represent etc."
+msgstr ""
+
 # Label used for "other" organisation type, item type etc
-#: contacts/models.py:7 supply_demand/models.py:9 supply_demand/models.py:19
+#: contacts/models.py:7 supply_demand/models.py:12 supply_demand/models.py:22
 msgid "Other"
 msgstr "Інше"
 
@@ -158,14 +186,14 @@ msgid "Regulator"
 msgstr "Регулятор"
 
 # Field containing the name of something
-#: contacts/models.py:26
+#: contacts/models.py:26 logistics/models.py:9 logistics/models.py:24
 msgid "name"
 msgstr "назва"
 
 # Field containing the type of something (type of organisation, type of request,
 # type of item etc)
-#: contacts/models.py:27 supply_demand/models.py:99 supply_demand/models.py:208
-#: supply_demand/models.py:243
+#: contacts/models.py:27 supply_demand/models.py:105
+#: supply_demand/models.py:240 supply_demand/models.py:299
 msgid "type"
 msgstr "тип"
 
@@ -185,7 +213,7 @@ msgid "logo"
 msgstr "логотип"
 
 # Name of the "organisation" item
-#: contacts/models.py:35 contacts/models.py:49 supply_demand/admin/admin.py:267
+#: contacts/models.py:35 contacts/models.py:49 supply_demand/admin/admin.py:346
 msgid "organisation"
 msgstr "організація"
 
@@ -210,19 +238,18 @@ msgid "phone"
 msgstr "телефон"
 
 # Field of request/offer referencing the contact that the request/offer belongs to
-#: contacts/models.py:59 supply_demand/admin/admin.py:272
-#: supply_demand/models.py:47 supply_demand/models.py:149
+#: contacts/models.py:59 supply_demand/admin/admin.py:351
+#: supply_demand/models.py:50 supply_demand/models.py:178
 msgid "contact"
 msgstr "контакт"
 
 # Field of request/offer referencing the contact that the request/offer belongs to
 #: contacts/models.py:60
-#| msgid "contact"
 msgid "contacts"
 msgstr "Контакти"
 
 # Notification message shows after sending email messages
-#: contacts/views.py:43
+#: contacts/views.py:35
 #, python-format
 msgid "%(count)s message has been sent"
 msgid_plural "%(count)s messages have been sent"
@@ -230,23 +257,139 @@ msgstr[0] "%(count)s повідомлення було відправлене"
 msgstr[1] "%(count)s повідомлення були відправлені"
 msgstr[2] "%(count)s повідомлень були відправлені"
 
+#: logistics/admin.py:34
+msgid "Assign to shipment"
+msgstr ""
+
+#: logistics/apps.py:8
+msgid "Logistics"
+msgstr ""
+
+#: logistics/models.py:10
+msgid "street_address"
+msgstr ""
+
+#: logistics/models.py:11
+msgid "city"
+msgstr ""
+
+#: logistics/models.py:12
+msgid "postcode"
+msgstr ""
+
+#: logistics/models.py:13
+msgid "country"
+msgstr ""
+
+# Field with location of donated items
+#: logistics/models.py:16 supply_demand/models.py:181
+msgid "location"
+msgstr "розташування"
+
+# Field with location of donated items
+#: logistics/models.py:17
+#, fuzzy
+#| msgid "location"
+msgid "locations"
+msgstr "розташування"
+
+# Logging: when was a change made
+#: logistics/models.py:25 logistics/models.py:43 supply_demand/models.py:296
+msgid "when"
+msgstr "коли"
+
+# Field with location of donated items
+#: logistics/models.py:26
+#, fuzzy
+#| msgid "location"
+msgid "current location"
+msgstr "розташування"
+
+# Field for delivery method of offer
+#: logistics/models.py:28
+#, fuzzy
+#| msgid "delivery method"
+msgid "is delivered"
+msgstr "метод доставки"
+
+#: logistics/models.py:31 logistics/models.py:44
+msgid "shipment"
+msgstr ""
+
+#: logistics/models.py:32
+msgid "shipments"
+msgstr ""
+
+# A single offered item
+#: logistics/models.py:39 supply_demand/models.py:258
+msgid "offered item"
+msgstr "запропоноване найменування"
+
+# A single requested item
+#: logistics/models.py:40 supply_demand/models.py:131
+msgid "requested item"
+msgstr "Найменування"
+
+#: logistics/models.py:41
+msgid "amount"
+msgstr ""
+
+#: logistics/models.py:42
+msgid "The amount of items claimed"
+msgstr ""
+
+# Field of offered item to store which requester it is claimed by
+#: logistics/models.py:48
+#, fuzzy
+#| msgid "claimed"
+msgid "claim"
+msgstr "отримувач"
+
+# Field of offered item to store which requester it is claimed by
+#: logistics/models.py:49
+#, fuzzy
+#| msgid "claimed"
+msgid "claims"
+msgstr "отримувач"
+
+#: logistics/views.py:38
+#, python-brace-format
+msgid "How many of \"{item}{notes}\" would you like?"
+msgstr ""
+
+#: logistics/views.py:59
+#, python-brace-format
+msgid "Request for {amount}x {item} created"
+msgstr ""
+
+#: supply_demand/admin/admin.py:29 supply_demand/admin/admin.py:205
+msgid "assigned"
+msgstr ""
+
 # Column name shoring requested/donated items in a list
-#: supply_demand/admin/admin.py:49 supply_demand/admin/admin.py:276
+#: supply_demand/admin/admin.py:74 supply_demand/admin/admin.py:355
 msgid "items"
 msgstr "Найменування"
 
 # Menu option to move requested items to a different request
-#: supply_demand/admin/admin.py:133
+#: supply_demand/admin/admin.py:188
 msgid "Move to other request"
 msgstr "Перенести до іншого запиту"
 
+# Field for delivery method of offer
+#: supply_demand/admin/admin.py:209
+#, fuzzy
+#| msgid "delivery method"
+msgid "delivered"
+msgstr "метод доставки"
+
 # Column in the list of items showing what offer it belongs to
-#: supply_demand/admin/admin.py:140 supply_demand/admin/admin.py:502
+#: supply_demand/admin/admin.py:213 supply_demand/admin/admin.py:606
 msgid "item of"
 msgstr "входить до"
 
 # Notification message shows after changing the type of an item
-#: supply_demand/admin/admin.py:155 supply_demand/admin/admin.py:380
+#: supply_demand/admin/admin.py:230 supply_demand/admin/admin.py:469
 #, python-format
 msgid "%(count)s item set to type %(type)s"
 msgid_plural "%(count)s items set to type %(type)s"
@@ -255,44 +398,44 @@ msgstr[1] "%(count)s найменування змінені на %(type)s"
 msgstr[2] "%(count)s найменувань змінені на %(type)s"
 
 # Menu option to change the type of an item to "other"
-#: supply_demand/admin/admin.py:163 supply_demand/admin/admin.py:388
+#: supply_demand/admin/admin.py:239 supply_demand/admin/admin.py:478
 msgid "Set type to other"
 msgstr "Змінити тип на \"інше\""
 
 # Menu option to change the type of an item to "hardware"
-#: supply_demand/admin/admin.py:167 supply_demand/admin/admin.py:392
+#: supply_demand/admin/admin.py:243 supply_demand/admin/admin.py:482
 msgid "Set type to hardware"
 msgstr "Змінити тип на \"апаратне забезпечення\""
 
 # Menu option to change the type of an item to "software"
-#: supply_demand/admin/admin.py:171 supply_demand/admin/admin.py:396
+#: supply_demand/admin/admin.py:247 supply_demand/admin/admin.py:486
 msgid "Set type to software"
 msgstr "Змінити тип на \"програмне забезпечення\""
 
 # Menu option to change the type of an item to "service"
-#: supply_demand/admin/admin.py:175 supply_demand/admin/admin.py:400
+#: supply_demand/admin/admin.py:251 supply_demand/admin/admin.py:490
 msgid "Set type to service"
 msgstr "Змінити тип на \"сервіс\""
 
 # Menu option to move offered items to a different offer
-#: supply_demand/admin/admin.py:364
+#: supply_demand/admin/admin.py:443
 msgid "Move to other offer"
 msgstr "Перенести до іншої пропозиції"
 
 # Field of offered item to store which requester it is claimed by
-#: supply_demand/admin/admin.py:508 supply_demand/admin/filters.py:7
+#: supply_demand/admin/admin.py:612
 msgid "claimed"
 msgstr "отримувач"
 
-# Generic yes in "Yes"/"No" selection
-#: supply_demand/admin/filters.py:12
-msgid "Yes"
-msgstr "Так"
+#: supply_demand/admin/admin.py:619
+msgid "available"
+msgstr ""
 
-# Generic no in "Yes"/"No" selection
-#: supply_demand/admin/filters.py:13
-msgid "No"
-msgstr "Ні"
+# In logging module: type of thing
+#: supply_demand/admin/admin.py:631 supply_demand/models.py:41
+#: templates/admin/request.html:10 templates/admin/request.html:15
+msgid "Request"
+msgstr "Запит"
 
 # Module name
 #: supply_demand/apps.py:8
@@ -311,224 +454,219 @@ msgid "email changes of this day (default: {date})"
 msgstr "надіслати зміни за цей день ({date})"
 
 # Item type
-#: supply_demand/models.py:10
+#: supply_demand/models.py:13
 msgid "Hardware"
 msgstr "Апаратне забезпечення"
 
 # Item type
-#: supply_demand/models.py:11
+#: supply_demand/models.py:14
 msgid "Software"
 msgstr "Програмне забезпечення"
 
 # Item type
-#: supply_demand/models.py:12
+#: supply_demand/models.py:15
 msgid "Service"
 msgstr "Сервіс"
 
 # Item type
-#: supply_demand/models.py:16
+#: supply_demand/models.py:19
 msgid "Unknown"
 msgstr "Інше"
 
 # Transportation option
-#: supply_demand/models.py:17
+#: supply_demand/models.py:20
 msgid "Send to GNA by donor"
 msgstr "Донор забезпечує доставку до GNA"
 
 # Transportation option
-#: supply_demand/models.py:18
+#: supply_demand/models.py:21
 msgid "Pickup requested"
 msgstr "Доставку організовує GNA"
 
 # Option what to do with unused donations
-#: supply_demand/models.py:23
+#: supply_demand/models.py:26
 msgid "Contact the donor"
 msgstr "Запитати у донора"
 
 # Option what to do with unused donations
-#: supply_demand/models.py:24
+#: supply_demand/models.py:27
 msgid "Return them to donor"
 msgstr "Повернути донору"
 
 # Option what to do with unused donations
-#: supply_demand/models.py:25
+#: supply_demand/models.py:28
 msgid "Destroy them"
 msgstr "Знищити"
 
 # Option what to do with unused donations
-#: supply_demand/models.py:26
+#: supply_demand/models.py:29
 msgid "Donate to another worthy cause"
 msgstr "Використати як пожертву для іншого випадку"
 
 # Option what to do with unused donations
-#: supply_demand/models.py:27
+#: supply_demand/models.py:30
 msgid "Sell them and donate funds to Ukraine"
 msgstr "Продати і пожертвувати прибуток на Україну"
 
 # In logging module: type of change made
-#: supply_demand/models.py:31
+#: supply_demand/models.py:34
 msgid "Add"
 msgstr "Додано"
 
 # In logging module: type of change made
-#: supply_demand/models.py:32
+#: supply_demand/models.py:35
 msgid "Change"
 msgstr "Змінено"
 
 # In logging module: type of change made
-#: supply_demand/models.py:33
+#: supply_demand/models.py:36
 msgid "Delete"
 msgstr "Видалено"
 
 # In logging module: type of thing
-#: supply_demand/models.py:37
+#: supply_demand/models.py:40
 msgid "Offer"
 msgstr "Пропозиція"
 
-# In logging module: type of thing
-#: supply_demand/models.py:38
-msgid "Request"
-msgstr "Запит"
-
 # Field of request containing the goal of a request
-#: supply_demand/models.py:50
+#: supply_demand/models.py:53
 msgid "goal"
 msgstr "мета"
 
 # Help text for "goal" field
-#: supply_demand/models.py:51
+#: supply_demand/models.py:54
 msgid "Give a short description of what this request is for"
 msgstr "Стисло поясніть призначення"
 
 # Field for description of a request/offer
-#: supply_demand/models.py:52 supply_demand/models.py:150
+#: supply_demand/models.py:55 supply_demand/models.py:179
 msgid "description"
 msgstr "опис"
 
 # Help text for "description" field
-#: supply_demand/models.py:53
+#: supply_demand/models.py:56
 msgid "Provide more detail on this request, this is your elevator pitch!"
 msgstr "Опишіть ваш запит так, щоб усі кинулися його виконувати!"
 
 # Field for internal notes
-#: supply_demand/models.py:54 supply_demand/models.py:162
+#: supply_demand/models.py:57 supply_demand/models.py:191
 msgid "internal notes"
 msgstr "приватні нотатки"
 
 # Help text for "internal notes"
-#: supply_demand/models.py:55 supply_demand/models.py:163
+#: supply_demand/models.py:58 supply_demand/models.py:192
 msgid "Internal notes that will NOT be shown publicly"
 msgstr "НЕ БУДУТЬ загальнодоступні на сайті"
 
+#: supply_demand/models.py:60 supply_demand/models.py:122
+#: supply_demand/models.py:194 supply_demand/models.py:249
+msgid "created at"
+msgstr ""
+
+#: supply_demand/models.py:61 supply_demand/models.py:123
+#: supply_demand/models.py:195 supply_demand/models.py:250
+msgid "updated at"
+msgstr ""
+
 # A request for donation
-#: supply_demand/models.py:66 supply_demand/models.py:98
+#: supply_demand/models.py:72 supply_demand/models.py:104
 msgid "request"
 msgstr "запит"
 
 # Plural of request
-#: supply_demand/models.py:67
+#: supply_demand/models.py:73
 msgid "requests"
 msgstr "запити"
 
 # Field for brand name of an item
-#: supply_demand/models.py:100 supply_demand/models.py:209
+#: supply_demand/models.py:106 supply_demand/models.py:241
 msgid "brand"
 msgstr "виробник"
 
 # Help text for "brand"
-#: supply_demand/models.py:101
+#: supply_demand/models.py:107
 msgid "Either a brand name or a description of the kind of brand"
 msgstr "Вкажіть виробника або тип обладнання"
 
 # Fielf for item model type/number/etc
-#: supply_demand/models.py:102 supply_demand/models.py:210
+#: supply_demand/models.py:108 supply_demand/models.py:242
 msgid "model"
 msgstr "модель"
 
 # Help text for "model"
-#: supply_demand/models.py:103
+#: supply_demand/models.py:109
 msgid "Either an explicit model or a description of the required features"
 msgstr "Номер моделі або опис необхідних функцій"
 
 # Field for number of items
-#: supply_demand/models.py:104
+#: supply_demand/models.py:110
 msgid "# required"
 msgstr "мінімальна кількість"
 
 # Help text for "# required"
-#: supply_demand/models.py:105
+#: supply_demand/models.py:111
 msgid "The minimal amount that you need"
 msgstr "мінімальна необхідна кількість"
 
 # Field for maximum number of items
-#: supply_demand/models.py:106
+#: supply_demand/models.py:112
 msgid "up to"
 msgstr "максимальна кількість"
 
 # Help text for "up to"
-#: supply_demand/models.py:107
+#: supply_demand/models.py:113
 msgid "The maximum amount that you could use"
 msgstr "максимальна кількість яку ви зможете використати"
 
 # Field to make notes
-#: supply_demand/models.py:109 supply_demand/models.py:212
+#: supply_demand/models.py:115 supply_demand/models.py:244
 msgid "notes"
 msgstr "нотатки"
 
 # Help text for "notes"
-#: supply_demand/models.py:110 supply_demand/models.py:213
+#: supply_demand/models.py:116
 msgid ""
 "Any extra information that can help a donor decide if they have something "
 "that can help you"
 msgstr "Додаткова інформація, що зможе допомогти донорам"
 
 # Field referencing that this request is an alternative for …
-#: supply_demand/models.py:112
+#: supply_demand/models.py:118
 msgid "alternative for"
 msgstr "альтернатива до"
 
 # Help text for "alternative for"
-#: supply_demand/models.py:114
+#: supply_demand/models.py:120
 msgid "In case there are multiple options to solve your problem"
 msgstr "якщо є декілька способів вирішити вашу проблему"
 
-# A single requested item
-#: supply_demand/models.py:120
-msgid "requested item"
-msgstr "Найменування"
-
 # Plural, multiple requested items
-#: supply_demand/models.py:121
+#: supply_demand/models.py:132
 msgid "requested items"
 msgstr "Найменування"
 
 # Help text for "description"
-#: supply_demand/models.py:151
+#: supply_demand/models.py:180
 msgid "Give a short description of what this offer is"
 msgstr "Стисло поясніть, що ви пропонуєте"
 
-# Field with location of donated items
-#: supply_demand/models.py:152
-msgid "location"
-msgstr "розташування"
-
 # Help text for "location"
-#: supply_demand/models.py:153
+#: supply_demand/models.py:182
 msgid "Where is the equipment coming from?"
 msgstr "Звідки доставляється обладнання?"
 
 # Field for delivery method of offer
-#: supply_demand/models.py:154
+#: supply_demand/models.py:183
 msgid "delivery method"
 msgstr "метод доставки"
 
 # Field for determining what to do with unused items
-#: supply_demand/models.py:156
+#: supply_demand/models.py:185
 msgid "unused item handling"
 msgstr "невикористане обладнання"
 
 # Help text for "unused item handling"
-#: supply_demand/models.py:159
+#: supply_demand/models.py:188
 msgid ""
 "If we can't find a Ukrainian organisation that can use these items in a "
 "reasonable time, what should we do with them?"
@@ -537,102 +675,97 @@ msgstr ""
 "зможе використати вашу пожертву?"
 
 # A single offer
-#: supply_demand/models.py:174 supply_demand/models.py:207
+#: supply_demand/models.py:206 supply_demand/models.py:239
 msgid "offer"
 msgstr "пропозиція"
 
 # Multiple offers
-#: supply_demand/models.py:175
+#: supply_demand/models.py:207
 msgid "offers"
 msgstr "пропозиції"
 
 # Field for number of items offered
-#: supply_demand/models.py:211
+#: supply_demand/models.py:243
 msgid "# offered"
 msgstr "запропонована кількість"
 
+# Help text for "notes"
+#: supply_demand/models.py:245
+#, fuzzy
+#| msgid ""
+#| "Any extra information that can help a donor decide if they have something "
+#| "that can help you"
+msgid ""
+"Any extra information that can help a requester decide if they can use this"
+msgstr "Додаткова інформація, що зможе допомогти донорам"
+
 # Field indicating whether an item has been received
-#: supply_demand/models.py:216
+#: supply_demand/models.py:247
 msgid "received"
 msgstr "отримано"
 
-# A field indicating which requester has claimed an item
-#: supply_demand/models.py:217
-msgid "claimed by"
-msgstr "отримувач"
-
-# A single offered item
-#: supply_demand/models.py:224
-msgid "offered item"
-msgstr "запропоноване найменування"
-
 # Multiple donated items
-#: supply_demand/models.py:225
+#: supply_demand/models.py:259
 msgid "offered items"
 msgstr "запропоновані найменування"
 
-# Logging: when was a change made
-#: supply_demand/models.py:240
-msgid "when"
-msgstr "коли"
-
 # Logging: who made the change
-#: supply_demand/models.py:241
+#: supply_demand/models.py:297
 msgid "who"
 msgstr "хто"
 
 # Logging: was it added/changed/deleted
-#: supply_demand/models.py:242
+#: supply_demand/models.py:298
 msgid "action"
 msgstr "дія"
 
 # Logging: what was changed
-#: supply_demand/models.py:244
+#: supply_demand/models.py:300
 msgid "what"
 msgstr "що"
 
 # Logging: what was the data before the change
-#: supply_demand/models.py:245
+#: supply_demand/models.py:301
 msgid "before"
 msgstr "до сміни"
 
 # Logging: what was the data after the change
-#: supply_demand/models.py:246
+#: supply_demand/models.py:302
 msgid "after"
 msgstr "після зміни"
 
 # A single change
-#: supply_demand/models.py:252
+#: supply_demand/models.py:308
 msgid "change"
 msgstr "зміна"
 
 # Multiple changes
-#: supply_demand/models.py:253
+#: supply_demand/models.py:309
 msgid "changes"
 msgstr "зміни"
 
 # Verb describing action "add"
-#: supply_demand/models.py:257
+#: supply_demand/models.py:313
 msgid "added"
 msgstr "додав"
 
 # Verb describing action "change"
-#: supply_demand/models.py:259
+#: supply_demand/models.py:315
 msgid "changed"
 msgstr "змінив"
 
 # Verb describing action "delete"
-#: supply_demand/models.py:261
+#: supply_demand/models.py:317
 msgid "removed"
 msgstr "видалив"
 
 # Verb describing unknown action
-#: supply_demand/models.py:263
+#: supply_demand/models.py:319
 msgid "did something to"
 msgstr "щось зробив з"
 
 # Link to home page
-#: templates/admin/email.html:6
+#: templates/admin/email.html:6 templates/admin/request.html:6
 msgid "Home"
 msgstr "Головна сторінка"
 
@@ -640,3 +773,55 @@ msgstr "Головна сторінка"
 #: templates/admin/email.html:9
 msgid "Email"
 msgstr "Електронна кореспонденція"
+
+#: templates/admin/login.html:11
+msgid "If you don't have an account yet please create one:"
+msgstr ""
+
+#: templates/admin/login.html:14
+msgid "Create account"
+msgstr ""
+
+#: templates/admin/request.html:18
+msgid ""
+"Here you can request items to help you keep the internet working in Ukraine. "
+"All items are provided <b>completely free of charge</b> on a best-effort "
+"basis."
+msgstr ""
+
+#: templates/admin/request.html:24
+msgid ""
+"Feel free to request anything that you can use. Requesting a reasonable "
+"number of spares is also no problem at all. However, requesting items for "
+"reselling is <b>NOT</b> allowed. Please give other Ukrainian network "
+"operators a chance to get the items they need too!"
+msgstr ""
+
+#: templates/admin/request.html:34
+#, python-format
+msgid "We have %(description)s available."
+msgstr ""
+
+#: templates/admin/request.html:38
+msgid ""
+"Please note that this number is based on promises made to us by our donors. "
+"We do not have these items in our own warehouse yet. We can therefore not "
+"guarantee that we can deliver all items."
+msgstr ""
+
+#: templates/admin/request.html:44
+msgid ""
+"We will do our best to get the requested items to you as quickly as "
+"possible, but please give us some time to handle the logistics."
+msgstr ""
+
+#: templates/admin/request.html:51
+msgid "Cancel"
+msgstr ""
+
+# Option what to do with unused donations
+#: templates/admin/request.html:58
+#, fuzzy
+#| msgid "Return them to donor"
+msgid "Return to the list"
+msgstr "Повернути донору"
