@@ -1,5 +1,8 @@
+import sys
+
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
 
 from contacts.models import Contact, Organisation
@@ -102,7 +105,7 @@ class RequestItem(models.Model):
     type = models.PositiveIntegerField(verbose_name=_('type'), choices=ItemType.choices, default=ItemType.HARDWARE)
     brand = models.CharField(verbose_name=_('brand'), max_length=50, blank=True,
                              help_text=_('Either a brand name or a description of the kind of brand'))
-    model = models.CharField(verbose_name=_('model'), max_length=50, blank=True,
+    model = models.CharField(verbose_name=_('model'), max_length=100, blank=True,
                              help_text=_('Either an explicit model or a description of the required features'))
     amount = models.PositiveIntegerField(verbose_name=_('# required'), default=1,
                                          help_text=_('The minimal amount that you need'))
@@ -121,16 +124,33 @@ class RequestItem(models.Model):
 
     objects = RequestItemManager()
 
+    _assigned = None
+
     class Meta:
         ordering = ('type', 'brand', 'model')
         verbose_name = _('requested item')
         verbose_name_plural = _('requested items')
 
     def __str__(self):
+        return f"{self.brand} {self.model}".strip()
+
+    @property
+    def counted_name(self):
         if self.up_to:
             return f"{self.up_to}x {self.brand} {self.model}".replace('  ', ' ')
         else:
             return f"{self.amount}x {self.brand} {self.model}".replace('  ', ' ')
+
+    @property
+    def assigned(self):
+        if self._assigned is not None:
+            return self._assigned
+
+        return self.claim_set.exists()
+
+    @assigned.setter
+    def assigned(self, value: bool):
+        self._assigned = value
 
     def clean(self):
         super().clean()
@@ -144,6 +164,9 @@ class RequestItem(models.Model):
                 if alt.id == self.id:
                     raise ValidationError({'alternative_for': "Alternatives can't form a loop"})
                 alt = alt.alternative_for if alt.alternative_for_id else None
+
+        if self.amount == self.up_to:
+            self.up_to = None
 
 
 class OfferManager(models.Manager):
@@ -216,7 +239,7 @@ class OfferItem(models.Model):
     offer = models.ForeignKey(verbose_name=_('offer'), to=Offer, related_name='items', on_delete=models.CASCADE)
     type = models.PositiveIntegerField(verbose_name=_('type'), choices=ItemType.choices, default=ItemType.HARDWARE)
     brand = models.CharField(verbose_name=_('brand'), max_length=50, blank=True)
-    model = models.CharField(verbose_name=_('model'), max_length=50)
+    model = models.CharField(verbose_name=_('model'), max_length=100)
     amount = models.PositiveIntegerField(verbose_name=_('# offered'), null=True, blank=True)
     notes = models.CharField(verbose_name=_('notes'), max_length=250, blank=True,
                              help_text=_('Any extra information that can help a requester decide if they can use this'))
@@ -228,16 +251,40 @@ class OfferItem(models.Model):
 
     objects = OfferItemManager()
 
+    _claimed = None
+
     class Meta:
         ordering = ('type', 'brand', 'model')
         verbose_name = _('offered item')
         verbose_name_plural = _('offered items')
 
     def __str__(self):
+        return f"{self.brand} {self.model}".strip()
+
+    @property
+    def counted_name(self):
         if self.amount:
             return f"{self.amount}x {self.brand} {self.model}".replace('  ', ' ')
 
         return f"{_('Multiple')} {self.brand} {self.model}".replace('  ', ' ')
+
+    @property
+    def claimed(self):
+        if self._claimed is not None:
+            return self._claimed
+
+        return self.claim_set.aggregate(Sum('amount'))['amount__sum'] or 0
+
+    @claimed.setter
+    def claimed(self, value: bool):
+        self._claimed = value or 0
+
+    @property
+    def available(self):
+        if not self.amount:
+            return 10
+
+        return self.amount - self.claimed
 
 
 class ChangeManager(models.Manager):

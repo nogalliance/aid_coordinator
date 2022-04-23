@@ -10,18 +10,37 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _, ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
+from aid_coordinator.widgets import ClaimAutocompleteSelect
 from logistics.models import Claim
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import (CustomConfirmImportForm, CustomImportForm, OfferItemExportResource,
-                                           OfferItemImportResource,
-                                           RequestItemResource)
+                                           OfferItemImportResource, RequestItemResource)
 from supply_demand.models import Change, ChangeAction, ChangeType, ItemType, Offer, OfferItem, Request, RequestItem
 
 
 class RequestItemInline(CompactInline):
     model = RequestItem
     extra = 1
+
+    fields = ('type', 'brand', 'model', 'amount', 'up_to', 'notes', 'alternative_for', 'assigned')
+    readonly_fields = ('assigned',)
+
+    @admin.display(description=_('assigned'))
+    def assigned(self, item: RequestItem):
+        if not item.pk:
+            return ''
+
+        assignments = []
+        for claim in item.claim_set.all():
+            assignments.append((
+                f'{claim.amount}x {claim.offered_item.brand} {claim.offered_item.model}',
+            ))
+
+        if assignments:
+            return format_html_join(mark_safe('<br>'), '{}', assignments)
+        else:
+            return '-'
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         field = super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -47,10 +66,22 @@ class RequestAdmin(ContactOnlyAdmin):
                      'contact__first_name', 'contact__last_name', 'contact__organisation__name',
                      'items__brand', 'items__model', 'items__notes')
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.prefetch_related('items__claim_set')
+        return qs
+
     @admin.display(description=_('items'))
     def admin_items(self, request: Request):
+        def prefix(my_item: RequestItem) -> str:
+            if my_item.assigned:
+                return '✅ '
+            else:
+                return ''
+
         def alts(alt_items: Iterable[RequestItem]) -> str:
-            alt_out = ' or '.join([str(alt_item) + alts(alt_item.alternatives.all()) for alt_item in alt_items])
+            alt_out = ' or '.join([prefix(alt_item) + alt_item.counted_name + alts(alt_item.alternatives.all())
+                                   for alt_item in alt_items])
             if not alt_out:
                 return ''
             return ' or ' + alt_out
@@ -61,7 +92,7 @@ class RequestAdmin(ContactOnlyAdmin):
             if item.alternative_for_id:
                 continue
 
-            out = str(item) + alts(item.alternatives.all())
+            out = prefix(item) + item.counted_name + alts(item.alternatives.all())
             items.append((out,))
 
         return format_html_join(
@@ -129,9 +160,24 @@ class RequestAdmin(ContactOnlyAdmin):
         super().delete_model(request, obj)
 
 
+class ClaimInlineAdmin(CompactInline):
+    model = Claim
+    extra = 1
+    autocomplete_fields = ('requested_item', 'offered_item', 'shipment')
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in ('requested_item', 'offered_item'):
+            db = kwargs.get("using")
+            kwargs["widget"] = ClaimAutocompleteSelect(
+                db_field, self.admin_site, using=db
+            )
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
 @admin.register(RequestItem)
 class RequestItemAdmin(ExportActionModelAdmin):
-    list_display = ('type', 'brand', 'model', 'amount', 'up_to', 'claimed', 'delivered', 'created_at', 'item_of')
+    list_display = ('type', 'brand', 'model', 'amount', 'up_to', 'assigned', 'delivered', 'created_at', 'item_of')
     list_filter = ('type', 'brand', 'request__contact__organisation')
     autocomplete_fields = ('request',)
     ordering = ('brand', 'model')
@@ -145,17 +191,20 @@ class RequestItemAdmin(ExportActionModelAdmin):
         'set_type_service',
         'set_type_other',
     )
+    inlines = (
+        ClaimInlineAdmin,
+    )
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.annotate(claimed=Exists(Claim.objects.filter(requested_item=OuterRef('pk'))))
+        qs = qs.annotate(assigned=Exists(Claim.objects.filter(requested_item=OuterRef('pk'))))
         qs = qs.annotate(delivered=Exists(Claim.objects.filter(requested_item=OuterRef('pk'),
                                                                shipment__is_delivered=True)))
         return qs
 
-    @admin.display(description=_('claimed'), boolean=True, ordering='assigned')
-    def claimed(self, item: RequestItem):
-        return item.claimed
+    @admin.display(description=_('assigned'), boolean=True, ordering='assigned')
+    def assigned(self, item: RequestItem):
+        return item.assigned
 
     @admin.display(description=_('delivered'), boolean=True, ordering='delivered')
     def delivered(self, item: RequestItem):
@@ -175,14 +224,17 @@ class RequestItemAdmin(ExportActionModelAdmin):
 
             count += 1
 
-        self.message_user(request, ngettext(
-            "%(count)s item set to type %(type)s",
-            "%(count)s items set to type %(type)s",
-            count
-        ) % {
-                              'count': count,
-                              'type': item_type.label,
-                          })
+        self.message_user(
+            request,
+            ngettext(
+                "%(count)s item set to type %(type)s",
+                "%(count)s items set to type %(type)s",
+                count
+            ) % {
+                'count': count,
+                'type': item_type.label,
+            }
+        )
 
     @admin.action(description=_('Set type to other'))
     def set_type_other(self, request: HttpRequest, queryset: RequestItem.objects):
@@ -239,6 +291,12 @@ class RequestItemAdmin(ExportActionModelAdmin):
             return []
 
         return super().get_actions(request)
+
+    def get_inlines(self, request, obj):
+        if not request.user.is_superuser:
+            return []
+
+        return super().get_inlines(request, obj)
 
     def get_list_display(self, request):
         fields = super().get_list_display(request)
@@ -375,7 +433,7 @@ class OfferAdmin(ContactOnlyAdmin):
 
 @admin.register(OfferItem)
 class OfferItemAdmin(ImportExportActionModelAdmin):
-    list_display = ('type', 'brand', 'model', 'notes', 'amount', 'claimed', 'received', 'item_of')
+    list_display = ('type', 'brand', 'model', 'notes', 'amount', 'claimed', 'available', 'received', 'item_of')
     list_filter = ('type', 'received', 'brand', 'offer__contact__organisation', 'offer')
     autocomplete_fields = ('offer',)
     ordering = ('brand', 'model')
@@ -388,10 +446,13 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         'set_type_service',
         'set_type_other',
     )
+    inlines = (
+        ClaimInlineAdmin,
+    )
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.annotate(total_claimed=Sum('claim__amount'))
+        qs = qs.annotate(claimed=Sum('claim__amount'))
         return qs
 
     def set_type_action(self, request: HttpRequest, queryset: RequestItem.objects, item_type: ItemType):
@@ -494,6 +555,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
                 obj.offer.contact.organisation_id == request.user.organisation_id
         )
 
+    def get_inlines(self, request, obj):
+        if not request.user.is_superuser:
+            return []
+
+        return super().get_inlines(request, obj)
+
     def get_actions(self, request):
         if not request.user.is_superuser:
             return []
@@ -509,8 +576,10 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     def get_list_display(self, request):
         fields = super().get_list_display(request)
 
-        if not request.user.is_superuser:
-            fields = [field for field in fields if field not in ('received', 'claimed', 'item_of')]
+        if request.user.is_superuser:
+            fields = [field for field in fields if field not in ('available',)]
+        else:
+            fields = [field for field in fields if field not in ('received', 'amount', 'claimed', 'item_of')]
 
         return fields
 
@@ -542,13 +611,24 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
     @admin.display(description=_('claimed'))
     def claimed(self, item: OfferItem):
-        if item.total_claimed is None:
-            return None
-
-        if item.amount >= item.total_claimed:
-            return item.total_claimed
+        if item.amount >= item.claimed:
+            return item.claimed
         else:
-            return format_html('<span style="color:red">{amount}</span>', amount=item.total_claimed)
+            return format_html('<span style="color:red">{amount}</span>', amount=item.claimed)
+
+    @admin.display(description=_('available'))
+    def available(self, item: OfferItem):
+        if item.available <= 0:
+            return '0'
+
+        url = reverse('request', kwargs={'item_id': item.id})
+
+        return format_html("""
+        <div style="display: inline-flex; justify-content: space-between; align-items: center; width: 14ch">
+            <span>{available}</span>
+            <a class="button" style="margin: -4px; margin-right: 0" href="{url}">{request}</a>
+        </div>
+        """, url=url, available=item.available, request=_('Request'))
 
 
 @admin.register(Change)
@@ -561,3 +641,4 @@ class ChangeAdmin(ReadOnlyMixin, admin.ModelAdmin):
     )
     date_hierarchy = 'when'
     ordering = ('-when', 'who')
+    search_fields = ('who__last_name', 'who__first_name', 'who__organisation__name', 'what', 'before', 'after')

@@ -5,8 +5,10 @@ from django.utils.translation import gettext_lazy as _
 from django_registration.backends.one_step.views import RegistrationView
 from rest_framework import routers
 
+from aid_coordinator.views import ClaimAutocompleteView
 from contacts.api import DonorOrganisationViewSet, PersonalDonorViewSet
 from contacts.forms import ContactRegistrationForm
+from logistics.views import RequestView
 from supply_demand.api import OfferItemViewSet, RequestItemViewSet
 
 # Change titles
@@ -32,6 +34,8 @@ urlpatterns = [
     ),
     path('accounts/', include('django_registration.backends.one_step.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('admin/request/<int:item_id>/', RequestView.as_view(), name='request'),
+    path('admin/autocomplete/claim/', ClaimAutocompleteView.as_view(admin_site=admin.site), name='autocomplete_claim'),
     path("admin/password_reset/", PasswordResetView.as_view(), name="admin_password_reset"),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),

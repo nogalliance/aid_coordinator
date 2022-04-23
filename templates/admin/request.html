@@ -1,0 +1,61 @@
+{% extends 'admin/base_site.html' %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+        &rsaquo; <a
+            href="{% url 'admin:supply_demand_offeritem_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+        &rsaquo; {% translate 'Request' %} {{ item }}
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h1>{% translate 'Request' %} {{ item }}</h1>
+    {% if item.available > 0 %}
+        <p>
+            {% blocktranslate %}
+                Here you can request items to help you keep the internet working in Ukraine.
+                All items are provided <b>completely free of charge</b> on a best-effort basis.
+            {% endblocktranslate %}
+        </p>
+        <p>
+            {% blocktranslate %}
+                Feel free to request anything that you can use. Requesting a reasonable number
+                of spares is also no problem at all. However, requesting items for reselling is
+                <b>NOT</b> allowed. Please give other Ukrainian network operators a chance to get
+                the items they need too!
+            {% endblocktranslate %}
+        </p>
+        <form method="post">{% csrf_token %}
+            {{ form.as_p }}
+            <p>
+                {% blocktranslate with description=item.counted_name %}
+                    We have {{ description }} available.
+                {% endblocktranslate %}
+                {% if not item.received %}
+                    {% blocktranslate %}
+                        Please note that this number is based on promises made to us by our donors. We do not
+                        have these items in our own warehouse yet. We can therefore not guarantee that we
+                        can deliver all items.
+                    {% endblocktranslate %}
+                {% endif %}
+                {% blocktranslate %}
+                    We will do our best to get the requested items to you as quickly as possible, but
+                    please give us some time to handle the logistics.
+                {% endblocktranslate %}
+            </p>
+            <input type="submit" value="Request items">
+            <a class="button" style="padding: 10px 15px"
+               href="{% url 'admin:supply_demand_offeritem_changelist' %}">{% translate 'Cancel' %}</a>
+        </form>
+    {% else %}
+        <p>
+            Unfortunately this item is not available at this time.
+        </p>
+        <p>
+            <a href="{% url 'admin:supply_demand_offeritem_changelist' %}">{% translate 'Return to the list' %}</a>
+        </p>
+    {% endif %}
+{% endblock %}

@@ -36,7 +36,7 @@ class RequestItemFilterSet(FilterSet):
 # Serializers define the API representation.
 class OfferItemSerializer(HyperlinkedModelSerializer):
     type = CharField(source='get_type_display')
-    line = CharField(source='__str__')
+    line = CharField(source='counted_name')
 
     class Meta:
         model = OfferItem
@@ -45,7 +45,7 @@ class OfferItemSerializer(HyperlinkedModelSerializer):
 
 class RequestItemSerializer(HyperlinkedModelSerializer):
     type = CharField(source='get_type_display')
-    line = CharField(source='__str__')
+    line = CharField(source='counted_name')
 
     class Meta:
         model = RequestItem
