@@ -1,6 +1,6 @@
-from django.utils.translation import gettext_lazy as _
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from logistics.filters import UsedChoicesFieldListFilter
 from logistics.forms import AssignToShipmentForm
@@ -22,6 +22,7 @@ class ShipmentAdmin(admin.ModelAdmin):
     list_filter = ('is_delivered',)
     date_hierarchy = 'when'
     ordering = ('when',)
+    search_fields = ('name', 'current_location__name', 'current_location__city', 'current_location__country')
 
 
 @admin.register(Claim)
