@@ -104,12 +104,11 @@ class ContactAdmin(UserAdmin):
                 self.message_user(request, f"Not sending a message to superuser {contact}", level=messages.WARNING)
                 continue
 
-            if not contact.is_donor and not contact.is_requester:
-                self.message_user(request, f"{contact} is neither a donor nor a requester, not sending welcome message",
+            if not contact.group_names:
+                self.message_user(request, f"{contact} is not in a group, not sending welcome message",
                                   level=messages.ERROR)
                 continue
 
-            groups = [str(group.name).lower() for group in contact.groups.all()]
             password_reset_url = 'https://' + request.get_host() + reverse('password_reset_confirm', kwargs={
                 'uidb64': urlsafe_base64_encode(force_bytes(contact.pk)),
                 'token': default_token_generator.make_token(contact)
@@ -117,7 +116,7 @@ class ContactAdmin(UserAdmin):
             message = render_to_string("email/welcome.txt.j2", {
                 'request': request,
                 'contact': contact,
-                'groups': groups,
+                'groups': contact.group_names,
                 'password_reset_url': password_reset_url,
             }, request)
             contact.email_user("Your keepukraineconnected.org account", message)

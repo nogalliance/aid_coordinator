@@ -112,7 +112,7 @@ class RequestAdmin(ContactOnlyAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
-        if request.user.is_superuser:
+        if request.user.is_superuser or request.user.is_viewer:
             fields = list(fields) + ['created_at', 'updated_at']
         return fields
 
@@ -203,6 +203,11 @@ class RequestItemAdmin(ExportActionModelAdmin):
                                                                shipment__is_delivered=True)))
         return qs
 
+    def get_resource_kwargs(self, request, *args, **kwargs):
+        new_kwargs = super().get_resource_kwargs(request, *args, **kwargs)
+        new_kwargs['request'] = request
+        return new_kwargs
+
     @admin.display(description=_('assigned'), boolean=True, ordering='assigned')
     def assigned(self, item: RequestItem):
         return item.assigned
@@ -257,14 +262,19 @@ class RequestItemAdmin(ExportActionModelAdmin):
         return request.user.is_superuser
 
     def has_view_permission(self, request, obj=None):
+        user = request.user
         if not obj:
-            return request.user.is_superuser or request.user.is_donor
+            return user.is_superuser or user.is_donor or user.is_viewer
 
         return (
-                request.user.is_superuser or
-                request.user.is_donor or
-                obj.request.contact == request.user or
-                obj.request.contact.organisation_id == request.user.organisation_id
+                user.is_superuser or
+                user.is_donor or
+                user.is_viewer or
+                obj.request.contact == user or
+                (
+                        obj.request.contact.organisation_id is not None and
+                        obj.request.contact.organisation_id == user.organisation_id
+                )
         )
 
     def has_change_permission(self, request, obj=None):
@@ -274,7 +284,10 @@ class RequestItemAdmin(ExportActionModelAdmin):
         return (
                 request.user.is_superuser or
                 obj.request.contact == request.user or
-                obj.request.contact.organisation_id == request.user.organisation_id
+                (
+                        obj.request.contact.organisation_id is not None and
+                        obj.request.contact.organisation_id == request.user.organisation_id
+                )
         )
 
     def has_delete_permission(self, request, obj=None):
@@ -284,14 +297,25 @@ class RequestItemAdmin(ExportActionModelAdmin):
         return (
                 request.user.is_superuser or
                 obj.request.contact == request.user or
-                obj.request.contact.organisation_id == request.user.organisation_id
+                (
+                        obj.request.contact.organisation_id is not None and
+                        obj.request.contact.organisation_id == request.user.organisation_id
+                )
         )
 
     def get_actions(self, request):
-        if not request.user.is_superuser:
-            return []
+        super_actions = super().get_actions(request)
+        if request.user.is_viewer:
+            return {
+                key: value
+                for key, value in super_actions.items()
+                if key == 'export_admin_action'
+            }
 
-        return super().get_actions(request)
+        if not request.user.is_superuser:
+            return {}
+
+        return super_actions
 
     def get_inlines(self, request, obj):
         if not request.user.is_superuser:
@@ -302,7 +326,8 @@ class RequestItemAdmin(ExportActionModelAdmin):
     def get_list_display(self, request):
         fields = super().get_list_display(request)
 
-        if not request.user.is_superuser:
+        user = request.user
+        if not user.is_superuser and not user.is_viewer:
             fields = [field for field in fields if field not in ('request', 'created_at', 'assigned', 'delivered',
                                                                  'item_of')]
 
@@ -310,7 +335,7 @@ class RequestItemAdmin(ExportActionModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
-        if request.user.is_superuser:
+        if request.user.is_superuser or request.user.is_viewer:
             fields = list(fields) + ['created_at', 'updated_at']
         return fields
 
@@ -319,7 +344,9 @@ class RequestItemAdmin(ExportActionModelAdmin):
         if request.user.is_superuser:
             return fields
 
-        # Non-superusers don't see notes
+        if request.user.is_viewer:
+            return [field for field in fields if field not in ('notes',)]
+
         return [field for field in fields if field not in ('request', 'notes', 'alternative_for')]
 
 
@@ -393,14 +420,16 @@ class OfferAdmin(ContactOnlyAdmin):
         fields = super().get_list_display(request)
 
         # Non-donors don't see donor info
-        if not request.user.is_donor:
+        if request.user.is_superuser or request.user.is_viewer:
+            pass
+        elif not request.user.is_donor:
             fields = [field for field in fields if field not in ('admin_organisation', 'admin_contact')]
 
         return fields
 
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
-        if request.user.is_superuser:
+        if request.user.is_superuser or request.user.is_viewer:
             fields = list(fields) + ['created_at', 'updated_at']
         return fields
 
@@ -413,7 +442,9 @@ class OfferAdmin(ContactOnlyAdmin):
         fields = [field for field in fields if field not in ('internal_notes',)]
 
         # Non-donors don't see donor info
-        if not request.user.is_donor:
+        if request.user.is_viewer:
+            fields = [field for field in fields if field not in ('location', 'delivery_method')]
+        elif not request.user.is_donor:
             fields = [field for field in fields if field not in ('organisation', 'contact',
                                                                  'location', 'delivery_method')]
 
@@ -549,6 +580,11 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         """
         return OfferItemExportResource
 
+    def get_resource_kwargs(self, request, *args, **kwargs):
+        new_kwargs = super().get_resource_kwargs(request, *args, **kwargs)
+        new_kwargs['request'] = request
+        return new_kwargs
+
     def get_import_form(self):
         return CustomImportForm
 
@@ -571,14 +607,19 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         return request.user.is_superuser
 
     def has_view_permission(self, request, obj=None):
+        user = request.user
         if not obj:
-            return request.user.is_superuser or request.user.is_requester
+            return user.is_superuser or user.is_requester or user.is_viewer
 
         return (
-                request.user.is_superuser or
-                request.user.is_requester or
-                obj.offer.contact == request.user or
-                obj.offer.contact.organisation_id == request.user.organisation_id
+                user.is_superuser or
+                user.is_requester or
+                user.is_viewer or
+                obj.offer.contact == user or
+                (
+                        obj.offer.contact.organisation_id is not None and
+                        obj.offer.contact.organisation_id == user.organisation_id
+                )
         )
 
     def has_change_permission(self, request, obj=None):
@@ -588,7 +629,10 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         return (
                 request.user.is_superuser or
                 obj.offer.contact == request.user or
-                obj.offer.contact.organisation_id == request.user.organisation_id
+                (
+                        obj.offer.contact.organisation_id is not None and
+                        obj.offer.contact.organisation_id == request.user.organisation_id
+                )
         )
 
     def has_delete_permission(self, request, obj=None):
@@ -598,7 +642,10 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         return (
                 request.user.is_superuser or
                 obj.offer.contact == request.user or
-                obj.offer.contact.organisation_id == request.user.organisation_id
+                (
+                        obj.offer.contact.organisation_id is not None and
+                        obj.offer.contact.organisation_id == request.user.organisation_id
+                )
         )
 
     def get_inlines(self, request, obj):
@@ -608,10 +655,18 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         return super().get_inlines(request, obj)
 
     def get_actions(self, request):
-        if not request.user.is_superuser:
-            return []
+        super_actions = super().get_actions(request)
+        if request.user.is_viewer:
+            return {
+                key: value
+                for key, value in super_actions.items()
+                if key == 'export_admin_action'
+            }
 
-        return super().get_actions(request)
+        if not request.user.is_superuser:
+            return {}
+
+        return super_actions
 
     def get_search_fields(self, request):
         if not request.user.is_superuser:
@@ -625,6 +680,9 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         if request.user.is_superuser:
             fields = [field for field in fields
                       if field not in ('available',)]
+        elif request.user.is_viewer:
+            fields = [field for field in fields
+                      if field not in ('rejected', 'received', 'available')]
         else:
             fields = [field for field in fields
                       if field not in ('rejected', 'received', 'amount', 'claimed', 'item_of')]
@@ -633,7 +691,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
-        if request.user.is_superuser:
+        if request.user.is_superuser or request.user.is_viewer:
             fields = list(fields) + ['created_at', 'updated_at']
         return fields
 
@@ -641,6 +699,10 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         fields = super().get_fields(request, obj)
         if request.user.is_superuser:
             return fields
+
+        if request.user.is_viewer:
+            fields = [field for field in fields
+                      if field not in ('rejected', 'received', 'available')]
 
         # Non-superusers don't see notes
         return [field for field in fields if field not in ('request', 'notes', 'alternative_for')]

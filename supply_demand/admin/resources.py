@@ -1,13 +1,20 @@
 import sys
 
 from django import forms
+from django.http import HttpRequest
 from import_export import fields, resources
 from import_export.forms import ConfirmImportForm, ImportForm
 
 from supply_demand.models import Offer, OfferItem, RequestItem
 
 
-class RequestItemResource(resources.ModelResource):
+class MyModelResource(resources.ModelResource):
+    def __init__(self, request: HttpRequest = None):
+        super().__init__()
+        self.request = request
+
+
+class RequestItemResource(MyModelResource):
     type = fields.Field(attribute='get_type_display', column_name='type')
 
     class Meta:
@@ -16,6 +23,14 @@ class RequestItemResource(resources.ModelResource):
                   'request__goal',
                   'request__contact__first_name', 'request__contact__last_name', 'request__contact__email',
                   'request__contact__organisation__name')
+
+    def get_fields(self):
+        my_fields = super().get_fields()
+        if not self.request.user.is_superuser:
+            my_fields = [field for field in my_fields
+                         if field.column_name not in ('request__contact__email',)]
+
+        return my_fields
 
 
 class CustomImportForm(ImportForm):
@@ -32,7 +47,7 @@ class CustomConfirmImportForm(ConfirmImportForm):
     )
 
 
-class OfferItemImportResource(resources.ModelResource):
+class OfferItemImportResource(MyModelResource):
     class Meta:
         model = OfferItem
         fields = ('brand', 'model', 'amount', 'notes')
@@ -43,7 +58,7 @@ class OfferItemImportResource(resources.ModelResource):
             instance.offer_id = kwargs['form'].cleaned_data['offer'].id
 
 
-class OfferItemExportResource(resources.ModelResource):
+class OfferItemExportResource(MyModelResource):
     type = fields.Field(attribute='get_type_display', column_name='type')
 
     class Meta:
@@ -51,3 +66,11 @@ class OfferItemExportResource(resources.ModelResource):
         fields = ('type', 'brand', 'model', 'amount', 'received', 'notes',
                   'offer__contact__first_name', 'offer__contact__last_name', 'offer__contact__email',
                   'offer__contact__organisation__name')
+
+    def get_fields(self):
+        my_fields = super().get_fields()
+        if not self.request.user.is_superuser:
+            my_fields = [field for field in my_fields
+                         if field.column_name not in ('received', 'offer__contact__email')]
+
+        return my_fields

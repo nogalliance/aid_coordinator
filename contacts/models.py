@@ -1,3 +1,5 @@
+from functools import cached_property
+
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -73,11 +75,17 @@ class Contact(AbstractUser):
             return self.display_name()
 
     @property
+    def group_names(self):
+        return [str(group.name).lower() for group in self.groups.all()]
+
+    @property
     def is_donor(self):
-        groups = [str(group.name).lower() for group in self.groups.all()]
-        return 'donors' in groups
+        return 'donors' in self.group_names
 
     @property
     def is_requester(self):
-        groups = [str(group.name).lower() for group in self.groups.all()]
-        return 'requesters' in groups
+        return 'requesters' in self.group_names
+
+    @property
+    def is_viewer(self):
+        return 'viewers' in self.group_names
