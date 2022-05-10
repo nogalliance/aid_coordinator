@@ -13,6 +13,7 @@ from import_export.admin import ExportActionModelAdmin, ImportExportActionModelA
 from aid_coordinator.widgets import ClaimAutocompleteSelect
 from logistics.models import Claim
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
+from supply_demand.admin.filters import OverclaimedListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import (CustomConfirmImportForm, CustomImportForm, OfferItemExportResource,
                                            OfferItemImportResource, RequestItemResource)
@@ -457,7 +458,9 @@ class OfferAdmin(ContactOnlyAdmin):
 class OfferItemAdmin(ImportExportActionModelAdmin):
     list_display = ('type', 'brand', 'model', 'notes', 'amount', 'claimed', 'available',
                     'rejected', 'received', 'item_of')
-    list_filter = ('type', 'rejected', 'received', 'brand', 'offer__contact__organisation', 'offer')
+    list_filter = ('type', 'rejected', 'received', OverclaimedListFilter, 'brand',
+                   ('offer__contact__organisation', admin.RelatedOnlyFieldListFilter),
+                   'offer')
     autocomplete_fields = ('offer',)
     ordering = ('brand', 'model')
     search_fields = ('brand', 'model', 'notes', 'offer__description', 'offer__contact__organisation__name',
