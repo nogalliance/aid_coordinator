@@ -35,6 +35,10 @@ class ClaimAdmin(ExportActionModelAdmin):
     list_filter = ('shipment', 'shipment__is_delivered',
                    ('offered_item__offer__contact__organisation', admin.RelatedOnlyFieldListFilter),
                    ('requested_item__request__contact__organisation', admin.RelatedOnlyFieldListFilter))
+    search_fields = ('offered_item__brand', 'offered_item__model',
+                     'requested_item__brand', 'requested_item__model',
+                     'offered_item__offer__contact__organisation__name',
+                     'requested_item__request__contact__organisation__name')
     ordering = ('shipment',)
     actions = (
         UpdateAction(form_class=AssignToShipmentForm, title=_('Assign to shipment')),
