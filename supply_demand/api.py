@@ -54,14 +54,14 @@ class RequestItemSerializer(HyperlinkedModelSerializer):
 
 # ViewSets define the view behavior.
 class OfferItemViewSet(ReadOnlyModelViewSet):
-    queryset = OfferItem.objects.all()
+    queryset = OfferItem.objects.filter(claim=None)
     serializer_class = OfferItemSerializer
     filterset_class = OfferItemFilterSet
     search_fields = ['brand', 'model', 'notes']
 
 
 class RequestItemViewSet(ReadOnlyModelViewSet):
-    queryset = RequestItem.objects.all()
+    queryset = RequestItem.objects.filter(claim=None)
     serializer_class = RequestItemSerializer
     filterset_class = RequestItemFilterSet
     search_fields = ['brand', 'model', 'notes']
