@@ -1,6 +1,7 @@
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
 from django.http import HttpRequest
+from django.templatetags.static import static
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -11,17 +12,22 @@ from logistics.forms import AssignToShipmentForm
 from logistics.models import Claim, Location, Shipment
 from logistics.resources import ClaimExportResource
 
+static_import_icon = static('img/import.png')
+static_export_icon = static('img/export.png')
+
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'city', 'country', 'admin_email', 'admin_phone',
-                    'is_collection_point', 'is_distribution_point')
+    list_display = ('name', 'country', 'admin_email', 'admin_phone',
+                    'admin_is_collection_point', 'admin_is_distribution_point', 'managed_by')
     list_filter = (
         ('country', UsedChoicesFieldListFilter),
+        'is_collection_point',
+        'is_distribution_point',
     )
     ordering = ('name',)
 
-    @admin.display(description=_('contact email'))
+    @admin.display(description=_('contact email'), ordering='email')
     def admin_email(self, location: Location):
         if not location.email:
             return None
@@ -31,7 +37,7 @@ class LocationAdmin(admin.ModelAdmin):
             email=location.email
         )
 
-    @admin.display(description=_('contact phone'))
+    @admin.display(description=_('contact phone'), ordering='phone')
     def admin_phone(self, location: Location):
         if not location.phone:
             return None
@@ -40,6 +46,18 @@ class LocationAdmin(admin.ModelAdmin):
             '<a href="tel:{phone}">{phone}</a>',
             phone=location.phone
         )
+
+    @admin.display(boolean=True, ordering='is_collection_point', description=mark_safe(
+        '<img alt="Is collection point" style="height: 1.5em; margin: -0.4em" src="' + static_import_icon + '">'
+    ))
+    def admin_is_collection_point(self, location: Location):
+        return location.is_collection_point
+
+    @admin.display(boolean=True, ordering='is_distribution_point', description=mark_safe(
+        '<img alt="Is distribution point" style="height: 1.5em; margin: -0.4em" src="' + static_export_icon + '">'
+    ))
+    def admin_is_distribution_point(self, location: Location):
+        return location.is_distribution_point
 
 
 @admin.register(Shipment)
@@ -53,7 +71,7 @@ class ShipmentAdmin(admin.ModelAdmin):
 
 @admin.register(Claim)
 class ClaimAdmin(ExportActionModelAdmin):
-    list_display = ('amount', 'admin_offered_item', 'admin_requested_item', 'shipment')
+    list_display = ('amount', 'admin_offered_item', 'admin_requested_item', 'current_location', 'shipment')
     list_filter = ('shipment', 'shipment__is_delivered',
                    ('offered_item__offer__contact__organisation', admin.RelatedOnlyFieldListFilter),
                    ('requested_item__request__contact__organisation', admin.RelatedOnlyFieldListFilter))

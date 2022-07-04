@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from contacts.models import Organisation
 from supply_demand.models import OfferItem, RequestItem
 
 
@@ -21,6 +22,9 @@ class Location(models.Model):
     is_distribution_point = models.BooleanField(verbose_name=_('is a distribution point'), default=False,
                                                 help_text=_('items at this location '
                                                             'can be directly assigned to requesters'))
+
+    managed_by = models.ForeignKey(verbose_name=_('managed by'), to=Organisation, on_delete=models.SET_NULL,
+                                   blank=True, null=True)
 
     class Meta:
         verbose_name = _('location')
