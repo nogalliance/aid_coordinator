@@ -2,6 +2,7 @@ from admin_wizard.admin import UpdateAction
 from django.contrib import admin
 from django.http import HttpRequest
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin
 
@@ -79,5 +80,9 @@ class ClaimAdmin(ExportActionModelAdmin):
 
     @admin.display(description=_('requested item'))
     def admin_requested_item(self, claim: Claim):
-        return format_html('<b>{item}</b><br>{request}', item=claim.requested_item,
-                           request=claim.requested_item.request)
+        if claim.requested_item_id:
+            return format_html('<b>{item}</b><br>{request}', item=claim.requested_item,
+                               request=claim.requested_item.request)
+        else:
+            return mark_safe('<b>Preemptive shipment</b><br>'
+                             'Just ship it to a distribution point')
