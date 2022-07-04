@@ -375,7 +375,7 @@ class OfferItemInline(CompactInline):
             return format_html('<span style="display: inline-block; width: 20ch; margin-top: -0.7em">{}</span>',
                                _("Likely not useful for Ukraine, please don't ship"))
         else:
-            return ''
+            return '-'
 
 
 @admin.register(Offer)
