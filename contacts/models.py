@@ -50,6 +50,7 @@ class Contact(AbstractUser):
     is_staff = True
     organisation = models.ForeignKey(verbose_name=_('organisation'), to=Organisation, blank=True, null=True,
                                      related_name='contacts', on_delete=models.SET_NULL)
+    requested_organisation = models.CharField(verbose_name=_('requested organisation'), max_length=100, blank=True)
     role = models.CharField(verbose_name=_('role'), max_length=50, blank=True)
     listed = models.BooleanField(verbose_name=_('listed'), default=False,
                                  help_text=_('Shown as a personal donor on the website'))

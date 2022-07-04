@@ -19,9 +19,9 @@ from contacts.views import EmailView
 
 @admin.register(Contact)
 class ContactAdmin(UserAdmin):
-    list_display = ('username', 'first_name', 'last_name', 'organisation', 'admin_groups', 'admin_email')
+    list_display = ('username', 'first_name', 'last_name', 'admin_organisation', 'admin_groups', 'admin_email')
     list_filter = ("is_superuser", "is_active", "groups")
-    search_fields = ('username', 'first_name', 'last_name', 'organisation__name')
+    search_fields = ('username', 'first_name', 'last_name', 'requested_organisation', 'organisation__name')
     readonly_fields = ("last_login", "date_joined")
     form = ContactForm
     superuser_fieldsets = (
@@ -35,7 +35,7 @@ class ContactAdmin(UserAdmin):
             "fields": ("email", "phone"),
         }),
         (_("Organisation"), {
-            "fields": ("organisation", "role"),
+            "fields": ("requested_organisation", "organisation", "role"),
         }),
         (_("Permissions"), {
             "fields": ("is_active", "is_superuser", "groups"),
@@ -55,7 +55,7 @@ class ContactAdmin(UserAdmin):
             "fields": ("email", "phone"),
         }),
         (_("Organisation"), {
-            "fields": ("organisation", "role"),
+            "fields": ("requested_organisation", "organisation", "role"),
         }),
         (_("Important dates"), {
             "fields": ("last_login", "date_joined"),
@@ -141,6 +141,15 @@ class ContactAdmin(UserAdmin):
             '{}',
             [(str(group),) for group in contact.groups.all()]
         )
+
+    @admin.display(description=_('organisation'), ordering='organisation__name, requested_organisation')
+    def admin_organisation(self, contact: Contact):
+        if contact.organisation_id:
+            return contact.organisation
+        elif contact.requested_organisation:
+            return format_html('🆕 {org}', org=contact.requested_organisation)
+        else:
+            return '-'
 
     @admin.display(description=_('email'))
     def admin_email(self, contact: Contact):

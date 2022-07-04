@@ -20,6 +20,10 @@ Alliance.
 {%- if contact.organisation %}
 
 You have been registered as a contact for {{ contact.organisation }}.
+{%- elif contact.requested_organisation %}
+
+You have requested to be registered as a contact for
+{{ contact.requested_organisation }}.
 {%- endif %}
 
 …
@@ -69,10 +73,15 @@ class ContactRegistrationForm(RegistrationFormCaseInsensitive):
         ),
         widget=forms.RadioSelect
     )
+    requested_organisation = forms.CharField(
+        label=_('Organisation'),
+        widget=forms.TextInput,
+        help_text=_('Please indicate the organisation you represent'),
+    )
     description = forms.CharField(
         label=_('Description'),
         widget=forms.Textarea,
-        help_text=_('Please describe why you create this account, which organisation you represent etc.')
+        help_text=_('Please describe why you create this account')
     )
 
     class Meta(RegistrationForm.Meta):
@@ -82,6 +91,7 @@ class ContactRegistrationForm(RegistrationFormCaseInsensitive):
             'first_name',
             'last_name',
             'email',
+            'requested_organisation',
             "password1",
             "password2",
         ]
@@ -108,6 +118,7 @@ class ContactRegistrationForm(RegistrationFormCaseInsensitive):
                     f"First name:    {user.first_name}\n"
                     f"Last name:     {user.last_name}\n"
                     f"Email address: {user.email}\n"
+                    f"Organisation:  {user.requested_organisation}\n"
                     f"\n"
                     f"Account type:  {account_type}\n"
                     f"Description:\n"
