@@ -106,6 +106,9 @@ class ContactRegistrationForm(RegistrationFormCaseInsensitive):
             group = None
 
         user = super().save(commit=commit)
+        user.is_active = False
+        user.save()
+
         if group:
             user.groups.add(group)
 

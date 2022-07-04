@@ -1,0 +1,24 @@
+Hello {{ contact.first_name }},
+
+Thank you for getting in touch with the Keep Ukraine Connected
+(https://keepukraineconnected.org) task force.
+
+Self-registration details:
+==========================
+Username:      {{ user.username }}
+First name:    {{ user.first_name }}
+Last name:     {{ user.last_name }}
+Email address: {{ user.email }}
+Organisation:  {{ user.requested_organisation }}
+
+Please confirm your email address by visiting the following link:
+{{ scheme }}://{{ site }}{% url 'django_registration_activate' activation_key=activation_key %}
+
+
+Yours,
+
+
+Everyone at Keep Ukraine Connected
+
+A task force from the Global NOG Alliance
+https://www.nogalliance.org/

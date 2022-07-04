@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.views import PasswordResetView
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
-from django_registration.backends.one_step.views import RegistrationView
+from django_registration.backends.activation.views import RegistrationView
 from rest_framework import routers
 
 from aid_coordinator.views import ClaimAutocompleteView
@@ -27,12 +27,11 @@ urlpatterns = [
     path(
         'accounts/register/',
         RegistrationView.as_view(
-            success_url='/admin/',
             form_class=ContactRegistrationForm
         ),
         name='django_registration_register',
     ),
-    path('accounts/', include('django_registration.backends.one_step.urls')),
+    path('accounts/', include('django_registration.backends.activation.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('admin/request/<int:item_id>/', RequestView.as_view(), name='request'),
     path('admin/autocomplete/claim/', ClaimAutocompleteView.as_view(admin_site=admin.site), name='autocomplete_claim'),
