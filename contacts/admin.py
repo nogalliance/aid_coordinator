@@ -3,7 +3,8 @@ from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.tokens import default_token_generator
 from django.db import models
-from django.db.models import Q
+from django.db.models import Case, F, Q, When, Value as V
+from django.db.models.functions import Concat
 from django.http import HttpRequest, HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.urls import path, reverse
@@ -142,7 +143,7 @@ class ContactAdmin(UserAdmin):
             [(str(group),) for group in contact.groups.all()]
         )
 
-    @admin.display(description=_('organisation'), ordering='organisation__name, requested_organisation')
+    @admin.display(description=_('organisation'), ordering='organisation_sort')
     def admin_organisation(self, contact: Contact):
         if contact.organisation_id:
             return contact.organisation
@@ -158,6 +159,14 @@ class ContactAdmin(UserAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
+
+        queryset = queryset.annotate(
+            organisation_sort=Case(
+                When(organisation_id__isnull=False, then=F('organisation__name')),
+                default=Concat(V(' '), F('requested_organisation')),
+                output_field=models.CharField(),
+            ),
+        )
 
         if request.user.is_superuser:
             return queryset
