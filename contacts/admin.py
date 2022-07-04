@@ -3,7 +3,7 @@ from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.tokens import default_token_generator
 from django.db import models
-from django.db.models import Case, F, Q, When, Value as V
+from django.db.models import Case, F, Q, Value as V, When
 from django.db.models.functions import Concat
 from django.http import HttpRequest, HttpResponseRedirect
 from django.template.loader import render_to_string
@@ -13,6 +13,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 
+from contacts.filters import RequestedOrganisationFilter
 from contacts.forms import AddContactForm, ContactForm
 from contacts.models import Contact, Organisation
 from contacts.views import EmailView
@@ -20,8 +21,9 @@ from contacts.views import EmailView
 
 @admin.register(Contact)
 class ContactAdmin(UserAdmin):
-    list_display = ('username', 'first_name', 'last_name', 'admin_organisation', 'admin_groups', 'admin_email')
-    list_filter = ("is_superuser", "is_active", "groups")
+    list_display = ('username', 'first_name', 'last_name', 'is_active',
+                    'admin_organisation', 'admin_groups', 'admin_email')
+    list_filter = ("is_superuser", "is_active", "groups", RequestedOrganisationFilter)
     search_fields = ('username', 'first_name', 'last_name', 'requested_organisation', 'organisation__name')
     readonly_fields = ("last_login", "date_joined")
     form = ContactForm
@@ -145,7 +147,12 @@ class ContactAdmin(UserAdmin):
 
     @admin.display(description=_('organisation'), ordering='organisation_sort')
     def admin_organisation(self, contact: Contact):
-        if contact.organisation_id:
+        if contact.organisation_id and contact.requested_organisation:
+            if contact.organisation.name == contact.requested_organisation:
+                return contact.organisation
+            else:
+                return format_html('⚠️ {org}', org=contact.organisation)
+        elif contact.organisation_id:
             return contact.organisation
         elif contact.requested_organisation:
             return format_html('🆕 {org}', org=contact.requested_organisation)
