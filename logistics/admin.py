@@ -13,11 +13,32 @@ from logistics.resources import ClaimExportResource
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'city', 'country')
+    list_display = ('name', 'city', 'country', 'admin_email', 'admin_phone',
+                    'is_collection_point', 'is_distribution_point')
     list_filter = (
         ('country', UsedChoicesFieldListFilter),
     )
     ordering = ('name',)
+
+    @admin.display(description=_('contact email'))
+    def admin_email(self, location: Location):
+        if not location.email:
+            return None
+
+        return format_html(
+            '<a href="mailto:{email}">{email}</a>',
+            email=location.email
+        )
+
+    @admin.display(description=_('contact phone'))
+    def admin_phone(self, location: Location):
+        if not location.phone:
+            return None
+
+        return format_html(
+            '<a href="tel:{phone}">{phone}</a>',
+            phone=location.phone
+        )
 
 
 @admin.register(Shipment)

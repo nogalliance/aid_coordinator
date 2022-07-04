@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+from phonenumber_field.modelfields import PhoneNumberField
 
 from supply_demand.models import OfferItem, RequestItem
 
@@ -11,6 +12,15 @@ class Location(models.Model):
     city = models.CharField(verbose_name=_('city'), max_length=50, blank=True)
     postcode = models.CharField(verbose_name=_('postcode'), max_length=16, blank=True)
     country = CountryField(verbose_name=_('country'), blank=True)
+
+    email = models.EmailField(verbose_name=_('email contact'), blank=True)
+    phone = PhoneNumberField(verbose_name=_('phone contact'), blank=True)
+
+    is_collection_point = models.BooleanField(verbose_name=_('is a collection point'), default=False,
+                                              help_text=_('allow donors to send equipment to this location'))
+    is_distribution_point = models.BooleanField(verbose_name=_('is a distribution point'), default=False,
+                                                help_text=_('items at this location '
+                                                            'can be directly assigned to requesters'))
 
     class Meta:
         verbose_name = _('location')
@@ -43,6 +53,8 @@ class Claim(models.Model):
     when = models.DateField(verbose_name=_('when'), auto_now_add=True)
     shipment = models.ForeignKey(verbose_name=_('shipment'), to=Shipment, blank=True, null=True,
                                  on_delete=models.SET_NULL)
+    current_location = models.ForeignKey(verbose_name=_('current location'), to=Location, blank=True, null=True,
+                                         on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = _('claim')

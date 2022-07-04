@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'import_export',
     'admin_wizard',
     'django_countries',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [
