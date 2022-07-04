@@ -7,6 +7,27 @@ from contacts.models import Organisation
 from supply_demand.models import OfferItem, RequestItem
 
 
+class EquipmentData(models.Model):
+    brand = models.CharField(verbose_name=_('brand'), max_length=50)
+    model = models.CharField(verbose_name=_('model'), max_length=100)
+
+    width = models.PositiveIntegerField(verbose_name=_('width'), blank=True, null=True, help_text=_('in cm'))
+    height = models.PositiveIntegerField(verbose_name=_('height'), blank=True, null=True, help_text=_('in cm'))
+    depth = models.PositiveIntegerField(verbose_name=_('depth'), blank=True, null=True, help_text=_('in cm'))
+
+    weight = models.FloatField(verbose_name=_('weight'), blank=True, null=True, help_text=_('in kg'))
+
+    class Meta:
+        unique_together = (
+            ('brand', 'model'),
+        )
+        verbose_name = _('equipment data')
+        verbose_name_plural = _('equipment data')
+
+    def __str__(self):
+        return f"{self.brand} {self.model}"
+
+
 class Location(models.Model):
     name = models.CharField(verbose_name=_('name'), max_length=100)
     street_address = models.TextField(verbose_name=_('street_address'), blank=True)

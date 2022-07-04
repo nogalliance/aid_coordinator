@@ -5,15 +5,36 @@ from django.templatetags.static import static
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from import_export.admin import ExportActionModelAdmin
+from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
 from logistics.filters import UsedChoicesFieldListFilter
 from logistics.forms import AssignToShipmentForm
-from logistics.models import Claim, Location, Shipment
-from logistics.resources import ClaimExportResource
+from logistics.models import Claim, EquipmentData, Location, Shipment
+from logistics.resources import ClaimExportResource, EquipmentDataResource
 
 static_import_icon = static('img/import.png')
 static_export_icon = static('img/export.png')
+
+
+@admin.register(EquipmentData)
+class EquipmentDataAdmin(ImportExportActionModelAdmin):
+    list_display = ('brand', 'model', 'admin_weight', 'admin_size')
+    ordering = ('brand', 'model')
+    resource_class = EquipmentDataResource
+
+    @admin.display(description=_('weight'), ordering='weight')
+    def admin_weight(self, item: EquipmentData):
+        if item.weight:
+            return f'{item.weight} kg'
+        else:
+            return '-'
+
+    @admin.display(description=_('size (W*H*D)'), ordering='width,height,depth')
+    def admin_size(self, item: EquipmentData):
+        if item.width or item.height or item.depth:
+            return f'{item.width or "?"} x {item.height or "?"} x {item.depth or "?"} cm'
+        else:
+            return '-'
 
 
 @admin.register(Location)

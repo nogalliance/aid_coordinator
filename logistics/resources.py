@@ -1,7 +1,14 @@
 from import_export import fields, resources
 from import_export.widgets import IntegerWidget
 
-from logistics.models import Claim
+from logistics.models import Claim, EquipmentData
+
+
+class EquipmentDataResource(resources.ModelResource):
+    class Meta:
+        model = EquipmentData
+        fields = ('brand', 'model', 'width', 'height', 'depth', 'weight')
+        import_id_fields = ('brand', 'model')
 
 
 class ClaimExportResource(resources.ModelResource):
