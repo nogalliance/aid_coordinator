@@ -13,7 +13,7 @@ from import_export.admin import ExportActionModelAdmin, ImportExportActionModelA
 from aid_coordinator.widgets import ClaimAutocompleteSelect
 from logistics.models import Claim
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
-from supply_demand.admin.filters import OverclaimedListFilter
+from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import (CustomConfirmImportForm, CustomImportForm, OfferItemExportResource,
                                            OfferItemImportResource, RequestItemResource)
@@ -381,7 +381,7 @@ class OfferItemInline(CompactInline):
 @admin.register(Offer)
 class OfferAdmin(ContactOnlyAdmin):
     list_display = ('description', 'admin_organisation', 'admin_contact', 'admin_items')
-    list_filter = ('contact__organisation',)
+    list_filter = (LocationFilter, 'contact__organisation')
     autocomplete_fields = ('contact',)
     inlines = (OfferItemInline,)
     search_fields = ('description',
