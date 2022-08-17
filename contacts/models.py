@@ -1,3 +1,4 @@
+import warnings
 from functools import cached_property
 
 from django.contrib.auth.models import AbstractUser, UserManager
@@ -57,6 +58,12 @@ class Contact(AbstractUser):
     phone = models.CharField(verbose_name=_('phone'), max_length=50, blank=True)
 
     objects = ContactManager()
+
+    def __init__(self, *args, **kwargs):
+        is_staff = kwargs.pop('is_staff', True)
+        if not is_staff:
+            warnings.warn("Contacts are always created as staff")
+        super().__init__(*args, **kwargs)
 
     class Meta:
         verbose_name = _('contact')
