@@ -10,14 +10,16 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _, ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
-from aid_coordinator.widgets import ClaimAutocompleteSelect
 from logistics.models import Claim
-from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
+from supply_demand.admin.base import ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import (CustomConfirmImportForm, CustomImportForm, OfferItemExportResource,
                                            OfferItemImportResource, RequestItemResource)
+
+from aid_coordinator.admin import CompactInline
 from supply_demand.models import Change, ChangeAction, ChangeType, ItemType, Offer, OfferItem, Request, RequestItem
+from logistics.admin import ClaimInlineAdmin
 
 
 class RequestItemInline(CompactInline):
@@ -159,21 +161,6 @@ class RequestAdmin(ContactOnlyAdmin):
             after=after,
         ).save()
         super().delete_model(request, obj)
-
-
-class ClaimInlineAdmin(CompactInline):
-    model = Claim
-    extra = 1
-    autocomplete_fields = ('requested_item', 'offered_item', 'shipment')
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name in ('requested_item', 'offered_item'):
-            db = kwargs.get("using")
-            kwargs["widget"] = ClaimAutocompleteSelect(
-                db_field, self.admin_site, using=db
-            )
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(RequestItem)
