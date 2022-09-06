@@ -131,6 +131,12 @@ class RequestItem(models.Model):
         verbose_name = _('requested item')
         verbose_name_plural = _('requested items')
 
+        permissions = (
+            ("view_own_requestitem", "Can view own request item"),
+            ("change_own_requestitem", "Can change own request item"),
+            ("delete_own_requestitem", "Can delete own request item"),
+        )
+
     def __str__(self):
         return f"{self.brand} {self.model}".strip()
 
@@ -258,6 +264,12 @@ class OfferItem(models.Model):
         ordering = ('type', 'brand', 'model')
         verbose_name = _('offered item')
         verbose_name_plural = _('offered items')
+
+        permissions = (
+            ("view_own_offeritem", "Can view own offer item"),
+            ("change_own_offeritem", "Can change own offer item"),
+            ("delete_own_offeritem", "Can delete own offer item"),
+        )
 
     def __str__(self):
         return f"{self.brand} {self.model}".strip()
