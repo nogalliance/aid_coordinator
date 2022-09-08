@@ -12,8 +12,26 @@ from logistics.forms import AssignToShipmentForm
 from logistics.models import Claim, EquipmentData, Location, Shipment
 from logistics.resources import ClaimExportResource, EquipmentDataResource
 
+from aid_coordinator.admin import CompactInline
+from aid_coordinator.widgets import ClaimAutocompleteSelect
+
 static_import_icon = static('img/import.png')
 static_export_icon = static('img/export.png')
+
+
+class ClaimInlineAdmin(CompactInline):
+    model = Claim
+    extra = 0
+    autocomplete_fields = ('requested_item', 'offered_item', 'shipment')
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in ('requested_item', 'offered_item'):
+            db = kwargs.get("using")
+            kwargs["widget"] = ClaimAutocompleteSelect(
+                db_field, self.admin_site, using=db
+            )
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(EquipmentData)
@@ -89,6 +107,10 @@ class ShipmentAdmin(admin.ModelAdmin):
     ordering = ('when',)
     search_fields = ('name', 'current_location__name', 'current_location__city', 'current_location__country')
 
+    inlines = (
+        ClaimInlineAdmin,
+    )
+
 
 @admin.register(Claim)
 class ClaimAdmin(ExportActionModelAdmin):
@@ -101,6 +123,7 @@ class ClaimAdmin(ExportActionModelAdmin):
                      'offered_item__offer__contact__organisation__name',
                      'requested_item__request__contact__organisation__name')
     ordering = ('shipment',)
+
     actions = (
         UpdateAction(form_class=AssignToShipmentForm, title=_('Assign to shipment')),
     )

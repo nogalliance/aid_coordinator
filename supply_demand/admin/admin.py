@@ -2,7 +2,7 @@ from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
-from django.db.models import Exists, OuterRef, Sum
+from django.db.models import Exists, OuterRef, Sum, Q
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
@@ -10,14 +10,16 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _, ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
-from aid_coordinator.widgets import ClaimAutocompleteSelect
 from logistics.models import Claim
-from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
+from supply_demand.admin.base import ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import (CustomConfirmImportForm, CustomImportForm, OfferItemExportResource,
                                            OfferItemImportResource, RequestItemResource)
+
+from aid_coordinator.admin import CompactInline
 from supply_demand.models import Change, ChangeAction, ChangeType, ItemType, Offer, OfferItem, Request, RequestItem
+from logistics.admin import ClaimInlineAdmin
 
 
 class RequestItemInline(CompactInline):
@@ -161,21 +163,6 @@ class RequestAdmin(ContactOnlyAdmin):
         super().delete_model(request, obj)
 
 
-class ClaimInlineAdmin(CompactInline):
-    model = Claim
-    extra = 1
-    autocomplete_fields = ('requested_item', 'offered_item', 'shipment')
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name in ('requested_item', 'offered_item'):
-            db = kwargs.get("using")
-            kwargs["widget"] = ClaimAutocompleteSelect(
-                db_field, self.admin_site, using=db
-            )
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-
 @admin.register(RequestItem)
 class RequestItemAdmin(ExportActionModelAdmin):
     list_display = ('type', 'brand', 'model', 'amount', 'up_to', 'assigned', 'delivered', 'created_at', 'item_of')
@@ -201,6 +188,16 @@ class RequestItemAdmin(ExportActionModelAdmin):
         qs = qs.annotate(assigned=Exists(Claim.objects.filter(requested_item=OuterRef('pk'))))
         qs = qs.annotate(delivered=Exists(Claim.objects.filter(requested_item=OuterRef('pk'),
                                                                shipment__is_delivered=True)))
+        if not request.user.has_perm(
+            "supply_demand.view_requestitem"
+        ) and request.user.has_perm("supply_demand.view_own_requestitem"):
+            qs = qs.filter(
+                Q(request__contact=request.user) |
+                Q(
+                    request__contact__organisation_id=request.user.organisation_id,
+                    request__contact__organisation_id__isnull=False
+                )
+            )
         return qs
 
     def get_resource_kwargs(self, request, *args, **kwargs):
@@ -258,49 +255,64 @@ class RequestItemAdmin(ExportActionModelAdmin):
     def set_type_service(self, request: HttpRequest, queryset: RequestItem.objects):
         self.set_type_action(request, queryset, ItemType.SERVICE)
 
-    def has_add_permission(self, request):
-        return request.user.is_superuser
-
     def has_view_permission(self, request, obj=None):
-        user = request.user
-        if not obj:
-            return user.is_superuser or user.is_donor or user.is_viewer
+        # let's not ignore built-in permission system
+        admin_permission = super().has_view_permission(request)
 
-        return (
-                user.is_superuser or
-                user.is_donor or
-                user.is_viewer or
-                obj.request.contact == user or
-                (
-                        obj.request.contact.organisation_id is not None and
-                        obj.request.contact.organisation_id == user.organisation_id
-                )
+        if admin_permission:
+            return True
+
+        user = request.user
+
+        if not obj:
+            return user.has_perm("supply_demand.view_own_requestitem")
+
+        if not user.has_perm("supply_demand.view_own_requestitem"):
+            return False
+
+        return obj.request.contact == user or (
+            obj.request.contact.organisation_id is not None
+            and obj.request.contact.organisation_id == user.organisation_id
         )
 
     def has_change_permission(self, request, obj=None):
-        if not obj:
-            return request.user.is_superuser
+        # let's not ignore built-in permission system
+        admin_permission = super().has_change_permission(request)
 
-        return (
-                request.user.is_superuser or
-                obj.request.contact == request.user or
-                (
-                        obj.request.contact.organisation_id is not None and
-                        obj.request.contact.organisation_id == request.user.organisation_id
-                )
+        if admin_permission:
+            return True
+
+        user = request.user
+
+        if not obj:
+            return user.has_perm("supply_demand.change_own_requestitem")
+
+        if not user.has_perm("supply_demand.change_own_requestitem"):
+            return False
+
+        return obj.request.contact == request.user or (
+            obj.request.contact.organisation_id is not None and
+            obj.request.contact.organisation_id == request.user.organisation_id
         )
 
     def has_delete_permission(self, request, obj=None):
-        if not obj:
-            return request.user.is_superuser
+        # let's not ignore built-in permission system
+        admin_permission = super().has_delete_permission(request)
 
-        return (
-                request.user.is_superuser or
-                obj.request.contact == request.user or
-                (
-                        obj.request.contact.organisation_id is not None and
-                        obj.request.contact.organisation_id == request.user.organisation_id
-                )
+        if admin_permission:
+            return True
+
+        user = request.user
+
+        if not obj:
+            return user.has_perm("supply_demand.delete_own_requestitem")
+
+        if not user.has_perm("supply_demand.delete_own_requestitem"):
+            return False
+
+        return obj.request.contact == request.user or (
+            obj.request.contact.organisation_id is not None and
+            obj.request.contact.organisation_id == request.user.organisation_id
         )
 
     def get_actions(self, request):
@@ -514,6 +526,16 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         qs = qs.annotate(claimed=Sum('claim__amount'))
+        if not request.user.has_perm(
+            "supply_demand.view_offeritem"
+        ) and request.user.has_perm("supply_demand.view_own_offeritem"):
+            qs = qs.filter(
+                Q(offer__contact=request.user) |
+                Q(
+                    offer__contact__organisation_id=request.user.organisation_id,
+                    offer__contact__organisation_id__isnull=False
+                )
+            )
         return qs
 
     def set_type_action(self, request: HttpRequest, queryset: RequestItem.objects, item_type: ItemType):
@@ -603,49 +625,64 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         """
         return kwargs
 
-    def has_add_permission(self, request):
-        return request.user.is_superuser
-
     def has_view_permission(self, request, obj=None):
-        user = request.user
-        if not obj:
-            return user.is_superuser or user.is_requester or user.is_viewer
+        # let's not ignore built-in permission system
+        admin_permission = super().has_view_permission(request)
 
-        return (
-                user.is_superuser or
-                user.is_requester or
-                user.is_viewer or
-                obj.offer.contact == user or
-                (
-                        obj.offer.contact.organisation_id is not None and
-                        obj.offer.contact.organisation_id == user.organisation_id
-                )
+        if admin_permission:
+            return True
+
+        user = request.user
+
+        if not obj:
+            return user.has_perm("supply_demand.view_own_offeritem")
+
+        if not user.has_perm("supply_demand.view_own_offeritem"):
+            return False
+
+        return obj.offer.contact == user or (
+            obj.offer.contact.organisation_id is not None
+            and obj.offer.contact.organisation_id == user.organisation_id
         )
 
     def has_change_permission(self, request, obj=None):
-        if not obj:
-            return request.user.is_superuser
+        # let's not ignore built-in permission system
+        admin_permission = super().has_view_permission(request)
 
-        return (
-                request.user.is_superuser or
-                obj.offer.contact == request.user or
-                (
-                        obj.offer.contact.organisation_id is not None and
-                        obj.offer.contact.organisation_id == request.user.organisation_id
-                )
+        if admin_permission:
+            return True
+
+        user = request.user
+
+        if not obj:
+            return user.has_perm("supply_demand.change_own_offeritem")
+
+        if not user.has_perm("supply_demand.change_own_offeritem"):
+            return False
+
+        return obj.offer.contact == request.user or (
+            obj.offer.contact.organisation_id is not None and
+            obj.offer.contact.organisation_id == request.user.organisation_id
         )
 
     def has_delete_permission(self, request, obj=None):
-        if not obj:
-            return request.user.is_superuser
+        # let's not ignore built-in permission system
+        admin_permission = super().has_view_permission(request)
 
-        return (
-                request.user.is_superuser or
-                obj.offer.contact == request.user or
-                (
-                        obj.offer.contact.organisation_id is not None and
-                        obj.offer.contact.organisation_id == request.user.organisation_id
-                )
+        if admin_permission:
+            return True
+
+        user = request.user
+
+        if not obj:
+            return user.has_perm("supply_demand.delete_own_offeritem")
+
+        if not user.has_perm("supply_demand.delete_own_offeritem"):
+            return False
+
+        return obj.offer.contact == request.user or (
+            obj.offer.contact.organisation_id is not None and
+            obj.offer.contact.organisation_id == request.user.organisation_id
         )
 
     def get_inlines(self, request, obj):
