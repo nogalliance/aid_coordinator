@@ -8,27 +8,27 @@ from aid_coordinator.filters import InputFilter
 
 
 class OverclaimedListFilter(admin.SimpleListFilter):
-    title = _('overclaimed')
-    parameter_name = 'overclaimed'
+    title = _("overclaimed")
+    parameter_name = "overclaimed"
 
     def lookups(self, request: HttpRequest, model_admin: ModelAdmin):
         return (
-            ('yes', _('Yes')),
-            ('no', _('No')),
+            ("yes", _("Yes")),
+            ("no", _("No")),
         )
 
     def queryset(self, request: HttpRequest, queryset: QuerySet):
-        if self.value() == 'yes':
-            return queryset.filter(claimed__gt=F('amount'))
-        if self.value() == 'yes':
-            return queryset.filter(claimed__lte=F('amount'))
+        if self.value() == "yes":
+            return queryset.filter(claimed__gt=F("amount"))
+        if self.value() == "yes":
+            return queryset.filter(claimed__lte=F("amount"))
         else:
             return queryset
 
 
 class LocationFilter(InputFilter):
-    parameter_name = 'location'
-    title = _('location')
+    parameter_name = "location"
+    title = _("location")
 
     def queryset(self, request: HttpRequest, queryset: QuerySet):
         if self.value() is not None:

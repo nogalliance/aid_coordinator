@@ -6,18 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contacts', '0006_remove_contact_is_staff'),
+        ("contacts", "0006_remove_contact_is_staff"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contact',
-            name='listed',
-            field=models.BooleanField(default=False, help_text='Shown as a personal donor on the website', verbose_name='listed'),
+            model_name="contact",
+            name="listed",
+            field=models.BooleanField(
+                default=False,
+                help_text="Shown as a personal donor on the website",
+                verbose_name="listed",
+            ),
         ),
         migrations.AddField(
-            model_name='organisation',
-            name='listed',
-            field=models.BooleanField(default=False, help_text='Shown as a donor organisation on the website', verbose_name='listed'),
+            model_name="organisation",
+            name="listed",
+            field=models.BooleanField(
+                default=False,
+                help_text="Shown as a donor organisation on the website",
+                verbose_name="listed",
+            ),
         ),
     ]

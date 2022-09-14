@@ -6,13 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contacts', '0002_alter_organisation_type'),
+        ("contacts", "0002_alter_organisation_type"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='organisation',
-            name='type',
-            field=models.PositiveIntegerField(choices=[(0, 'Other'), (100, 'Commercial (generic)'), (101, 'Internet Provider'), (102, 'Internet Exchange'), (200, 'Non-Profit (generic)'), (201, 'Association'), (202, 'Foundation'), (900, 'Government (generic)'), (901, 'Regulator')], default=0, verbose_name='type'),
+            model_name="organisation",
+            name="type",
+            field=models.PositiveIntegerField(
+                choices=[
+                    (0, "Other"),
+                    (100, "Commercial (generic)"),
+                    (101, "Internet Provider"),
+                    (102, "Internet Exchange"),
+                    (200, "Non-Profit (generic)"),
+                    (201, "Association"),
+                    (202, "Foundation"),
+                    (900, "Government (generic)"),
+                    (901, "Regulator"),
+                ],
+                default=0,
+                verbose_name="type",
+            ),
         ),
     ]

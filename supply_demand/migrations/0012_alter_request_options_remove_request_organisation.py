@@ -6,16 +6,25 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0011_alter_offer_options_remove_offer_organisation'),
+        ("supply_demand", "0011_alter_offer_options_remove_offer_organisation"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='request',
-            options={'ordering': ('contact__organisation__name', 'contact__last_name', 'contact__first_name', 'goal'), 'verbose_name': 'request', 'verbose_name_plural': 'requests'},
+            name="request",
+            options={
+                "ordering": (
+                    "contact__organisation__name",
+                    "contact__last_name",
+                    "contact__first_name",
+                    "goal",
+                ),
+                "verbose_name": "request",
+                "verbose_name_plural": "requests",
+            },
         ),
         migrations.RemoveField(
-            model_name='request',
-            name='organisation',
+            model_name="request",
+            name="organisation",
         ),
     ]

@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('logistics', '0012_alter_location_is_collection_point'),
+        ("logistics", "0012_alter_location_is_collection_point"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='location',
-            name='is_distribution_point',
-            field=models.BooleanField(default=False, help_text='items at this location can be directly assigned to requesters', verbose_name='is a distribution point'),
+            model_name="location",
+            name="is_distribution_point",
+            field=models.BooleanField(
+                default=False,
+                help_text="items at this location can be directly assigned to requesters",
+                verbose_name="is a distribution point",
+            ),
         ),
     ]

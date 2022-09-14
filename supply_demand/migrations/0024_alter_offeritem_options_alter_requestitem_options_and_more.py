@@ -6,26 +6,52 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0023_alter_offer_unused_item_handling'),
+        ("supply_demand", "0023_alter_offer_unused_item_handling"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='offeritem',
-            options={'ordering': ('type', 'brand', 'model'), 'verbose_name': 'offered item', 'verbose_name_plural': 'offered items'},
+            name="offeritem",
+            options={
+                "ordering": ("type", "brand", "model"),
+                "verbose_name": "offered item",
+                "verbose_name_plural": "offered items",
+            },
         ),
         migrations.AlterModelOptions(
-            name='requestitem',
-            options={'ordering': ('type', 'brand', 'model'), 'verbose_name': 'requested item', 'verbose_name_plural': 'requested items'},
+            name="requestitem",
+            options={
+                "ordering": ("type", "brand", "model"),
+                "verbose_name": "requested item",
+                "verbose_name_plural": "requested items",
+            },
         ),
         migrations.AlterField(
-            model_name='offeritem',
-            name='type',
-            field=models.PositiveIntegerField(choices=[(0, 'Other'), (100, 'Hardware'), (200, 'Software'), (300, 'Service')], default=100, verbose_name='type'),
+            model_name="offeritem",
+            name="type",
+            field=models.PositiveIntegerField(
+                choices=[
+                    (0, "Other"),
+                    (100, "Hardware"),
+                    (200, "Software"),
+                    (300, "Service"),
+                ],
+                default=100,
+                verbose_name="type",
+            ),
         ),
         migrations.AlterField(
-            model_name='requestitem',
-            name='type',
-            field=models.PositiveIntegerField(choices=[(0, 'Other'), (100, 'Hardware'), (200, 'Software'), (300, 'Service')], default=100, verbose_name='type'),
+            model_name="requestitem",
+            name="type",
+            field=models.PositiveIntegerField(
+                choices=[
+                    (0, "Other"),
+                    (100, "Hardware"),
+                    (200, "Software"),
+                    (300, "Service"),
+                ],
+                default=100,
+                verbose_name="type",
+            ),
         ),
     ]

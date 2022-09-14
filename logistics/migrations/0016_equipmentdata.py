@@ -6,21 +6,32 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('logistics', '0015_location_managed_by'),
+        ("logistics", "0015_location_managed_by"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EquipmentData',
+            name="EquipmentData",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('brand', models.CharField(max_length=50, verbose_name='brand')),
-                ('model', models.CharField(max_length=100, verbose_name='model')),
-                ('weight', models.FloatField(blank=True, null=True, verbose_name='weight')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("brand", models.CharField(max_length=50, verbose_name="brand")),
+                ("model", models.CharField(max_length=100, verbose_name="model")),
+                (
+                    "weight",
+                    models.FloatField(blank=True, null=True, verbose_name="weight"),
+                ),
             ],
             options={
-                'verbose_name': 'equipment data',
-                'verbose_name_plural': 'equipment data',
+                "verbose_name": "equipment data",
+                "verbose_name_plural": "equipment data",
             },
         ),
     ]

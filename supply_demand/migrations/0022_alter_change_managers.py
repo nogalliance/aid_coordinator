@@ -6,13 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0021_alter_offer_unused_item_handling'),
+        ("supply_demand", "0021_alter_offer_unused_item_handling"),
     ]
 
     operations = [
         migrations.AlterModelManagers(
-            name='change',
-            managers=[
-            ],
+            name="change",
+            managers=[],
         ),
     ]

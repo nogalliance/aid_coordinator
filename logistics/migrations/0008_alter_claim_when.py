@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('logistics', '0007_default_locations'),
+        ("logistics", "0007_default_locations"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='claim',
-            name='when',
-            field=models.DateField(auto_now_add=True, verbose_name='when'),
+            model_name="claim",
+            name="when",
+            field=models.DateField(auto_now_add=True, verbose_name="when"),
         ),
     ]

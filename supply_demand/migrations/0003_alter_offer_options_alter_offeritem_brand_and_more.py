@@ -6,22 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0002_offer_alter_request_options_offeritem'),
+        ("supply_demand", "0002_offer_alter_request_options_offeritem"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='offer',
-            options={'ordering': ('organisation__name',), 'verbose_name': 'offer', 'verbose_name_plural': 'offers'},
+            name="offer",
+            options={
+                "ordering": ("organisation__name",),
+                "verbose_name": "offer",
+                "verbose_name_plural": "offers",
+            },
         ),
         migrations.AlterField(
-            model_name='offeritem',
-            name='brand',
-            field=models.CharField(max_length=50, verbose_name='brand'),
+            model_name="offeritem",
+            name="brand",
+            field=models.CharField(max_length=50, verbose_name="brand"),
         ),
         migrations.AlterField(
-            model_name='offeritem',
-            name='model',
-            field=models.CharField(max_length=50, verbose_name='model'),
+            model_name="offeritem",
+            name="model",
+            field=models.CharField(max_length=50, verbose_name="model"),
         ),
     ]

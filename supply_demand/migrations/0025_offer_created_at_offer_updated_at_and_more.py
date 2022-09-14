@@ -7,52 +7,71 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0024_alter_offeritem_options_alter_requestitem_options_and_more'),
+        (
+            "supply_demand",
+            "0024_alter_offeritem_options_alter_requestitem_options_and_more",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='offer',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now, verbose_name='created at'),
+            model_name="offer",
+            name="created_at",
+            field=models.DateTimeField(
+                auto_now_add=True,
+                default=django.utils.timezone.now,
+                verbose_name="created at",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='offer',
-            name='updated_at',
-            field=models.DateTimeField(auto_now=True, verbose_name='updated at'),
+            model_name="offer",
+            name="updated_at",
+            field=models.DateTimeField(auto_now=True, verbose_name="updated at"),
         ),
         migrations.AddField(
-            model_name='offeritem',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now, verbose_name='created at'),
+            model_name="offeritem",
+            name="created_at",
+            field=models.DateTimeField(
+                auto_now_add=True,
+                default=django.utils.timezone.now,
+                verbose_name="created at",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='offeritem',
-            name='updated_at',
-            field=models.DateTimeField(auto_now=True, verbose_name='updated at'),
+            model_name="offeritem",
+            name="updated_at",
+            field=models.DateTimeField(auto_now=True, verbose_name="updated at"),
         ),
         migrations.AddField(
-            model_name='request',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now, verbose_name='created at'),
+            model_name="request",
+            name="created_at",
+            field=models.DateTimeField(
+                auto_now_add=True,
+                default=django.utils.timezone.now,
+                verbose_name="created at",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='request',
-            name='updated_at',
-            field=models.DateTimeField(auto_now=True, verbose_name='updated at'),
+            model_name="request",
+            name="updated_at",
+            field=models.DateTimeField(auto_now=True, verbose_name="updated at"),
         ),
         migrations.AddField(
-            model_name='requestitem',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now, verbose_name='created at'),
+            model_name="requestitem",
+            name="created_at",
+            field=models.DateTimeField(
+                auto_now_add=True,
+                default=django.utils.timezone.now,
+                verbose_name="created at",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='requestitem',
-            name='updated_at',
-            field=models.DateTimeField(auto_now=True, verbose_name='updated at'),
+            model_name="requestitem",
+            name="updated_at",
+            field=models.DateTimeField(auto_now=True, verbose_name="updated at"),
         ),
     ]

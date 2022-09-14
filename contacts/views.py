@@ -11,30 +11,33 @@ from contacts.forms import EmailForm
 from contacts.models import Contact
 
 
-@method_decorator(superuser_required(), name='dispatch')
+@method_decorator(superuser_required(), name="dispatch")
 class EmailView(AdminFormView):
-    template_name = 'admin/email.html'
+    template_name = "admin/email.html"
     form_class = EmailForm
     admin_model = Contact
 
     def form_valid(self, form: EmailForm):
         count = 0
-        for contact in Contact.objects.filter(pk__in=self.request.GET['contacts'].split(',')):
-            context = {
-                'contact': contact
-            }
-            text = Template(form.cleaned_data['content']).render(context)
+        for contact in Contact.objects.filter(pk__in=self.request.GET["contacts"].split(",")):
+            context = {"contact": contact}
+            text = Template(form.cleaned_data["content"]).render(context)
             contact.email_user(
-                from_email=form.cleaned_data['sender'],
-                subject=form.cleaned_data['subject'],
+                from_email=form.cleaned_data["sender"],
+                subject=form.cleaned_data["subject"],
                 message=text,
             )
             count += 1
 
-        messages.add_message(request=self.request, level=messages.INFO, message=ngettext(
-            "%(count)s message has been sent",
-            "%(count)s messages have been sent",
-            count
-        ) % {'count': count})
+        messages.add_message(
+            request=self.request,
+            level=messages.INFO,
+            message=ngettext(
+                "%(count)s message has been sent",
+                "%(count)s messages have been sent",
+                count,
+            )
+            % {"count": count},
+        )
 
-        return HttpResponseRedirect('..')
+        return HttpResponseRedirect("..")

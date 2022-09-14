@@ -6,18 +6,34 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0013_alter_offeritem_options_alter_requestitem_options_and_more'),
+        (
+            "supply_demand",
+            "0013_alter_offeritem_options_alter_requestitem_options_and_more",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='offer',
-            name='delivery_method',
-            field=models.IntegerField(choices=[(0, 'Unknown'), (100, 'Send to GNA by donor'), (200, 'Pickup requested'), (999, 'Other')], default=0, verbose_name='delivery method'),
+            model_name="offer",
+            name="delivery_method",
+            field=models.IntegerField(
+                choices=[
+                    (0, "Unknown"),
+                    (100, "Send to GNA by donor"),
+                    (200, "Pickup requested"),
+                    (999, "Other"),
+                ],
+                default=0,
+                verbose_name="delivery method",
+            ),
         ),
         migrations.AddField(
-            model_name='offer',
-            name='location',
-            field=models.TextField(blank=True, help_text='Where is the equipment coming from?', verbose_name='location'),
+            model_name="offer",
+            name="location",
+            field=models.TextField(
+                blank=True,
+                help_text="Where is the equipment coming from?",
+                verbose_name="location",
+            ),
         ),
     ]

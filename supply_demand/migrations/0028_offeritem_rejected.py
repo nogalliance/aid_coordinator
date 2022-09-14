@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0027_alter_offeritem_model_alter_requestitem_model'),
+        ("supply_demand", "0027_alter_offeritem_model_alter_requestitem_model"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='offeritem',
-            name='rejected',
-            field=models.BooleanField(default=False, verbose_name='rejected'),
+            model_name="offeritem",
+            name="rejected",
+            field=models.BooleanField(default=False, verbose_name="rejected"),
         ),
     ]

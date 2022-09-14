@@ -6,12 +6,16 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0007_alter_offer_options'),
+        ("supply_demand", "0007_alter_offer_options"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='offer',
-            options={'ordering': ('description', 'organisation__name'), 'verbose_name': 'offer', 'verbose_name_plural': 'offers'},
+            name="offer",
+            options={
+                "ordering": ("description", "organisation__name"),
+                "verbose_name": "offer",
+                "verbose_name_plural": "offers",
+            },
         ),
     ]

@@ -7,13 +7,19 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('logistics', '0005_location'),
+        ("logistics", "0005_location"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='shipment',
-            name='current_location',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.RESTRICT, to='logistics.location', verbose_name='current location'),
+            model_name="shipment",
+            name="current_location",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.RESTRICT,
+                to="logistics.location",
+                verbose_name="current location",
+            ),
         ),
     ]

@@ -7,14 +7,14 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('logistics', '0001_initial'),
+        ("logistics", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='claim',
-            name='when',
-            field=models.DateField(default=django.utils.timezone.now, verbose_name='when'),
+            model_name="claim",
+            name="when",
+            field=models.DateField(default=django.utils.timezone.now, verbose_name="when"),
             preserve_default=False,
         ),
     ]

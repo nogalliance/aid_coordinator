@@ -9,24 +9,40 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('supply_demand', '0015_alter_offer_description_alter_request_description'),
+        ("supply_demand", "0015_alter_offer_description_alter_request_description"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Change',
+            name="Change",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('when', models.DateTimeField(auto_now_add=True, verbose_name='when')),
-                ('what', models.CharField(max_length=250, verbose_name='what')),
-                ('before', models.TextField(blank=True, verbose_name='before')),
-                ('after', models.TextField(blank=True, verbose_name='after')),
-                ('who', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, related_name='changes', to=settings.AUTH_USER_MODEL, verbose_name='who')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("when", models.DateTimeField(auto_now_add=True, verbose_name="when")),
+                ("what", models.CharField(max_length=250, verbose_name="what")),
+                ("before", models.TextField(blank=True, verbose_name="before")),
+                ("after", models.TextField(blank=True, verbose_name="after")),
+                (
+                    "who",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        related_name="changes",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="who",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'change',
-                'verbose_name_plural': 'changes',
-                'ordering': ('when', 'who'),
+                "verbose_name": "change",
+                "verbose_name_plural": "changes",
+                "ordering": ("when", "who"),
             },
         ),
     ]

@@ -8,45 +8,129 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contacts', '0001_initial'),
+        ("contacts", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('supply_demand', '0001_initial'),
+        ("supply_demand", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Offer',
+            name="Offer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('description', models.CharField(help_text='Give a short description of what this offer is', max_length=100, verbose_name='description')),
-                ('internal_notes', models.TextField(blank=True, help_text='Internal notes that will NOT be shown publicly', verbose_name='internal notes')),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to=settings.AUTH_USER_MODEL, verbose_name='contact')),
-                ('organisation', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='contacts.organisation', verbose_name='organisation')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "description",
+                    models.CharField(
+                        help_text="Give a short description of what this offer is",
+                        max_length=100,
+                        verbose_name="description",
+                    ),
+                ),
+                (
+                    "internal_notes",
+                    models.TextField(
+                        blank=True,
+                        help_text="Internal notes that will NOT be shown publicly",
+                        verbose_name="internal notes",
+                    ),
+                ),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="contact",
+                    ),
+                ),
+                (
+                    "organisation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        to="contacts.organisation",
+                        verbose_name="organisation",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'offer',
-                'verbose_name_plural': 'offer',
-                'ordering': ('organisation__name',),
+                "verbose_name": "offer",
+                "verbose_name_plural": "offer",
+                "ordering": ("organisation__name",),
             },
         ),
         migrations.AlterModelOptions(
-            name='request',
-            options={'ordering': ('organisation__name', 'goal'), 'verbose_name': 'request', 'verbose_name_plural': 'requests'},
+            name="request",
+            options={
+                "ordering": ("organisation__name", "goal"),
+                "verbose_name": "request",
+                "verbose_name_plural": "requests",
+            },
         ),
         migrations.CreateModel(
-            name='OfferItem',
+            name="OfferItem",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.PositiveIntegerField(choices=[(0, 'Other'), (100, 'Hardware'), (200, 'Software'), (300, 'Service')], default=0, verbose_name='type')),
-                ('brand', models.CharField(blank=True, max_length=50, verbose_name='brand')),
-                ('model', models.CharField(blank=True, max_length=50, verbose_name='model')),
-                ('amount', models.PositiveIntegerField(default=1, verbose_name='# offered')),
-                ('notes', models.CharField(blank=True, help_text='Any extra information that can help a donor decide if they have something that can help you', max_length=250, verbose_name='notes')),
-                ('offer', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='supply_demand.offer', verbose_name='offer')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "type",
+                    models.PositiveIntegerField(
+                        choices=[
+                            (0, "Other"),
+                            (100, "Hardware"),
+                            (200, "Software"),
+                            (300, "Service"),
+                        ],
+                        default=0,
+                        verbose_name="type",
+                    ),
+                ),
+                (
+                    "brand",
+                    models.CharField(blank=True, max_length=50, verbose_name="brand"),
+                ),
+                (
+                    "model",
+                    models.CharField(blank=True, max_length=50, verbose_name="model"),
+                ),
+                (
+                    "amount",
+                    models.PositiveIntegerField(default=1, verbose_name="# offered"),
+                ),
+                (
+                    "notes",
+                    models.CharField(
+                        blank=True,
+                        help_text="Any extra information that can help a donor decide if they have something that can help you",
+                        max_length=250,
+                        verbose_name="notes",
+                    ),
+                ),
+                (
+                    "offer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        to="supply_demand.offer",
+                        verbose_name="offer",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'offer item',
-                'verbose_name_plural': 'offer items',
+                "verbose_name": "offer item",
+                "verbose_name_plural": "offer items",
             },
         ),
     ]

@@ -13,7 +13,7 @@ def show_toolbar(request: HttpRequest):
 
     # Extract the remote address, and no address = no toolbar
     try:
-        remote_addr = ipaddress.ip_address(request.META.get('REMOTE_ADDR', '::'))
+        remote_addr = ipaddress.ip_address(request.META.get("REMOTE_ADDR", "::"))
         if remote_addr.is_unspecified:
             return False
     except ValueError:
@@ -27,7 +27,7 @@ def show_toolbar(request: HttpRequest):
                 # The prefix is on the list
                 return True
         except ValueError:
-            raise ImproperlyConfigured(f'INTERNAL_IP {internal_ip} cannot be parsed')
+            raise ImproperlyConfigured(f"INTERNAL_IP {internal_ip} cannot be parsed")
 
     sys.stdout.flush()
 

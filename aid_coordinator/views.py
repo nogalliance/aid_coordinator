@@ -24,7 +24,7 @@ class ClaimAutocompleteView(AutocompleteJsonView):
 
             return {
                 "id": str(getattr(obj, to_field_name)),
-                "text": f"{amount} {obj} {obj.notes} [{donor}]"
+                "text": f"{amount} {obj} {obj.notes} [{donor}]",
             }
         else:
             return super().serialize_result(obj, to_field_name)
@@ -35,12 +35,12 @@ class AdminFormView(FormView):
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
-        data.setdefault('request', self.request)
+        data.setdefault("request", self.request)
         data.setdefault("site_title", admin.site.site_title)
         data.setdefault("site_header", admin.site.site_header)
         data.setdefault("has_permission", admin.site.has_permission(self.request))
 
         # noinspection PyProtectedMember
-        data.setdefault('opts', self.admin_model._meta)
+        data.setdefault("opts", self.admin_model._meta)
 
         return data

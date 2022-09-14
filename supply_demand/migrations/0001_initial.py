@@ -10,42 +10,160 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('contacts', '0001_initial'),
+        ("contacts", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Request',
+            name="Request",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('goal', models.CharField(help_text='Give a short description of what this request is for', max_length=100, verbose_name='goal')),
-                ('description', models.TextField(help_text='Provide more detail on this request, this is your elevator pitch!', verbose_name='description')),
-                ('internal_notes', models.TextField(blank=True, help_text='Internal notes that will NOT be shown publicly', verbose_name='internal notes')),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to=settings.AUTH_USER_MODEL, verbose_name='contact')),
-                ('organisation', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='contacts.organisation', verbose_name='organisation')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "goal",
+                    models.CharField(
+                        help_text="Give a short description of what this request is for",
+                        max_length=100,
+                        verbose_name="goal",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        help_text="Provide more detail on this request, this is your elevator pitch!",
+                        verbose_name="description",
+                    ),
+                ),
+                (
+                    "internal_notes",
+                    models.TextField(
+                        blank=True,
+                        help_text="Internal notes that will NOT be shown publicly",
+                        verbose_name="internal notes",
+                    ),
+                ),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="contact",
+                    ),
+                ),
+                (
+                    "organisation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        to="contacts.organisation",
+                        verbose_name="organisation",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'request',
-                'verbose_name_plural': 'requests',
+                "verbose_name": "request",
+                "verbose_name_plural": "requests",
             },
         ),
         migrations.CreateModel(
-            name='RequestItem',
+            name="RequestItem",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.PositiveIntegerField(choices=[(0, 'Other'), (100, 'Hardware'), (200, 'Software'), (300, 'Service')], default=0, verbose_name='type')),
-                ('brand', models.CharField(blank=True, help_text='Either a brand name or a description of the kind of brand', max_length=50, verbose_name='brand')),
-                ('model', models.CharField(blank=True, help_text='Either an explicit model or a description of the required features', max_length=50, verbose_name='model')),
-                ('amount', models.PositiveIntegerField(default=1, help_text='The minimal amount that you need', verbose_name='# required')),
-                ('up_to', models.PositiveIntegerField(blank=True, help_text='The maximum amount that you could use', null=True, verbose_name='up to')),
-                ('notes', models.CharField(blank=True, help_text='Any extra information that can help a donor decide if they have something that can help you', max_length=250, verbose_name='notes')),
-                ('alternative_for', models.ForeignKey(blank=True, help_text='In case there are multiple options to solve your problem', null=True, on_delete=django.db.models.deletion.CASCADE, to='supply_demand.requestitem', verbose_name='alternative for')),
-                ('request', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='supply_demand.request', verbose_name='request')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "type",
+                    models.PositiveIntegerField(
+                        choices=[
+                            (0, "Other"),
+                            (100, "Hardware"),
+                            (200, "Software"),
+                            (300, "Service"),
+                        ],
+                        default=0,
+                        verbose_name="type",
+                    ),
+                ),
+                (
+                    "brand",
+                    models.CharField(
+                        blank=True,
+                        help_text="Either a brand name or a description of the kind of brand",
+                        max_length=50,
+                        verbose_name="brand",
+                    ),
+                ),
+                (
+                    "model",
+                    models.CharField(
+                        blank=True,
+                        help_text="Either an explicit model or a description of the required features",
+                        max_length=50,
+                        verbose_name="model",
+                    ),
+                ),
+                (
+                    "amount",
+                    models.PositiveIntegerField(
+                        default=1,
+                        help_text="The minimal amount that you need",
+                        verbose_name="# required",
+                    ),
+                ),
+                (
+                    "up_to",
+                    models.PositiveIntegerField(
+                        blank=True,
+                        help_text="The maximum amount that you could use",
+                        null=True,
+                        verbose_name="up to",
+                    ),
+                ),
+                (
+                    "notes",
+                    models.CharField(
+                        blank=True,
+                        help_text="Any extra information that can help a donor decide if they have something that can help you",
+                        max_length=250,
+                        verbose_name="notes",
+                    ),
+                ),
+                (
+                    "alternative_for",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="In case there are multiple options to solve your problem",
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="supply_demand.requestitem",
+                        verbose_name="alternative for",
+                    ),
+                ),
+                (
+                    "request",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        to="supply_demand.request",
+                        verbose_name="request",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'request item',
-                'verbose_name_plural': 'request items',
+                "verbose_name": "request item",
+                "verbose_name_plural": "request items",
             },
         ),
     ]

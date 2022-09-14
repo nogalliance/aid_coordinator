@@ -7,14 +7,14 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contacts', '0009_alter_contact_managers'),
+        ("contacts", "0009_alter_contact_managers"),
     ]
 
     operations = [
         migrations.AlterModelManagers(
-            name='contact',
+            name="contact",
             managers=[
-                ('objects', contacts.models.ContactManager()),
+                ("objects", contacts.models.ContactManager()),
             ],
         ),
     ]

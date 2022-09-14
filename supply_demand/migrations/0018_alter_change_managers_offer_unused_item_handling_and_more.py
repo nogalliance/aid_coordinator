@@ -8,34 +8,63 @@ import django.db.models.manager
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0017_change_action_change_type'),
+        ("supply_demand", "0017_change_action_change_type"),
     ]
 
     operations = [
         migrations.AlterModelManagers(
-            name='change',
+            name="change",
             managers=[
-                ('object', django.db.models.manager.Manager()),
+                ("object", django.db.models.manager.Manager()),
             ],
         ),
         migrations.AddField(
-            model_name='offer',
-            name='unused_item_handling',
-            field=models.PositiveIntegerField(choices=[(0, 'No preference'), (10, 'Return them to donor'), (20, 'Destroy them'), (50, 'Sell them and use funds for Ukraine')], default=0, help_text="If we can't find a Ukrainian organisation that can use these items in a reasonable time, what should we do with them?", verbose_name='unused item handling'),
+            model_name="offer",
+            name="unused_item_handling",
+            field=models.PositiveIntegerField(
+                choices=[
+                    (0, "No preference"),
+                    (10, "Return them to donor"),
+                    (20, "Destroy them"),
+                    (50, "Sell them and use funds for Ukraine"),
+                ],
+                default=0,
+                help_text="If we can't find a Ukrainian organisation that can use these items in a reasonable time, what should we do with them?",
+                verbose_name="unused item handling",
+            ),
         ),
         migrations.AlterField(
-            model_name='offer',
-            name='delivery_method',
-            field=models.PositiveIntegerField(choices=[(0, 'Unknown'), (100, 'Send to GNA by donor'), (200, 'Pickup requested'), (999, 'Other')], default=0, verbose_name='delivery method'),
+            model_name="offer",
+            name="delivery_method",
+            field=models.PositiveIntegerField(
+                choices=[
+                    (0, "Unknown"),
+                    (100, "Send to GNA by donor"),
+                    (200, "Pickup requested"),
+                    (999, "Other"),
+                ],
+                default=0,
+                verbose_name="delivery method",
+            ),
         ),
         migrations.AlterField(
-            model_name='offeritem',
-            name='offer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='supply_demand.offer', verbose_name='offer'),
+            model_name="offeritem",
+            name="offer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="items",
+                to="supply_demand.offer",
+                verbose_name="offer",
+            ),
         ),
         migrations.AlterField(
-            model_name='requestitem',
-            name='request',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='supply_demand.request', verbose_name='request'),
+            model_name="requestitem",
+            name="request",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="items",
+                to="supply_demand.request",
+                verbose_name="request",
+            ),
         ),
     ]

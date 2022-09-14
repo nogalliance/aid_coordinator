@@ -7,14 +7,20 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contacts', '0001_initial'),
-        ('supply_demand', '0004_alter_offeritem_amount'),
+        ("contacts", "0001_initial"),
+        ("supply_demand", "0004_alter_offeritem_amount"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='offer',
-            name='organisation',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.RESTRICT, to='contacts.organisation', verbose_name='organisation'),
+            model_name="offer",
+            name="organisation",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.RESTRICT,
+                to="contacts.organisation",
+                verbose_name="organisation",
+            ),
         ),
     ]

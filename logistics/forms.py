@@ -6,7 +6,7 @@ from logistics.models import Claim
 class AssignToShipmentForm(forms.ModelForm):
     class Meta:
         model = Claim
-        fields = ('shipment',)
+        fields = ("shipment",)
 
 
 class RequestForm(forms.Form):

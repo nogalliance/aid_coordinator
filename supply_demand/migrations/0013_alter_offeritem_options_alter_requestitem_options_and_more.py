@@ -6,21 +6,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0012_alter_request_options_remove_request_organisation'),
+        ("supply_demand", "0012_alter_request_options_remove_request_organisation"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='offeritem',
-            options={'ordering': ('type', 'brand', 'model'), 'verbose_name': 'offer item', 'verbose_name_plural': 'offer items'},
+            name="offeritem",
+            options={
+                "ordering": ("type", "brand", "model"),
+                "verbose_name": "offer item",
+                "verbose_name_plural": "offer items",
+            },
         ),
         migrations.AlterModelOptions(
-            name='requestitem',
-            options={'ordering': ('type', 'brand', 'model'), 'verbose_name': 'request item', 'verbose_name_plural': 'request items'},
+            name="requestitem",
+            options={
+                "ordering": ("type", "brand", "model"),
+                "verbose_name": "request item",
+                "verbose_name_plural": "request items",
+            },
         ),
         migrations.AddField(
-            model_name='offeritem',
-            name='received',
-            field=models.BooleanField(default=False, verbose_name='received'),
+            model_name="offeritem",
+            name="received",
+            field=models.BooleanField(default=False, verbose_name="received"),
         ),
     ]

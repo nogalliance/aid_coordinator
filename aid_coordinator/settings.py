@@ -23,95 +23,95 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 # Note: to save you some time, this is NOT the key used in production :)
 # noinspection SpellCheckingInspection
-SECRET_KEY = 'django-insecure-3=oz#nz0gr%4fsa$+i0r_xfl6&#!4#4tz$g(rj&ba*svwk0^+*'
+SECRET_KEY = "django-insecure-3=oz#nz0gr%4fsa$+i0r_xfl6&#!4#4tz$g(rj&ba*svwk0^+*"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
 USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_HTTPS', 'on')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_HTTPS", "on")
 ALLOWED_HOSTS = [
-    'keepukraineconnected.org',
-    'www.keepukraineconnected.org',
+    "keepukraineconnected.org",
+    "www.keepukraineconnected.org",
 ]
 
-DEFAULT_FROM_EMAIL = 'ukraine@nogalliance.org'
+DEFAULT_FROM_EMAIL = "ukraine@nogalliance.org"
 
 INTERNAL_IPS = [
-    '2001:9e0:8804:7700::/56',
-    '82.139.77.145',
+    "2001:9e0:8804:7700::/56",
+    "82.139.77.145",
 ]
 
 # Application definition
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'supply_demand.apps.SupplyDemandConfig',
-    'contacts.apps.ContactsConfig',
-    'logistics.apps.LogisticsConfig',
-    'debug_toolbar',
-    'rest_framework',
-    'django_filters',
-    'import_export',
-    'admin_wizard',
-    'django_countries',
-    'phonenumber_field',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "supply_demand.apps.SupplyDemandConfig",
+    "contacts.apps.ContactsConfig",
+    "logistics.apps.LogisticsConfig",
+    "debug_toolbar",
+    "rest_framework",
+    "django_filters",
+    "import_export",
+    "admin_wizard",
+    "django_countries",
+    "phonenumber_field",
 ]
 
 MIDDLEWARE = [
-    'xff.middleware.XForwardedForMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'aid_coordinator.middleware.LogLocaleMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "xff.middleware.XForwardedForMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "aid_coordinator.middleware.LogLocaleMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 XFF_TRUSTED_PROXY_DEPTH = 1
 XFF_STRICT = True
 
-ROOT_URLCONF = 'aid_coordinator.urls'
+ROOT_URLCONF = "aid_coordinator.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': [BASE_DIR / 'jinja2'],
-        'APP_DIRS': True,
+        "BACKEND": "django.template.backends.jinja2.Jinja2",
+        "DIRS": [BASE_DIR / "jinja2"],
+        "APP_DIRS": True,
     },
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'aid_coordinator.context_processors.settings',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "aid_coordinator.context_processors.settings",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'aid_coordinator.wsgi.application'
+WSGI_APPLICATION = "aid_coordinator.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -120,69 +120,69 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
-LANGUAGE_CODE = 'en'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = "en"
+TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
 LOCALE_PATHS = [
-    BASE_DIR / 'locale',
+    BASE_DIR / "locale",
 ]
 LANGUAGES = [
-    ('uk', _('Ukrainian')),
-    ('en', _('English')),
+    ("uk", _("Ukrainian")),
+    ("en", _("English")),
 ]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'static'
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "static"
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': 'aid_coordinator.debug_toolbar.show_toolbar',
+    "SHOW_TOOLBAR_CALLBACK": "aid_coordinator.debug_toolbar.show_toolbar",
 }
 
-AUTH_USER_MODEL = 'contacts.Contact'
-LOGIN_URL = '/admin/login'
+AUTH_USER_MODEL = "contacts.Contact"
+LOGIN_URL = "/admin/login"
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
     ],
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
     ],
 }
 
 IMPORT_EXPORT_USE_TRANSACTIONS = True
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
-IMPORT_EXPORT_IMPORT_PERMISSION_CODE = 'add'
-IMPORT_EXPORT_EXPORT_PERMISSION_CODE = 'view'
+IMPORT_EXPORT_IMPORT_PERMISSION_CODE = "add"
+IMPORT_EXPORT_EXPORT_PERMISSION_CODE = "view"
 
 REGISTRATION_OPEN = True
 ACCOUNT_ACTIVATION_DAYS = 3650

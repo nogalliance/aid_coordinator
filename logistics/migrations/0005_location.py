@@ -7,23 +7,43 @@ import django_countries.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('logistics', '0004_alter_claim_when'),
+        ("logistics", "0004_alter_claim_when"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Location',
+            name="Location",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='name')),
-                ('street_address', models.TextField(blank=True, verbose_name='street_address')),
-                ('city', models.CharField(blank=True, max_length=50, verbose_name='city')),
-                ('postcode', models.CharField(blank=True, max_length=16, verbose_name='postcode')),
-                ('country', django_countries.fields.CountryField(blank=True, max_length=2, verbose_name='country')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100, verbose_name="name")),
+                (
+                    "street_address",
+                    models.TextField(blank=True, verbose_name="street_address"),
+                ),
+                (
+                    "city",
+                    models.CharField(blank=True, max_length=50, verbose_name="city"),
+                ),
+                (
+                    "postcode",
+                    models.CharField(blank=True, max_length=16, verbose_name="postcode"),
+                ),
+                (
+                    "country",
+                    django_countries.fields.CountryField(blank=True, max_length=2, verbose_name="country"),
+                ),
             ],
             options={
-                'verbose_name': 'location',
-                'verbose_name_plural': 'locations',
+                "verbose_name": "location",
+                "verbose_name_plural": "locations",
             },
         ),
     ]

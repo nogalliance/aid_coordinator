@@ -9,13 +9,19 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('supply_demand', '0005_alter_offer_organisation'),
+        ("supply_demand", "0005_alter_offer_organisation"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='offeritem',
-            name='claimed_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL, verbose_name='claimed by'),
+            model_name="offeritem",
+            name="claimed_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="claimed by",
+            ),
         ),
     ]

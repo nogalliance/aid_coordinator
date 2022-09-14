@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('logistics', '0017_alter_equipmentdata_unique_together'),
+        ("logistics", "0017_alter_equipmentdata_unique_together"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='equipmentdata',
-            name='depth',
-            field=models.PositiveIntegerField(blank=True, help_text='in cm', null=True, verbose_name='depth'),
+            model_name="equipmentdata",
+            name="depth",
+            field=models.PositiveIntegerField(blank=True, help_text="in cm", null=True, verbose_name="depth"),
         ),
         migrations.AddField(
-            model_name='equipmentdata',
-            name='height',
-            field=models.PositiveIntegerField(blank=True, help_text='in cm', null=True, verbose_name='height'),
+            model_name="equipmentdata",
+            name="height",
+            field=models.PositiveIntegerField(blank=True, help_text="in cm", null=True, verbose_name="height"),
         ),
         migrations.AddField(
-            model_name='equipmentdata',
-            name='width',
-            field=models.PositiveIntegerField(blank=True, help_text='in cm', null=True, verbose_name='width'),
+            model_name="equipmentdata",
+            name="width",
+            field=models.PositiveIntegerField(blank=True, help_text="in cm", null=True, verbose_name="width"),
         ),
     ]

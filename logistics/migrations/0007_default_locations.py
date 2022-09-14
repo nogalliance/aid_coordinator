@@ -15,7 +15,7 @@ def create_locations(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('logistics', '0006_shipment_current_location'),
+        ("logistics", "0006_shipment_current_location"),
     ]
 
     operations = [

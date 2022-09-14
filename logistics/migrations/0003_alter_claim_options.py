@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('logistics', '0002_claim_when'),
+        ("logistics", "0002_claim_when"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='claim',
-            options={'verbose_name': 'claim', 'verbose_name_plural': 'claims'},
+            name="claim",
+            options={"verbose_name": "claim", "verbose_name_plural": "claims"},
         ),
     ]

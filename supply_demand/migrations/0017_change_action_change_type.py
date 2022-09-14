@@ -6,20 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supply_demand', '0016_change'),
+        ("supply_demand", "0016_change"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='change',
-            name='action',
-            field=models.PositiveIntegerField(choices=[(1, 'Add'), (2, 'Change'), (3, 'Delete')], default=1, verbose_name='action'),
+            model_name="change",
+            name="action",
+            field=models.PositiveIntegerField(
+                choices=[(1, "Add"), (2, "Change"), (3, "Delete")],
+                default=1,
+                verbose_name="action",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='change',
-            name='type',
-            field=models.PositiveIntegerField(choices=[(1, 'Offer'), (2, 'Request')], default=1, verbose_name='type'),
+            model_name="change",
+            name="type",
+            field=models.PositiveIntegerField(choices=[(1, "Offer"), (2, "Request")], default=1, verbose_name="type"),
             preserve_default=False,
         ),
     ]
