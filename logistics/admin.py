@@ -9,8 +9,10 @@ from import_export.admin import ExportActionModelAdmin, ImportExportActionModelA
 
 from logistics.filters import UsedChoicesFieldListFilter
 from logistics.forms import AssignToShipmentForm
-from logistics.models import Claim, EquipmentData, Location, Shipment
-from logistics.resources import ClaimExportResource, EquipmentDataResource
+from logistics.models import EquipmentData, Location, Shipment, ShipmentItem
+from logistics.resources import EquipmentDataResource
+
+from supply_demand.models import Claim
 
 static_import_icon = static("img/import.png")
 static_export_icon = static("img/export.png")
@@ -92,25 +94,24 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(Shipment)
 class ShipmentAdmin(admin.ModelAdmin):
-    list_display = ("name", "when", "current_location", "is_delivered")
+    list_display = ("name", "when", "is_delivered")
     list_filter = ("is_delivered",)
     date_hierarchy = "when"
     ordering = ("when",)
     search_fields = (
         "name",
-        "current_location__name",
-        "current_location__city",
-        "current_location__country",
+        "to_location__name",
+        "to_location__city",
+        "to_location__country",
     )
 
 
-@admin.register(Claim)
-class ClaimAdmin(ExportActionModelAdmin):
+@admin.register(ShipmentItem)
+class ShipmentItemAdmin(ExportActionModelAdmin):
     list_display = (
         "amount",
         "admin_offered_item",
         "admin_requested_item",
-        "current_location",
         "shipment",
     )
     list_filter = (
@@ -135,7 +136,8 @@ class ClaimAdmin(ExportActionModelAdmin):
     )
     ordering = ("shipment",)
     actions = (UpdateAction(form_class=AssignToShipmentForm, title=_("Assign to shipment")),)
-    resource_class = ClaimExportResource
+    # TODO
+    # resource_class = ShipmentItemExportResource
 
     def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)

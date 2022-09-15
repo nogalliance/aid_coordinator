@@ -7,8 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from aid_coordinator.views import AdminFormView
 from logistics.forms import RequestForm
-from logistics.models import Claim
-from supply_demand.models import OfferItem, Request, RequestItem
+from supply_demand.models import Claim, OfferItem, Request, RequestItem
 
 
 class RequestView(AdminFormView):
@@ -57,8 +56,8 @@ class RequestView(AdminFormView):
             notes=self.item.notes,
             amount=amount,
         )
+        item.offered_items.add(self.item)
         Claim.objects.create(offered_item=self.item, requested_item=item, amount=amount)
-
         messages.info(
             self.request,
             _("Request for {amount}x {item} created").format(

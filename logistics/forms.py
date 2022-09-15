@@ -1,11 +1,11 @@
 from django import forms
 
-from logistics.models import Claim
+from logistics.models import ShipmentItem
 
 
 class AssignToShipmentForm(forms.ModelForm):
     class Meta:
-        model = Claim
+        model = ShipmentItem
         fields = ("shipment",)
 
 

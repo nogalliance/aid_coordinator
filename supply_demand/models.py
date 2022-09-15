@@ -1,11 +1,9 @@
-import sys
-
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
 
-from contacts.models import Contact, Organisation
+from contacts.models import Contact
 
 
 class ItemType(models.IntegerChoices):
@@ -165,6 +163,7 @@ class RequestItem(models.Model):
         on_delete=models.CASCADE,
         help_text=_("In case there are multiple options to solve your problem"),
     )
+    offered_items = models.ManyToManyField("OfferItem", through="Claim", related_name="requested_items")
 
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name=_("updated at"), auto_now=True)
@@ -408,3 +407,34 @@ class Change(models.Model):
             action = _("did something to")
 
         return f"{self.who.display_name()} {action} {self.get_type_display().lower()} {_('of')} {self.what}"
+
+
+class Claim(models.Model):
+    offered_item = models.ForeignKey(verbose_name=_("offered item"), to=OfferItem, on_delete=models.RESTRICT)
+    requested_item = models.ForeignKey(
+        verbose_name=_("requested item"),
+        to=RequestItem,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    amount = models.PositiveIntegerField(
+        verbose_name=_("amount"), default=1, help_text=_("The amount of items claimed")
+    )
+    when = models.DateField(verbose_name=_("when"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("claim")
+        verbose_name_plural = _("claims")
+        # db_table = "logistics_claim"
+
+    def __str__(self):
+        return f"{self.amount}x {self.offered_item} for request {self.requested_item}"
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
+
+        # If someone claims this, we don't need to reject it anymore
+        if self.offered_item.rejected:
+            self.offered_item.rejected = False
+            self.offered_item.save()

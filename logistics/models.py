@@ -66,14 +66,17 @@ class Location(models.Model):
 class Shipment(models.Model):
     name = models.CharField(verbose_name=_("name"), max_length=100, unique=True)
     when = models.DateField(verbose_name=_("when"), blank=True, null=True)
-    current_location = models.ForeignKey(
-        verbose_name=_("current location"),
-        to=Location,
-        on_delete=models.RESTRICT,
-        blank=True,
-        null=True,
-    )
+
     is_delivered = models.BooleanField(verbose_name=_("is delivered"), default=False)
+
+    from_location = models.ForeignKey(Location, verbose_name=_('from location'), blank=True, null=True,
+                                      on_delete=models.RESTRICT, related_name="from_location")
+
+    to_location = models.ForeignKey(Location, verbose_name=_('to location'), blank=True, null=True,
+                                    on_delete=models.RESTRICT, related_name="to_location")
+
+    created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
 
     class Meta:
         verbose_name = _("shipment")
@@ -83,45 +86,20 @@ class Shipment(models.Model):
         return self.name
 
 
-class Claim(models.Model):
-    offered_item = models.ForeignKey(verbose_name=_("offered item"), to=OfferItem, on_delete=models.RESTRICT)
-    requested_item = models.ForeignKey(
-        verbose_name=_("requested item"),
-        to=RequestItem,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
-    amount = models.PositiveIntegerField(
-        verbose_name=_("amount"), default=1, help_text=_("The amount of items claimed")
-    )
-    when = models.DateField(verbose_name=_("when"), auto_now_add=True)
-    shipment = models.ForeignKey(
-        verbose_name=_("shipment"),
-        to=Shipment,
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
-    )
-    current_location = models.ForeignKey(
-        verbose_name=_("current location"),
-        to=Location,
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
-    )
+class ShipmentItem(models.Model):
+    shipment = models.ForeignKey(verbose_name=_('shipment'), to=Shipment, blank=True, null=True,
+                                 on_delete=models.SET_NULL)
+    offered_item = models.ForeignKey(verbose_name=_('offered item'), to=OfferItem, on_delete=models.RESTRICT)
+    amount = models.PositiveIntegerField(verbose_name=_('amount'), default=1,
+                                         help_text=_('The amount of items claimed'))
+    when = models.DateField(verbose_name=_('when'), auto_now_add=True)
+
+    created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
 
     class Meta:
-        verbose_name = _("claim")
-        verbose_name_plural = _("claims")
+        verbose_name = _('shipment item')
+        verbose_name_plural = _('shipment items')
 
     def __str__(self):
-        return f"{self.amount}x {self.offered_item} for request {self.requested_item}"
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        super().save(force_insert, force_update, using, update_fields)
-
-        # If someone claims this, we don't need to reject it anymore
-        if self.offered_item.rejected:
-            self.offered_item.rejected = False
-            self.offered_item.save()
+        return f"{self.amount}x {self.offered_item}"

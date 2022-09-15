@@ -11,10 +11,11 @@ from django.utils.translation import gettext_lazy as _, ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
 from aid_coordinator.widgets import ClaimAutocompleteSelect
-from logistics.models import Claim
+from logistics.forms import AssignToShipmentForm
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
+from supply_demand.resources import ClaimExportResource
 from supply_demand.admin.resources import (
     CustomConfirmImportForm,
     CustomImportForm,
@@ -26,6 +27,7 @@ from supply_demand.models import (
     Change,
     ChangeAction,
     ChangeType,
+    Claim,
     ItemType,
     Offer,
     OfferItem,
@@ -189,7 +191,7 @@ class RequestAdmin(ContactOnlyAdmin):
 class ClaimInlineAdmin(CompactInline):
     model = Claim
     extra = 1
-    autocomplete_fields = ("requested_item", "offered_item", "shipment")
+    autocomplete_fields = ("requested_item", "offered_item",)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name in ("requested_item", "offered_item"):
@@ -574,8 +576,9 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "offer__contact__organisation__name",
         "offer__contact__last_name",
     )
-    actions = (
+    actions = [
         UpdateAction(form_class=MoveToOfferForm, title=_("Move to other offer")),
+        UpdateAction(form_class=AssignToShipmentForm, title=_("Assign to shipment")),
         "set_type_hardware",
         "set_type_software",
         "set_type_service",
@@ -584,7 +587,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "set_not_rejected",
         "set_received",
         "set_not_received",
-    )
+    ]
     inlines = (ClaimInlineAdmin,)
 
     def get_queryset(self, request):
@@ -840,3 +843,59 @@ class ChangeAdmin(ReadOnlyMixin, admin.ModelAdmin):
         "before",
         "after",
     )
+
+
+@admin.register(Claim)
+class ClaimAdmin(ExportActionModelAdmin):
+    list_display = (
+        "amount",
+        "admin_offered_item",
+        "admin_requested_item",
+    )
+    list_filter = (
+        (
+            "offered_item__offer__contact__organisation",
+            admin.RelatedOnlyFieldListFilter,
+        ),
+        (
+            "requested_item__request__contact__organisation",
+            admin.RelatedOnlyFieldListFilter,
+        ),
+    )
+    search_fields = (
+        "offered_item__brand",
+        "offered_item__model",
+        "requested_item__brand",
+        "requested_item__model",
+        "offered_item__offer__contact__organisation__name",
+        "requested_item__request__contact__organisation__name",
+    )
+    # actions = (UpdateAction(form_class=AssignToShipmentForm, title=_("Assign to shipment")),)
+    resource_class = ClaimExportResource
+
+    def get_queryset(self, request: HttpRequest):
+        qs = super().get_queryset(request)
+        qs = qs.prefetch_related(
+            "offered_item__offer__contact__organisation",
+            "requested_item__request__contact__organisation",
+        )
+        return qs
+
+    @admin.display(description=_("offered item"))
+    def admin_offered_item(self, claim: Claim):
+        return format_html(
+            "<b>{item}</b><br>{offer}",
+            item=claim.offered_item,
+            offer=claim.offered_item.offer,
+        )
+
+    @admin.display(description=_("requested item"))
+    def admin_requested_item(self, claim: Claim):
+        if claim.requested_item_id:
+            return format_html(
+                "<b>{item}</b><br>{request}",
+                item=claim.requested_item,
+                request=claim.requested_item.request,
+            )
+        else:
+            return mark_safe("<b>Preemptive shipment</b><br>" "Just ship it to a distribution point")
