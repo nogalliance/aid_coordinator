@@ -1,9 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Sum
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from contacts.models import Contact
+from django.utils.html import format_html
 
 
 class ItemType(models.IntegerChoices):
@@ -170,8 +172,6 @@ class RequestItem(models.Model):
 
     objects = RequestItemManager()
 
-    _assigned = None
-
     class Meta:
         ordering = ("type", "brand", "model")
         verbose_name = _("requested item")
@@ -187,16 +187,12 @@ class RequestItem(models.Model):
         else:
             return f"{self.amount}x {self.brand} {self.model}".replace("  ", " ")
 
-    @property
+    def _assigned(self):
+        return self.claim_set.count()
+
+    @cached_property
     def assigned(self):
-        if self._assigned is not None:
-            return self._assigned
-
-        return self.claim_set.exists()
-
-    @assigned.setter
-    def assigned(self, value: bool):
-        self._assigned = value
+        return self._assigned
 
     def clean(self):
         super().clean()
@@ -430,6 +426,21 @@ class Claim(models.Model):
 
     def __str__(self):
         return f"{self.amount}x {self.offered_item} for request {self.requested_item}"
+
+    @property
+    def location(self):
+        shipment_items = self.offered_item.shipmentitem_set.all()
+        locations = []
+        for item in shipment_items:
+            if item.shipment.is_delivered:
+                location = item.shipment.to_location
+            else:
+                location = item.shipment.from_location
+            if not location:
+                location = _("Donor")
+            locations.append(f"{item.amount}x - {location}")
+        locations = "<br>".join(locations)
+        return format_html(locations)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)

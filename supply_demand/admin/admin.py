@@ -2,8 +2,11 @@ from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
-from django.db.models import Exists, OuterRef, Sum
+from django.db.models import Sum, IntegerField, Case, When, F
+
+from django.db.models.functions import Coalesce
 from django.http import HttpRequest
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
@@ -190,15 +193,17 @@ class RequestAdmin(ContactOnlyAdmin):
 
 class ClaimInlineAdmin(CompactInline):
     model = Claim
-    extra = 1
-    autocomplete_fields = ("requested_item", "offered_item",)
+    extra = 0
+    readonly_fields = ("requested_item", "offered_item", "amount", "location", )
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name in ("requested_item", "offered_item"):
-            db = kwargs.get("using")
-            kwargs["widget"] = ClaimAutocompleteSelect(db_field, self.admin_site, using=db)
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.prefetch_related("offered_item__shipmentitem_set__shipment")
+        return qs
 
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    @admin.display(description=_("current location"))
+    def location(self, item: Claim):
+        return item.location
 
 
 @admin.register(RequestItem)
@@ -237,9 +242,18 @@ class RequestItemAdmin(ExportActionModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.annotate(assigned=Exists(Claim.objects.filter(requested_item=OuterRef("pk"))))
+        qs = qs.annotate(assigned=Coalesce(Sum("claim__amount"), 0))
         qs = qs.annotate(
-            delivered=Exists(Claim.objects.filter(requested_item=OuterRef("pk"), shipment__is_delivered=True))
+            delivered=Sum(
+                Case(
+                    When(
+                        offered_items__shipmentitem__shipment__is_delivered=True,
+                        then=F("offered_items__shipmentitem__amount"),
+                    ),
+                    default=0,
+                    output_field=IntegerField(),
+                ),
+            )
         )
         return qs
 
@@ -248,13 +262,25 @@ class RequestItemAdmin(ExportActionModelAdmin):
         new_kwargs["request"] = request
         return new_kwargs
 
-    @admin.display(description=_("assigned"), boolean=True, ordering="assigned")
+    @admin.display(description=_("assigned"))
     def assigned(self, item: RequestItem):
-        return item.assigned
+        if item.assigned == item.amount:
+            icon_url = static("admin/img/icon-yes.svg")
+            return format_html('<img src="{}" alt="True">', icon_url)
+        elif item.assigned == 0:
+            icon_url = static("admin/img/icon-no.svg")
+            return format_html('<img src="{}" alt="False">', icon_url)
+        return f"{item.assigned}/{item.amount}"
 
-    @admin.display(description=_("delivered"), boolean=True, ordering="delivered")
+    @admin.display(description=_("delivered"))
     def delivered(self, item: RequestItem):
-        return item.delivered
+        if item.delivered == item.amount:
+            icon_url = static("admin/img/icon-yes.svg")
+            return format_html('<img src="{}" alt="True">', icon_url)
+        elif item.delivered == 0:
+            icon_url = static("admin/img/icon-no.svg")
+            return format_html('<img src="{}" alt="False">', icon_url)
+        return f"{item.delivered}/{item.amount}"
 
     @admin.display(description=_("item of"))
     def item_of(self, item: RequestItem):
