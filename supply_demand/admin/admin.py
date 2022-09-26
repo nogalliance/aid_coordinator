@@ -2,23 +2,22 @@ from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
-from django.db.models import Sum, IntegerField, Case, When, F
-
+from django.db.models import Case, F, IntegerField, Sum, When
 from django.db.models.functions import Coalesce
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseRedirect
+from django.shortcuts import render
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext_lazy as _, ngettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
-
-from aid_coordinator.widgets import ClaimAutocompleteSelect
 from logistics.forms import AssignToShipmentForm
+from logistics.models import ShipmentItem
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
-from supply_demand.resources import ClaimExportResource
 from supply_demand.admin.resources import (
     CustomConfirmImportForm,
     CustomImportForm,
@@ -37,6 +36,7 @@ from supply_demand.models import (
     Request,
     RequestItem,
 )
+from supply_demand.resources import ClaimExportResource
 
 
 class RequestItemInline(CompactInline):
@@ -194,7 +194,12 @@ class RequestAdmin(ContactOnlyAdmin):
 class ClaimInlineAdmin(CompactInline):
     model = Claim
     extra = 0
-    readonly_fields = ("requested_item", "offered_item", "amount", "location", )
+    readonly_fields = (
+        "requested_item",
+        "offered_item",
+        "amount",
+        "location",
+    )
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -604,7 +609,6 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     )
     actions = [
         UpdateAction(form_class=MoveToOfferForm, title=_("Move to other offer")),
-        UpdateAction(form_class=AssignToShipmentForm, title=_("Assign to shipment")),
         "set_type_hardware",
         "set_type_software",
         "set_type_service",
@@ -896,7 +900,7 @@ class ClaimAdmin(ExportActionModelAdmin):
         "offered_item__offer__contact__organisation__name",
         "requested_item__request__contact__organisation__name",
     )
-    # actions = (UpdateAction(form_class=AssignToShipmentForm, title=_("Assign to shipment")),)
+    actions = ["assign_to_shipment"]
     resource_class = ClaimExportResource
 
     def get_queryset(self, request: HttpRequest):
@@ -906,6 +910,22 @@ class ClaimAdmin(ExportActionModelAdmin):
             "requested_item__request__contact__organisation",
         )
         return qs
+
+    @admin.action(description=_("Assign to shipment"))
+    def assign_to_shipment(self, request, queryset):
+
+        if "apply" in request.POST:
+            for item in queryset:
+                ShipmentItem.objects.create(
+                    shipment_id=request.POST["shipment"],
+                    offered_item=item.offered_item,
+                    amount=item.amount
+                )
+
+            return HttpResponseRedirect(request.get_full_path())
+
+        form = AssignToShipmentForm()
+        return render(request, "admin/assign_to_shipment.html", context={"claims": queryset, "form": form})
 
     @admin.display(description=_("offered item"))
     def admin_offered_item(self, claim: Claim):

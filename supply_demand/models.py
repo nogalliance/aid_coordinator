@@ -425,7 +425,9 @@ class Claim(models.Model):
         # db_table = "logistics_claim"
 
     def __str__(self):
-        return f"{self.amount}x {self.offered_item} for request {self.requested_item}"
+        if self.requested_item:
+            return f"{self.amount} x {self.offered_item} for request {self.requested_item}"
+        return f"{self.amount} x {self.offered_item} not requested"
 
     @property
     def location(self):

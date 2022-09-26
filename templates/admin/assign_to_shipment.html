@@ -1,0 +1,18 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <form action="" method="post">
+    {% csrf_token %}
+    {{ form }}
+    {% for claim in claims %}
+      <p>
+        {{ claim }}
+      </p>
+      <input type="hidden" name="_selected_action" value="{{ claim.pk }}" />
+    {% endfor %}
+
+    <input type="hidden" name="action" value="assign_to_shipment" />
+    <input type="submit" name="apply" value="{% translate "Assign to Shipment" %}"/>
+  </form>
+{% endblock %}

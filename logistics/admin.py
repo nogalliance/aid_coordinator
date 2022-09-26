@@ -1,4 +1,3 @@
-from admin_wizard.admin import UpdateAction
 from django.contrib import admin
 from django.http import HttpRequest
 from django.templatetags.static import static
@@ -6,16 +5,12 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
-
-from aid_coordinator.widgets import ClaimAutocompleteSelect
-from supply_demand.admin.base import CompactInline
-
 from logistics.filters import UsedChoicesFieldListFilter
-from logistics.forms import AssignToShipmentForm
+
+# from logistics.forms import AssignToShipmentForm
 from logistics.models import EquipmentData, Location, Shipment, ShipmentItem
 from logistics.resources import EquipmentDataResource
-
-from supply_demand.models import Claim
+from supply_demand.admin.base import CompactInline
 
 static_import_icon = static("img/import.png")
 static_export_icon = static("img/export.png")
@@ -158,7 +153,6 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         # "requested_item__request__contact__organisation__name",
     )
     ordering = ("shipment",)
-    actions = (UpdateAction(form_class=AssignToShipmentForm, title=_("Assign to shipment")),)
 
     # TODO
     # resource_class = ShipmentItemExportResource
