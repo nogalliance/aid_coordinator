@@ -56,7 +56,7 @@ class RequestView(AdminFormView):
             notes=self.item.notes,
             amount=amount,
         )
-        item.offered_items.add(self.item)
+
         Claim.objects.create(offered_item=self.item, requested_item=item, amount=amount)
         messages.info(
             self.request,

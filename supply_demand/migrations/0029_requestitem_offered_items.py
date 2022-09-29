@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name="offered_items",
             field=models.ManyToManyField(
                 related_name="requested_items",
-                through="logistics.Claim",
+                # through="logistics.Claim",
                 to="supply_demand.offeritem",
             ),
         ),

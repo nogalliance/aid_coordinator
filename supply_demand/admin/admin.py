@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 from logistics.forms import AssignToShipmentForm
-from logistics.models import ShipmentItem
+from logistics.models import ShipmentItem, Shipment
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
@@ -900,6 +900,7 @@ class ClaimAdmin(ExportActionModelAdmin):
         "offered_item__offer__contact__organisation__name",
         "requested_item__request__contact__organisation__name",
     )
+    autocomplete_fields = ("offered_item", "requested_item",)
     actions = ["assign_to_shipment"]
     resource_class = ClaimExportResource
 
@@ -915,17 +916,19 @@ class ClaimAdmin(ExportActionModelAdmin):
     def assign_to_shipment(self, request, queryset):
 
         if "apply" in request.POST:
+            shipment = Shipment.objects.get(id=request.POST["shipment"])
             for item in queryset:
                 ShipmentItem.objects.create(
-                    shipment_id=request.POST["shipment"],
+                    shipment=shipment,
                     offered_item=item.offered_item,
-                    amount=item.amount
+                    amount=item.amount,
+                    last_location=shipment.from_location,
                 )
 
             return HttpResponseRedirect(request.get_full_path())
 
         form = AssignToShipmentForm()
-        return render(request, "admin/assign_to_shipment.html", context={"claims": queryset, "form": form})
+        return render(request, "admin/assign_to_shipment.html", context={"items": queryset, "form": form})
 
     @admin.display(description=_("offered item"))
     def admin_offered_item(self, claim: Claim):

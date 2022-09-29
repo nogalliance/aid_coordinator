@@ -4,7 +4,7 @@ from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from contacts.models import Organisation
-from supply_demand.models import OfferItem, RequestItem
+from supply_demand.models import OfferItem
 
 
 class EquipmentData(models.Model):
@@ -69,37 +69,77 @@ class Shipment(models.Model):
 
     is_delivered = models.BooleanField(verbose_name=_("is delivered"), default=False)
 
-    from_location = models.ForeignKey(Location, verbose_name=_('from location'), blank=True, null=True,
-                                      on_delete=models.RESTRICT, related_name="from_location")
+    from_location = models.ForeignKey(
+        Location,
+        verbose_name=_("from location"),
+        blank=True,
+        null=True,
+        on_delete=models.RESTRICT,
+        related_name="from_location",
+    )
 
-    to_location = models.ForeignKey(Location, verbose_name=_('to location'), blank=True, null=True,
-                                    on_delete=models.RESTRICT, related_name="to_location")
+    to_location = models.ForeignKey(
+        Location,
+        verbose_name=_("to location"),
+        blank=True,
+        null=True,
+        on_delete=models.RESTRICT,
+        related_name="to_location",
+    )
 
-    created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
+    created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name=_("updated at"), auto_now=True)
 
     class Meta:
         verbose_name = _("shipment")
         verbose_name_plural = _("shipments")
 
     def __str__(self):
-        return self.name
+        return f"{self.name}({self.from_location} -> {self.to_location})"
 
 
 class ShipmentItem(models.Model):
-    shipment = models.ForeignKey(verbose_name=_('shipment'), to=Shipment, blank=True, null=True,
-                                 on_delete=models.SET_NULL)
-    offered_item = models.ForeignKey(verbose_name=_('offered item'), to=OfferItem, on_delete=models.RESTRICT)
-    amount = models.PositiveIntegerField(verbose_name=_('amount'), default=1,
-                                         help_text=_('The amount of items claimed'))
-    when = models.DateField(verbose_name=_('when'), auto_now_add=True)
+    shipment = models.ForeignKey(
+        verbose_name=_("shipment"), to=Shipment, blank=True, null=True, on_delete=models.SET_NULL
+    )
+    offered_item = models.ForeignKey(verbose_name=_("offered item"), to=OfferItem, on_delete=models.RESTRICT)
+    amount = models.PositiveIntegerField(
+        verbose_name=_("amount"), default=1, help_text=_("The amount of items claimed")
+    )
+    # TODO
+    when = models.DateField(verbose_name=_("when"), auto_now_add=True)
+    last_location = models.ForeignKey(
+        Location,
+        verbose_name=_("last location"),
+        blank=True,
+        null=True,
+        on_delete=models.RESTRICT,
+        related_name="last_location",
+    )
 
-    created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
+    parent_shipment_item = models.ForeignKey(
+        "self",
+        verbose_name=_("parent shipment item"),
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="sent_items",
+    )
+
+    created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name=_("updated at"), auto_now=True)
 
     class Meta:
-        verbose_name = _('shipment item')
-        verbose_name_plural = _('shipment items')
+        verbose_name = _("shipment item")
+        verbose_name_plural = _("shipment items")
 
     def __str__(self):
         return f"{self.amount}x {self.offered_item}"
+
+
+class Item(ShipmentItem):
+    class Meta:
+        proxy = True
+
+        verbose_name = _("available item")
+        verbose_name_plural = _("available items")

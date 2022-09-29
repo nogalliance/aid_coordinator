@@ -1,16 +1,18 @@
 from django.contrib import admin
-from django.http import HttpRequest
+from django.db.models import F, Sum
+from django.db.models.functions import Coalesce
+from django.forms.models import BaseInlineFormSet
+from django.http import HttpRequest, HttpResponseRedirect
+from django.shortcuts import render
 from django.templatetags.static import static
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 from logistics.filters import UsedChoicesFieldListFilter
-
-# from logistics.forms import AssignToShipmentForm
-from logistics.models import EquipmentData, Location, Shipment, ShipmentItem
+from logistics.forms import AssignToShipmentForm
+from logistics.models import EquipmentData, Item, Location, Shipment, ShipmentItem
 from logistics.resources import EquipmentDataResource
-from supply_demand.admin.base import CompactInline
 
 static_import_icon = static("img/import.png")
 static_export_icon = static("img/export.png")
@@ -90,10 +92,16 @@ class LocationAdmin(admin.ModelAdmin):
         return location.is_distribution_point
 
 
-class ShipmentItemInlineAdmin(CompactInline):
+class ShipmentItemInlineAdmin(admin.TabularInline):
     model = ShipmentItem
     extra = 0
-    readonly_fields = ("offered_item", "amount")
+    max_num = 0
+    readonly_fields = (
+        "offered_item",
+        "amount",
+        "last_location",
+    )
+    exclude = ("parent_shipment_item",)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).select_related("shipment")
@@ -102,7 +110,13 @@ class ShipmentItemInlineAdmin(CompactInline):
 
 @admin.register(Shipment)
 class ShipmentAdmin(admin.ModelAdmin):
-    list_display = ("name", "when", "from_location", "to_location", "is_delivered")
+    list_display = (
+        "name",
+        "when",
+        "from_location",
+        "to_location",
+        "is_delivered",
+    )
     list_filter = (
         "is_delivered",
         "from_location",
@@ -126,33 +140,32 @@ class ShipmentAdmin(admin.ModelAdmin):
 @admin.register(ShipmentItem)
 class ShipmentItemAdmin(ExportActionModelAdmin):
     list_display = (
+        "offered_item",
         "amount",
-        "admin_offered_item",
-        # "admin_requested_item",
         "shipment",
+        "last_location",
         "is_delivered",
     )
     list_filter = (
+        "last_location",
         "shipment",
         "shipment__is_delivered",
         (
             "offered_item__offer__contact__organisation",
             admin.RelatedOnlyFieldListFilter,
         ),
-        # (
-        #     "requested_item__request__contact__organisation",
-        #     admin.RelatedOnlyFieldListFilter,
-        # ),
     )
     search_fields = (
         "offered_item__brand",
         "offered_item__model",
-        # "requested_item__brand",
-        # "requested_item__model",
         "offered_item__offer__contact__organisation__name",
-        # "requested_item__request__contact__organisation__name",
+        "last_location",
     )
-    ordering = ("shipment",)
+    autocomplete_fields = (
+        "offered_item",
+        "parent_shipment_item",
+    )
+    ordering = ("-created_at",)
 
     # TODO
     # resource_class = ShipmentItemExportResource
@@ -164,6 +177,7 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
             .select_related(
                 "shipment",
                 "offered_item__offer__contact__organisation",
+                "offered_item",
             )
             .prefetch_related(
                 "offered_item__requested_items__request__contact__organisation",
@@ -171,28 +185,105 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         )
         return qs
 
-    @admin.display(
-        description=_("is delivered"),
-        boolean=True,
-    )
+    @admin.display(description=_("is delivered"), boolean=True)
     def is_delivered(self, item: ShipmentItem):
         return item.shipment and item.shipment.is_delivered
 
-    @admin.display(description=_("offered item"))
-    def admin_offered_item(self, item: ShipmentItem):
-        return format_html(
-            "<b>{item}</b><br>{offer}",
-            item=item.offered_item,
-            offer=item.offered_item.offer,
+
+class ChildInlineFormSet(BaseInlineFormSet):
+
+    ordering = ("when",)
+
+    def get_queryset(self):
+        qs = ShipmentItem.objects.filter(offered_item=self.instance.offered_item).order_by("-when", "-created_at")
+        return qs
+
+
+class ShipmentItemHistoryInlineAdmin(admin.TabularInline):
+    model = ShipmentItem
+    verbose_name = _("Shipment History of Item")
+    verbose_name_plural = _("Shipment History of Items")
+    extra = 0
+    max_num = 0
+    formset = ChildInlineFormSet
+    can_delete = False
+    readonly_fields = (
+        "offered_item",
+        "amount",
+        "last_location",
+        "shipment",
+        "when",
+    )
+    # exclude = ("parent_shipment_item",)
+
+
+@admin.register(Item)
+class ItemAdmin(ShipmentItemAdmin):
+    list_display = (
+        "offered_item",
+        "available",
+        "last_location",
+        "shipment",
+        "is_delivered",
+        "parent_shipment_item",
+    )
+    list_filter = (
+        "last_location",
+        "shipment",
+        "shipment__is_delivered",
+        (
+            "offered_item__offer__contact__organisation",
+            admin.RelatedOnlyFieldListFilter,
+        ),
+    )
+    search_fields = (
+        "offered_item__brand",
+        "offered_item__model",
+        "offered_item__offer__contact__organisation__name",
+        "last_location",
+    )
+    ordering = ("-created_at",)
+    actions = ("assign_to_shipment",)
+
+    inlines = (ShipmentItemHistoryInlineAdmin,)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = (
+            qs.annotate(sent=Coalesce(Sum("sent_items__amount"), 0))
+            .prefetch_related("sent_items")
+            .annotate(available=F("amount") - F("sent"))
+            .filter(available__gt=0)
+        )
+        return qs
+
+    @admin.action(description=_("Assign to shipment"))
+    def assign_to_shipment(self, request, queryset):
+
+        if "apply" in request.POST:
+            # TODO:
+            # - amount validation
+            shipment = Shipment.objects.get(id=request.POST["shipment"])
+            amount_list = request.POST.getlist("amount")
+            for index, item in enumerate(queryset):
+                amount = amount_list[index]
+                ShipmentItem.objects.create(
+                    shipment=shipment,
+                    offered_item=item.offered_item,
+                    amount=amount,
+                    last_location=shipment.from_location,
+                    parent_shipment_item_id=item.id,
+                )
+
+            return HttpResponseRedirect(request.get_full_path())
+
+        form = AssignToShipmentForm()
+        return render(
+            request,
+            "admin/assign_to_shipment.html",
+            context={"items": queryset, "form": form, "adjustable_amount": True},
         )
 
-    # @admin.display(description=_("requested item"))
-    # def admin_requested_item(self, claim: Claim):
-    #     if claim.requested_item_id:
-    #         return format_html(
-    #             "<b>{item}</b><br>{request}",
-    #             item=claim.requested_item,
-    #             request=claim.requested_item.request,
-    #         )
-    #     else:
-    #         return mark_safe("<b>Preemptive shipment</b><br>" "Just ship it to a distribution point")
+    @admin.display(description=_("available"))
+    def available(self, item: Item):
+        return item.available

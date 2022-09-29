@@ -6,3 +6,6 @@ class LogisticsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "logistics"
     verbose_name = _("Logistics")
+
+    def ready(self):
+        import logistics.signals  # noqa
