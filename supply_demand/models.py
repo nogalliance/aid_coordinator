@@ -406,7 +406,11 @@ class Change(models.Model):
 
 
 class Claim(models.Model):
-    offered_item = models.ForeignKey(verbose_name=_("offered item"), to=OfferItem, on_delete=models.RESTRICT)
+    offered_item = models.ForeignKey(
+        verbose_name=_("offered item"),
+        to=OfferItem,
+        on_delete=models.RESTRICT,
+    )
     requested_item = models.ForeignKey(
         verbose_name=_("requested item"),
         to=RequestItem,
@@ -415,7 +419,16 @@ class Claim(models.Model):
         null=True,
     )
     amount = models.PositiveIntegerField(
-        verbose_name=_("amount"), default=1, help_text=_("The amount of items claimed")
+        verbose_name=_("amount"),
+        default=1,
+        help_text=_("The amount of items claimed"),
+    )
+    shipment_item = models.ForeignKey(
+        "logistics.ShipmentItem",
+        verbose_name=_("shipment item"),
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     when = models.DateField(verbose_name=_("when"), auto_now_add=True)
 
@@ -428,6 +441,12 @@ class Claim(models.Model):
         if self.requested_item:
             return f"{self.amount} x {self.offered_item} for request {self.requested_item}"
         return f"{self.amount} x {self.offered_item} not requested"
+
+    @property
+    def is_processed(self):
+        if self.shipment_item:
+            return True
+        return False
 
     @property
     def location(self):

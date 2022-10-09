@@ -16,7 +16,7 @@ from import_export.admin import ExportActionModelAdmin, ImportExportActionModelA
 from logistics.forms import AssignToShipmentForm
 from logistics.models import ShipmentItem, Shipment
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
-from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter
+from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter, ProcessedClaimListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
 from supply_demand.admin.resources import (
     CustomConfirmImportForm,
@@ -199,6 +199,8 @@ class ClaimInlineAdmin(CompactInline):
         "offered_item",
         "amount",
         "location",
+        "requester",
+        "donor",
     )
 
     def get_queryset(self, request):
@@ -208,7 +210,40 @@ class ClaimInlineAdmin(CompactInline):
 
     @admin.display(description=_("current location"))
     def location(self, item: Claim):
-        return item.location
+        shipment_items = item.offered_item.shipmentitem_set.all()
+        if shipment_items:
+            return format_html_join(
+                mark_safe("<br>"), "{}x - {}", ((item.amount, item.last_location) for item in shipment_items)
+            )
+        return _("donor")
+
+    @admin.display(description=_("requester"))
+    def requester(self, item: Claim):
+        if item.requested_item.request.contact.organisation_id:
+            organisation = item.requested_item.request.contact.organisation
+        else:
+            organisation = _("no organisation")
+        requester = item.requested_item.request.contact
+        requester_name = requester.display_name()
+        return format_html(
+            '<a href="{url}">{requester}</a>',
+            url=reverse("admin:contacts_contact_change", args=(requester.id,)),
+            requester=f"{requester_name}({organisation})",
+        )
+
+    @admin.display(description=_("donor"))
+    def donor(self, item: Claim):
+        if item.offered_item.offer.contact.organisation_id:
+            organisation = item.offered_item.offer.contact.organisation
+        else:
+            organisation = _("no organisation")
+        donor = item.offered_item.offer.contact
+        donor_name = donor.display_name()
+        return format_html(
+            '<a href="{url}">{donor}</a>',
+            url=reverse("admin:contacts_contact_change", args=(donor.id,)),
+            donor=f"{donor_name}({organisation})",
+        )
 
 
 @admin.register(RequestItem)
@@ -220,7 +255,6 @@ class RequestItemAdmin(ExportActionModelAdmin):
         "amount",
         "up_to",
         "assigned",
-        "delivered",
         "created_at",
         "item_of",
     )
@@ -248,18 +282,6 @@ class RequestItemAdmin(ExportActionModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         qs = qs.annotate(assigned=Coalesce(Sum("claim__amount"), 0))
-        qs = qs.annotate(
-            delivered=Sum(
-                Case(
-                    When(
-                        offered_items__shipmentitem__shipment__is_delivered=True,
-                        then=F("offered_items__shipmentitem__amount"),
-                    ),
-                    default=0,
-                    output_field=IntegerField(),
-                ),
-            )
-        )
         return qs
 
     def get_resource_kwargs(self, request, *args, **kwargs):
@@ -276,16 +298,6 @@ class RequestItemAdmin(ExportActionModelAdmin):
             icon_url = static("admin/img/icon-no.svg")
             return format_html('<img src="{}" alt="False">', icon_url)
         return f"{item.assigned}/{item.amount}"
-
-    @admin.display(description=_("delivered"))
-    def delivered(self, item: RequestItem):
-        if item.delivered == item.amount:
-            icon_url = static("admin/img/icon-yes.svg")
-            return format_html('<img src="{}" alt="True">', icon_url)
-        elif item.delivered == 0:
-            icon_url = static("admin/img/icon-no.svg")
-            return format_html('<img src="{}" alt="False">', icon_url)
-        return f"{item.delivered}/{item.amount}"
 
     @admin.display(description=_("item of"))
     def item_of(self, item: RequestItem):
@@ -881,8 +893,12 @@ class ClaimAdmin(ExportActionModelAdmin):
         "amount",
         "admin_offered_item",
         "admin_requested_item",
+        "when",
+        "is_processed",
+        "shipment",
     )
     list_filter = (
+        ProcessedClaimListFilter,
         (
             "offered_item__offer__contact__organisation",
             admin.RelatedOnlyFieldListFilter,
@@ -900,7 +916,12 @@ class ClaimAdmin(ExportActionModelAdmin):
         "offered_item__offer__contact__organisation__name",
         "requested_item__request__contact__organisation__name",
     )
-    autocomplete_fields = ("offered_item", "requested_item",)
+    autocomplete_fields = (
+        "offered_item",
+        "requested_item",
+    )
+
+    ordering = ("-when",)
     actions = ["assign_to_shipment"]
     resource_class = ClaimExportResource
 
@@ -918,12 +939,14 @@ class ClaimAdmin(ExportActionModelAdmin):
         if "apply" in request.POST:
             shipment = Shipment.objects.get(id=request.POST["shipment"])
             for item in queryset:
-                ShipmentItem.objects.create(
+                shipment_item = ShipmentItem.objects.create(
                     shipment=shipment,
                     offered_item=item.offered_item,
                     amount=item.amount,
                     last_location=shipment.from_location,
                 )
+                item.shipment_item = shipment_item
+                item.save()
 
             return HttpResponseRedirect(request.get_full_path())
 
@@ -948,3 +971,23 @@ class ClaimAdmin(ExportActionModelAdmin):
             )
         else:
             return mark_safe("<b>Preemptive shipment</b><br>" "Just ship it to a distribution point")
+
+    @admin.display(description=_("processed?"))
+    def is_processed(self, claim: Claim):
+        if claim.shipment_item:
+            icon_url = static("admin/img/icon-yes.svg")
+            return format_html('<img src="{}" alt="True">', icon_url)
+        else:
+            icon_url = static("admin/img/icon-no.svg")
+            return format_html('<img src="{}" alt="False">', icon_url)
+
+    @admin.display(description=_("shipment_item"))
+    def shipment(self, item: Claim):
+        shipment_item = item.shipment_item
+        if not shipment_item:
+            return
+        return format_html(
+            '<a href="{url}">{shipment}</a>',
+            url=reverse("admin:logistics_item_change", args=(shipment_item.id,)),
+            shipment=shipment_item.shipment.name,
+        )

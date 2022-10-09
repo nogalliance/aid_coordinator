@@ -190,7 +190,7 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         return item.shipment and item.shipment.is_delivered
 
 
-class ChildInlineFormSet(BaseInlineFormSet):
+class ShipmentItemHistoryFormSet(BaseInlineFormSet):
 
     ordering = ("when",)
 
@@ -205,7 +205,7 @@ class ShipmentItemHistoryInlineAdmin(admin.TabularInline):
     verbose_name_plural = _("Shipment History of Items")
     extra = 0
     max_num = 0
-    formset = ChildInlineFormSet
+    formset = ShipmentItemHistoryFormSet
     can_delete = False
     readonly_fields = (
         "offered_item",
@@ -222,6 +222,7 @@ class ItemAdmin(ShipmentItemAdmin):
     list_display = (
         "offered_item",
         "available",
+        "amount",
         "last_location",
         "shipment",
         "is_delivered",
@@ -246,6 +247,15 @@ class ItemAdmin(ShipmentItemAdmin):
     actions = ("assign_to_shipment",)
 
     inlines = (ShipmentItemHistoryInlineAdmin,)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
