@@ -2,7 +2,7 @@ from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
-from django.db.models import Case, F, IntegerField, Sum, When
+from django.db.models import Case, F, Sum, When
 from django.db.models.functions import Coalesce
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
@@ -17,7 +17,7 @@ from logistics.forms import AssignToShipmentForm
 from logistics.models import ShipmentItem, Shipment
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter, ProcessedClaimListFilter
-from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
+from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm, RequestItemInlineFormSet
 from supply_demand.admin.resources import (
     CustomConfirmImportForm,
     CustomImportForm,
@@ -41,7 +41,8 @@ from supply_demand.resources import ClaimExportResource
 
 class RequestItemInline(CompactInline):
     model = RequestItem
-    extra = 1
+    formset = RequestItemInlineFormSet
+    extra = 0
 
     fields = (
         "type",
@@ -53,7 +54,21 @@ class RequestItemInline(CompactInline):
         "alternative_for",
         "assigned",
     )
-    readonly_fields = ("assigned",)
+    readonly_fields = fields
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.prefetch_related("claim_set")
+        qs = qs.annotate(
+            processed=Case(
+                When(claim__shipment_item_id__isnull=True, then=True),
+                default=False,
+            ),
+        )
+        return qs
+
+    def has_add_permission(self, reques, obj=None):
+        return False
 
     @admin.display(description=_("assigned"))
     def assigned(self, item: RequestItem):
@@ -635,7 +650,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         qs = qs.annotate(claimed=Coalesce(Sum("claim__amount"), 0))
-        qs = qs.annotate(available=Coalesce(F("amount")-F("claimed"), 10))
+        qs = qs.annotate(available=Coalesce(F("amount") - F("claimed"), 10))
         if request.user.is_requester:
             qs = qs.exclude(available=0)
         return qs
