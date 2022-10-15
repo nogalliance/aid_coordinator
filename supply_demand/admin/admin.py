@@ -634,7 +634,10 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.annotate(claimed=Sum("claim__amount"))
+        qs = qs.annotate(claimed=Coalesce(Sum("claim__amount"), 0))
+        qs = qs.annotate(available=Coalesce(F("amount")-F("claimed"), 10))
+        if request.user.is_requester:
+            qs = qs.exclude(available=0)
         return qs
 
     def set_type_action(self, request: HttpRequest, queryset: RequestItem.objects, item_type: ItemType):

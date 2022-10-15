@@ -358,7 +358,7 @@ class OfferItem(models.Model):
     def claimed(self, value: bool):
         self._claimed = value or 0
 
-    @property
+    @cached_property
     def available(self):
         if not self.amount:
             return 10
