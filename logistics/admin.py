@@ -112,18 +112,22 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
 class ShipmentAdmin(admin.ModelAdmin):
     list_display = (
         "name",
-        "when",
+        "shipment_date",
+        "delivery_date",
         "from_location",
         "to_location",
         "is_delivered",
+        "notes"
     )
     list_filter = (
         "is_delivered",
         "from_location",
         "to_location",
+        "shipment_date",
+        "delivery_date"
     )
-    date_hierarchy = "when"
-    ordering = ("when",)
+    date_hierarchy = "delivery_date"
+    ordering = ("delivery_date",)
     search_fields = (
         "name",
         "to_location__name",

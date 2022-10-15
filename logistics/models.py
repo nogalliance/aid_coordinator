@@ -65,7 +65,8 @@ class Location(models.Model):
 
 class Shipment(models.Model):
     name = models.CharField(verbose_name=_("name"), max_length=100, unique=True)
-    when = models.DateField(verbose_name=_("when"), blank=True, null=True)
+    shipment_date = models.DateField(verbose_name=_("shipment date"), blank=True, null=True)
+    delivery_date = models.DateField(verbose_name=_("delivery date"), blank=True, null=True)
 
     is_delivered = models.BooleanField(verbose_name=_("is delivered"), default=False)
 
@@ -85,6 +86,12 @@ class Shipment(models.Model):
         null=True,
         on_delete=models.RESTRICT,
         related_name="to_location",
+    )
+
+    notes = models.TextField(
+        verbose_name=_("notes"),
+        blank=True,
+        help_text=_("Provide details on this shipment"),
     )
 
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
