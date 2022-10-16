@@ -1,9 +1,13 @@
+from contacts.models import Organisation
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
-
-from contacts.models import Organisation
 from supply_demand.models import OfferItem
 
 
@@ -111,7 +115,10 @@ class ShipmentItem(models.Model):
     )
     offered_item = models.ForeignKey(verbose_name=_("offered item"), to=OfferItem, on_delete=models.RESTRICT)
     amount = models.PositiveIntegerField(
-        verbose_name=_("amount"), default=1, help_text=_("The amount of items claimed")
+        verbose_name=_("amount"),
+        default=1,
+        help_text=_("The amount of items claimed"),
+        validators=[MinValueValidator(1)],
     )
     # TODO
     when = models.DateField(verbose_name=_("when"), auto_now_add=True)
@@ -142,6 +149,26 @@ class ShipmentItem(models.Model):
 
     def __str__(self):
         return f"{self.amount}x {self.offered_item}"
+
+    @cached_property
+    def available(self):
+        if not self.parent_shipment_item:
+            return self.amount
+        parent_amount = self.parent_shipment_item.amount
+        return self.parent_shipment_item.sent_items.exclude(id=self.id).aggregate(
+            available=parent_amount - Coalesce(Sum("amount"), 0)
+        )["available"]
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def clean(self):
+        # validate amount
+        if self.amount > self.available:
+            raise ValidationError(
+                {"amount": _("You can choose max {available} units").format(available=self.available)}
+            )
 
 
 class Item(ShipmentItem):

@@ -2,27 +2,34 @@
 {% load i18n %}
 
 {% block content %}
-  {% if not form.fields.shipment.choices %}
-    <p style="color: red;">{% translate "Create Shipment first" %}</p>
-  {% endif %}
-    <a class="" href="{% url 'admin:logistics_shipment_add' %}" target="_blank" title="{% translate "Add new Shipment" %}">
-      <img src="/static/admin/img/icon-addlink.svg" alt="Add"> {% translate "Create New Shipment" %}
-    </a>({% translate "refresh page after new shipment has been created" %})
-    <p></p>
-  <form action="" method="post">
-    {% csrf_token %}
-    {{ form }}
-    {% for item in items %}
-      <p>
-        {% if adjustable_amount %}
-          <input type="number" name="amount" value="{{ item.amount }}" required min="1" max="{{ item.amount }}" />
-        {% endif %}
-        {{ item }}
-      </p>
-      <input type="hidden" name="_selected_action" value="{{ item.pk }}" />
-    {% endfor %}
+  {% if not errors %}
 
-    <input type="hidden" name="action" value="assign_to_shipment" />
-    <input type="submit" name="apply" value="{% translate "Assign to Shipment" %}"/>
-  </form>
+    {% if not form.fields.shipment.choices %}
+      <p style="color: red;">{% translate "Create Shipment first" %}</p>
+    {% endif %}
+      <a class="" href="{% url 'admin:logistics_shipment_add' %}" target="_blank" title="{% translate "Add new Shipment" %}">
+        <img src="/static/admin/img/icon-addlink.svg" alt="Add"> {% translate "Create New Shipment" %}
+      </a>({% translate "refresh page after new shipment has been created" %})
+      <p></p>
+    <form action="" method="post">
+      {% csrf_token %}
+      {{ form }}
+      {% for item in items %}
+        <p>
+          {% if adjustable_amount %}
+            <input type="number" name="amount" value="{{ item.available }}" required min="1" max="{{ item.available }}" />
+          {% endif %}
+          {{ item }}
+        </p>
+        <input type="hidden" name="_selected_action" value="{{ item.pk }}" />
+      {% endfor %}
+
+      <input type="hidden" name="action" value="assign_to_shipment" />
+      <input type="submit" name="apply" value="{% translate "Assign to Shipment" %}"/>
+    </form>
+  {% else %}
+    {% for error in errors %}
+      <p style="color: red;">{{ error }}</p>
+    {% endfor %}
+  {% endif %}
 {% endblock %}

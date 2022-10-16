@@ -968,8 +968,22 @@ class ClaimAdmin(ExportActionModelAdmin):
 
             return HttpResponseRedirect(request.get_full_path())
 
-        form = AssignToShipmentForm()
-        return render(request, "admin/assign_to_shipment.html", context={"items": queryset, "form": form})
+        errors = []
+        form = None
+
+        if len(set(queryset.values_list("offered_item__offer__contact", flat=True))) > 1:
+            errors.append(_("Choosen items are offered by different donors."))
+        if not errors:
+            # TODO
+            #  - filter shipment only from donor
+            shipment_queryset = Shipment.objects.filter()
+            form = AssignToShipmentForm(initial=dict(shipment_queryset=shipment_queryset))
+
+        return render(
+            request,
+            "admin/assign_to_shipment.html",
+            context={"items": queryset, "errors": errors, "form": form},
+        )
 
     @admin.display(description=_("offered item"))
     def admin_offered_item(self, claim: Claim):

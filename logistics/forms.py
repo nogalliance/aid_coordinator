@@ -10,7 +10,11 @@ class AssignToShipmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["shipment"].choices = Shipment.objects.exclude(is_delivered=True).values_list("id", "name")
+        shipment_queryset = kwargs.get("initial", {}).get("shipment_queryset", None)
+        if shipment_queryset is None:
+            shipment_queryset = Shipment.objects.filter()
+        shipment_choices = shipment_queryset.filter(is_delivered=False).values_list("id", "name")
+        self.fields["shipment"].choices = shipment_choices
 
 
 class RequestForm(forms.Form):

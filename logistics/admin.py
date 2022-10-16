@@ -110,22 +110,8 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
 
 @admin.register(Shipment)
 class ShipmentAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "shipment_date",
-        "delivery_date",
-        "from_location",
-        "to_location",
-        "is_delivered",
-        "notes"
-    )
-    list_filter = (
-        "is_delivered",
-        "from_location",
-        "to_location",
-        "shipment_date",
-        "delivery_date"
-    )
+    list_display = ("name", "shipment_date", "delivery_date", "from_location", "to_location", "is_delivered", "notes")
+    list_filter = ("is_delivered", "from_location", "to_location", "shipment_date", "delivery_date")
     date_hierarchy = "delivery_date"
     ordering = ("delivery_date",)
     search_fields = (
@@ -275,8 +261,6 @@ class ItemAdmin(ShipmentItemAdmin):
     def assign_to_shipment(self, request, queryset):
 
         if "apply" in request.POST:
-            # TODO:
-            # - amount validation
             shipment = Shipment.objects.get(id=request.POST["shipment"])
             amount_list = request.POST.getlist("amount")
             for index, item in enumerate(queryset):
@@ -291,11 +275,21 @@ class ItemAdmin(ShipmentItemAdmin):
 
             return HttpResponseRedirect(request.get_full_path())
 
-        form = AssignToShipmentForm()
+        errors = []
+        form = None
+        if len(set(queryset.values_list("last_location", flat=True))) > 1:
+            errors.append(_("Choosen items are in different locations."))
+        if queryset.filter(shipment__is_delivered=False).exists():
+            errors.append(_("Some of items are not delivered yet or attached to another shipment."))
+        if not errors:
+            shipment_queryset = Shipment.objects.filter(
+                from_location=queryset.first().last_location,
+            )
+            form = AssignToShipmentForm(initial=dict(shipment_queryset=shipment_queryset))
         return render(
             request,
             "admin/assign_to_shipment.html",
-            context={"items": queryset, "form": form, "adjustable_amount": True},
+            context={"items": queryset, "errors": errors, "form": form, "adjustable_amount": True},
         )
 
     @admin.display(description=_("available"))
