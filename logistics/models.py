@@ -11,6 +11,13 @@ from phonenumber_field.modelfields import PhoneNumberField
 from supply_demand.models import OfferItem
 
 
+class LocationType(models.IntegerChoices):
+    DONOR = 1, _("Donor")
+    COLLECTION_POINT = 2, _("Collection point")
+    DISTRIBUTION_POINT = 3, _("Distribution point")
+    REQUESTER = 4, _("Requester")
+
+
 class EquipmentData(models.Model):
     brand = models.CharField(verbose_name=_("brand"), max_length=50)
     model = models.CharField(verbose_name=_("model"), max_length=100)
@@ -40,15 +47,8 @@ class Location(models.Model):
     email = models.EmailField(verbose_name=_("email contact"), blank=True)
     phone = PhoneNumberField(verbose_name=_("phone contact"), blank=True)
 
-    is_collection_point = models.BooleanField(
-        verbose_name=_("is a collection point"),
-        default=False,
-        help_text=_("allow donors to send equipment to this location"),
-    )
-    is_distribution_point = models.BooleanField(
-        verbose_name=_("is a distribution point"),
-        default=False,
-        help_text=_("items at this location " "can be directly assigned to requesters"),
+    type = models.PositiveIntegerField(
+        verbose_name=_("type"), choices=LocationType.choices, default=LocationType.COLLECTION_POINT
     )
 
     managed_by = models.ForeignKey(

@@ -46,14 +46,12 @@ class LocationAdmin(admin.ModelAdmin):
         "country",
         "admin_email",
         "admin_phone",
-        "admin_is_collection_point",
-        "admin_is_distribution_point",
+        "type",
         "managed_by",
     )
     list_filter = (
         ("country", UsedChoicesFieldListFilter),
-        "is_collection_point",
-        "is_distribution_point",
+        "type",
     )
     ordering = ("name",)
 
@@ -70,26 +68,6 @@ class LocationAdmin(admin.ModelAdmin):
             return None
 
         return format_html('<a href="tel:{phone}">{phone}</a>', phone=location.phone)
-
-    @admin.display(
-        boolean=True,
-        ordering="is_collection_point",
-        description=mark_safe(
-            '<img alt="Is collection point" style="height: 1.5em; margin: -0.4em" src="' + static_import_icon + '">'
-        ),
-    )
-    def admin_is_collection_point(self, location: Location):
-        return location.is_collection_point
-
-    @admin.display(
-        boolean=True,
-        ordering="is_distribution_point",
-        description=mark_safe(
-            '<img alt="Is distribution point" style="height: 1.5em; margin: -0.4em" src="' + static_export_icon + '">'
-        ),
-    )
-    def admin_is_distribution_point(self, location: Location):
-        return location.is_distribution_point
 
 
 class ShipmentItemInlineAdmin(admin.TabularInline):
