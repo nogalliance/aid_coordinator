@@ -13,6 +13,7 @@ from logistics.filters import UsedChoicesFieldListFilter
 from logistics.forms import AssignToShipmentForm
 from logistics.models import EquipmentData, Item, Location, Shipment, ShipmentItem
 from logistics.resources import EquipmentDataResource
+from nonrelated_inlines.admin import NonrelatedTabularInline
 
 static_import_icon = static("img/import.png")
 static_export_icon = static("img/export.png")
@@ -116,7 +117,6 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
     )
     list_filter = (
         "last_location",
-        "shipment",
         "shipment__is_delivered",
         (
             "offered_item__offer__contact__organisation",
@@ -124,10 +124,11 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         ),
     )
     search_fields = (
+        "shipment__name",
         "offered_item__brand",
         "offered_item__model",
         "offered_item__offer__contact__organisation__name",
-        "last_location",
+        "last_location__name",
     )
     autocomplete_fields = (
         "offered_item",
@@ -143,12 +144,11 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
             super()
             .get_queryset(request)
             .select_related(
-                "shipment",
-                "offered_item__offer__contact__organisation",
                 "offered_item",
-            )
-            .prefetch_related(
-                "offered_item__requested_items__request__contact__organisation",
+                "last_location",
+                "shipment__from_location",
+                "shipment__to_location",
+                "parent_shipment_item",
             )
         )
         return qs
@@ -158,31 +158,56 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         return item.shipment and item.shipment.is_delivered
 
 
-class ShipmentItemHistoryFormSet(BaseInlineFormSet):
-
-    ordering = ("when",)
-
-    def get_queryset(self):
-        qs = ShipmentItem.objects.filter(offered_item=self.instance.offered_item).order_by("-when", "-created_at")
-        return qs
-
-
-class ShipmentItemHistoryInlineAdmin(admin.TabularInline):
+class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
     model = ShipmentItem
     verbose_name = _("Shipment History of Item")
     verbose_name_plural = _("Shipment History of Items")
     extra = 0
     max_num = 0
-    formset = ShipmentItemHistoryFormSet
     can_delete = False
-    readonly_fields = (
+    fields = (
         "offered_item",
         "amount",
         "last_location",
         "shipment",
-        "when",
+        "shipment_dates",
     )
-    # exclude = ("parent_shipment_item",)
+
+    readonly_fields = fields
+
+    def get_form_queryset(self, obj):
+        query = """
+            WITH RECURSIVE parents AS (
+                SELECT logistics_shipmentitem.*, 0 AS relative_depth
+                FROM logistics_shipmentitem
+                WHERE id = %s
+
+                UNION ALL
+
+                SELECT logistics_shipmentitem.*, parents.relative_depth - 1
+                FROM logistics_shipmentitem,parents
+                WHERE logistics_shipmentitem.id = parents.parent_shipment_item_id
+            )
+            SELECT id, parent_shipment_item_id, relative_depth
+            FROM parents
+            ORDER BY relative_depth;
+        """
+        ids = [shipment_item.id for shipment_item in ShipmentItem.objects.raw(query, [obj.id])]
+
+        return ShipmentItem.objects.filter(id__in=ids).select_related(
+            "offered_item",
+            "last_location",
+            "shipment__from_location",
+            "shipment__to_location",
+            "parent_shipment_item",
+        )
+
+    @admin.display(description=_("shipment_dates"))
+    def shipment_dates(self, item: Item):
+        text = f"{item.shipment.shipment_date} -> {item.shipment.delivery_date}"
+        if not item.shipment.is_delivered:
+            text = _("{text} (on the way)").format(text=text)
+        return text
 
 
 @admin.register(Item)
@@ -195,21 +220,6 @@ class ItemAdmin(ShipmentItemAdmin):
         "shipment",
         "is_delivered",
         "parent_shipment_item",
-    )
-    list_filter = (
-        "last_location",
-        "shipment",
-        "shipment__is_delivered",
-        (
-            "offered_item__offer__contact__organisation",
-            admin.RelatedOnlyFieldListFilter,
-        ),
-    )
-    search_fields = (
-        "offered_item__brand",
-        "offered_item__model",
-        "offered_item__offer__contact__organisation__name",
-        "last_location",
     )
     ordering = ("-created_at",)
     actions = ("assign_to_shipment",)

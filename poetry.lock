@@ -186,7 +186,7 @@ Django = ">=2.2,<4.1"
 
 [[package]]
 name = "django-countries"
-version = "7.3.2"
+version = "7.4.2"
 description = "Provides a country field for Django models."
 category = "main"
 optional = false
@@ -239,15 +239,26 @@ Django = ">=3.2"
 tablib = {version = ">=3.0.0", extras = ["html", "ods", "xls", "xlsx", "yaml"]}
 
 [[package]]
+name = "django-nonrelated-inlines"
+version = "0.2"
+description = "Django admin inlines for unrelated models"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+Django = ">=2.0"
+
+[[package]]
 name = "django-phonenumber-field"
-version = "6.3.0"
+version = "6.4.0"
 description = "An international phone number field for django models."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-Django = ">=2.2"
+Django = ">=3.2"
 phonenumbers = {version = ">=7.0.2", optional = true, markers = "extra == \"phonenumbers\""}
 
 [package.extras]
@@ -578,11 +589,11 @@ yaml = ["pyyaml"]
 
 [[package]]
 name = "twisted"
-version = "22.4.0"
+version = "22.8.0"
 description = "An asynchronous networking framework written in Python"
 category = "main"
 optional = false
-python-versions = ">=3.6.7"
+python-versions = ">=3.7.1"
 
 [package.dependencies]
 attrs = ">=19.2.0"
@@ -591,27 +602,28 @@ constantly = ">=15.1"
 hyperlink = ">=17.1.1"
 idna = {version = ">=2.4", optional = true, markers = "extra == \"tls\""}
 incremental = ">=21.3.0"
-pyopenssl = {version = ">=16.0.0", optional = true, markers = "extra == \"tls\""}
+pyopenssl = {version = ">=21.0.0", optional = true, markers = "extra == \"tls\""}
 service-identity = {version = ">=18.1.0", optional = true, markers = "extra == \"tls\""}
 twisted-iocpsupport = {version = ">=1.0.2,<2", markers = "platform_system == \"Windows\""}
 typing-extensions = ">=3.6.5"
 "zope.interface" = ">=4.4.2"
 
 [package.extras]
-all_non_platform = ["cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=16.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pywin32 (!=226)", "contextvars (>=2.4,<3)"]
+all_non_platform = ["cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=21.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pywin32 (!=226)", "contextvars (>=2.4,<3)"]
 conch = ["pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)"]
 conch_nacl = ["pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pynacl"]
 contextvars = ["contextvars (>=2.4,<3)"]
-dev = ["towncrier (>=19.2,<20.0)", "sphinx-rtd-theme (>=0.5,<1.0)", "readthedocs-sphinx-ext (>=2.1,<3.0)", "sphinx (>=4.1.2,<6)", "pyflakes (>=2.2,<3.0)", "twistedchecker (>=0.7,<1.0)", "coverage (>=6b1,<7)", "python-subunit (>=1.4,<2.0)", "pydoctor (>=21.9.0,<21.10.0)"]
-dev_release = ["towncrier (>=19.2,<20.0)", "sphinx-rtd-theme (>=0.5,<1.0)", "readthedocs-sphinx-ext (>=2.1,<3.0)", "sphinx (>=4.1.2,<6)", "pydoctor (>=21.9.0,<21.10.0)"]
+dev = ["towncrier (>=19.2,<20.0)", "pydoctor (>=22.7.0,<22.8.0)", "sphinx-rtd-theme (>=0.5,<1.0)", "readthedocs-sphinx-ext (>=2.1,<3.0)", "sphinx (>=4.1.2,<6)", "pyflakes (>=2.2,<3.0)", "twistedchecker (>=0.7,<1.0)", "coverage (>=6b1,<7)", "python-subunit (>=1.4,<2.0)"]
+dev_release = ["towncrier (>=19.2,<20.0)", "pydoctor (>=22.7.0,<22.8.0)", "sphinx-rtd-theme (>=0.5,<1.0)", "readthedocs-sphinx-ext (>=2.1,<3.0)", "sphinx (>=4.1.2,<6)"]
+gtk_platform = ["pygobject", "cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=21.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pywin32 (!=226)", "contextvars (>=2.4,<3)"]
 http2 = ["h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)"]
-macos_platform = ["pyobjc-core", "pyobjc-framework-cfnetwork", "pyobjc-framework-cocoa", "cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=16.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pywin32 (!=226)", "contextvars (>=2.4,<3)"]
-mypy = ["mypy (==0.930)", "mypy-zope (==0.3.4)", "types-setuptools", "types-pyopenssl", "towncrier (>=19.2,<20.0)", "sphinx-rtd-theme (>=0.5,<1.0)", "readthedocs-sphinx-ext (>=2.1,<3.0)", "sphinx (>=4.1.2,<6)", "pyflakes (>=2.2,<3.0)", "twistedchecker (>=0.7,<1.0)", "coverage (>=6b1,<7)", "cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=16.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pynacl", "pywin32 (!=226)", "python-subunit (>=1.4,<2.0)", "contextvars (>=2.4,<3)", "pydoctor (>=21.9.0,<21.10.0)"]
-osx_platform = ["pyobjc-core", "pyobjc-framework-cfnetwork", "pyobjc-framework-cocoa", "cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=16.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pywin32 (!=226)", "contextvars (>=2.4,<3)"]
+macos_platform = ["pyobjc-core", "pyobjc-framework-cfnetwork", "pyobjc-framework-cocoa", "cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=21.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pywin32 (!=226)", "contextvars (>=2.4,<3)"]
+mypy = ["mypy (==0.930)", "mypy-zope (==0.3.4)", "types-setuptools", "types-pyopenssl", "towncrier (>=19.2,<20.0)", "pydoctor (>=22.7.0,<22.8.0)", "sphinx-rtd-theme (>=0.5,<1.0)", "readthedocs-sphinx-ext (>=2.1,<3.0)", "sphinx (>=4.1.2,<6)", "pyflakes (>=2.2,<3.0)", "twistedchecker (>=0.7,<1.0)", "coverage (>=6b1,<7)", "cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=21.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pynacl", "pywin32 (!=226)", "python-subunit (>=1.4,<2.0)", "contextvars (>=2.4,<3)"]
+osx_platform = ["pyobjc-core", "pyobjc-framework-cfnetwork", "pyobjc-framework-cocoa", "cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=21.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pywin32 (!=226)", "contextvars (>=2.4,<3)"]
 serial = ["pyserial (>=3.0)", "pywin32 (!=226)"]
 test = ["cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)"]
-tls = ["pyopenssl (>=16.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)"]
-windows_platform = ["pywin32 (!=226)", "cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=16.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pywin32 (!=226)", "contextvars (>=2.4,<3)"]
+tls = ["pyopenssl (>=21.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)"]
+windows_platform = ["pywin32 (!=226)", "cython-test-exception-raiser (>=1.0.2,<2)", "PyHamcrest (>=1.9.0)", "pyopenssl (>=21.0.0)", "service-identity (>=18.1.0)", "idna (>=2.4)", "pyasn1", "cryptography (>=2.6)", "appdirs (>=1.4.0)", "bcrypt (>=3.0.0)", "pyserial (>=3.0)", "h2 (>=3.0,<5.0)", "priority (>=1.1.0,<2.0)", "pywin32 (!=226)", "contextvars (>=2.4,<3)"]
 
 [[package]]
 name = "twisted-iocpsupport"
@@ -659,9 +671,9 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 
 [package.extras]
-build = ["wheel", "twine"]
+test = ["pytest-cov", "pytest"]
 docs = ["sphinx"]
-test = ["pytest", "pytest-cov"]
+build = ["twine", "wheel"]
 
 [[package]]
 name = "xlwt"
@@ -699,7 +711,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4f9942d58e03eca76c7748c2b6f84ea35bf4865b401204e44b10b2a927b8cf6d"
+content-hash = "fbbaea93900571013c9146f1a4512c49e245ebfc1e86211dedc9c87c8a7a0506"
 
 [metadata.files]
 asgiref = [
@@ -838,8 +850,8 @@ django-admin-wizard = [
     {file = "django_admin_wizard-0.3.0-py3-none-any.whl", hash = "sha256:143c8fbbe9473dd948c56646e056ebbe2948cc430460339eeaf0f929fa8a58c8"},
 ]
 django-countries = [
-    {file = "django-countries-7.3.2.tar.gz", hash = "sha256:0df6d34193667c2343da8935cbfb8a2bd4fb0c97baf01ac10db4628ba1557a82"},
-    {file = "django_countries-7.3.2-py3-none-any.whl", hash = "sha256:27fc8a0f66a87c9d839493f3926b4e0f4dd873ef66465aa8cd3e953f99758cc9"},
+    {file = "django-countries-7.4.2.tar.gz", hash = "sha256:9d553531de8eaf384fec7fdd5867f3cb9b922d384984c3e613b6b29031e5c3c2"},
+    {file = "django_countries-7.4.2-py3-none-any.whl", hash = "sha256:2eadbe91578fe7b5a0c7782c07487b2ceb4bde9bc5c76eb43458929969f25c62"},
 ]
 django-debug-toolbar = [
     {file = "django-debug-toolbar-3.2.4.tar.gz", hash = "sha256:644bbd5c428d3283aa9115722471769cac1bec189edf3a0c855fd8ff870375a9"},
@@ -853,9 +865,13 @@ django-import-export = [
     {file = "django-import-export-2.8.0.tar.gz", hash = "sha256:33c37b2921ef84e2cd9aa0eb76d04a7c2b538c9d04cb1ed97ac32600876cab30"},
     {file = "django_import_export-2.8.0-py3-none-any.whl", hash = "sha256:31d7dcfba22251e3ef93accb7da844f58c4d78585db9dd7dae37bb76f939da2c"},
 ]
+django-nonrelated-inlines = [
+    {file = "django-nonrelated-inlines-0.2.tar.gz", hash = "sha256:e123010a3ad18b049781d6688b3ff45b2441e69fd63802bec94c37cd36c83611"},
+    {file = "django_nonrelated_inlines-0.2-py3-none-any.whl", hash = "sha256:216a4513971c58568f450a2339064746624de718a946088534e86011b400ccc3"},
+]
 django-phonenumber-field = [
-    {file = "django-phonenumber-field-6.3.0.tar.gz", hash = "sha256:668db2e61559908ce8dcd660ac716262c7922cc29ec76ede3f9b88772992dc28"},
-    {file = "django_phonenumber_field-6.3.0-py3-none-any.whl", hash = "sha256:188ca55b27ef1ac4d9b279d90ee3f1377ece6cd9ed8c63f0a66efd565bf9ad6f"},
+    {file = "django-phonenumber-field-6.4.0.tar.gz", hash = "sha256:72a3e7a3e7493bf2a12c07a3bc77ce89813acc16592bf04d0eee3b5a452097ed"},
+    {file = "django_phonenumber_field-6.4.0-py3-none-any.whl", hash = "sha256:a31b4f05ac0ff898661516c84940f83adb5cdcf0ae4b9b1d31bb8ad3ff345b58"},
 ]
 django-registration = [
     {file = "django-registration-3.2.tar.gz", hash = "sha256:2ea8c7d89a8760ccde41dfd335aa28ba89073d09aab5a0f5f3d7c8c148fcc518"},
@@ -1100,8 +1116,8 @@ tablib = [
     {file = "tablib-3.2.1.tar.gz", hash = "sha256:a57f2770b8c225febec1cb1e65012a69cf30dd28be810e0ff98d024768c7d0f1"},
 ]
 twisted = [
-    {file = "Twisted-22.4.0-py3-none-any.whl", hash = "sha256:f9f7a91f94932477a9fc3b169d57f54f96c6e74a23d78d9ce54039a7f48928a2"},
-    {file = "Twisted-22.4.0.tar.gz", hash = "sha256:a047990f57dfae1e0bd2b7df2526d4f16dcdc843774dc108b78c52f2a5f13680"},
+    {file = "Twisted-22.8.0-py3-none-any.whl", hash = "sha256:8d4718d1e48dcc28933f8beb48dc71cfe77a125e37ad1eb7a3d0acc49baf6c99"},
+    {file = "Twisted-22.8.0.tar.gz", hash = "sha256:e5b60de39f2d1da153fbe1874d885fe3fcbdb21fcc446fa759a53e8fc3513bed"},
 ]
 twisted-iocpsupport = [
     {file = "twisted-iocpsupport-1.0.2.tar.gz", hash = "sha256:72068b206ee809c9c596b57b5287259ea41ddb4774d86725b19f35bf56aa32a9"},

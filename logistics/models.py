@@ -148,7 +148,7 @@ class ShipmentItem(models.Model):
         verbose_name_plural = _("shipment items")
 
     def __str__(self):
-        return f"{self.amount}x {self.offered_item}"
+        return f"{self.offered_item.amount}x {self.offered_item}"
 
     @cached_property
     def available(self):

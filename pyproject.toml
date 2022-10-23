@@ -22,6 +22,7 @@ django-admin-wizard = "^0.3.0"
 django-registration = "^3.2"
 django-countries = {extras = ["pyuca"], version = "^7.3.2"}
 django-phonenumber-field = {extras = ["phonenumbers"], version = "^6.3.0"}
+django-nonrelated-inlines = "^0.2"
 
 [tool.poetry.dev-dependencies]
 
