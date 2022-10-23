@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 from logistics.forms import AssignToShipmentForm
-from logistics.models import ShipmentItem, Shipment
+from logistics.models import LocationType, ShipmentItem, Shipment
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter, ProcessedClaimListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm, RequestItemInlineFormSet
@@ -974,9 +974,7 @@ class ClaimAdmin(ExportActionModelAdmin):
         if len(set(queryset.values_list("offered_item__offer__contact", flat=True))) > 1:
             errors.append(_("Choosen items are offered by different donors."))
         if not errors:
-            # TODO
-            #  - filter shipment only from donor
-            shipment_queryset = Shipment.objects.filter()
+            shipment_queryset = Shipment.objects.filter(from_location__type=LocationType.DONOR)
             form = AssignToShipmentForm(initial=dict(shipment_queryset=shipment_queryset))
 
         return render(
