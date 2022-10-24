@@ -136,7 +136,7 @@ class ShipmentItem(models.Model):
         verbose_name=_("parent shipment item"),
         blank=True,
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name="sent_items",
     )
 
