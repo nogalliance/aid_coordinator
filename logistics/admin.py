@@ -160,8 +160,8 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
 
 class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
     model = ShipmentItem
-    verbose_name = _("Shipment History of Item")
-    verbose_name_plural = _("Shipment History of Items")
+    verbose_name = _("Shipment History of the Item")
+    verbose_name_plural = _("Shipment History of the Items")
     extra = 0
     max_num = 0
     can_delete = False
@@ -210,6 +210,24 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
         return text
 
 
+class OfferedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
+    verbose_name = _("Shipment History of the Offered Item")
+    verbose_name_plural = _("Shipment History of the Offered Items")
+
+    def get_form_queryset(self, obj):
+        return (
+            ShipmentItem.objects.filter(offered_item=obj.offered_item)
+            .order_by("when", "created_at")
+            .select_related(
+                "offered_item",
+                "last_location",
+                "shipment__from_location",
+                "shipment__to_location",
+                "parent_shipment_item",
+            )
+        )
+
+
 @admin.register(Item)
 class ItemAdmin(ShipmentItemAdmin):
     list_display = (
@@ -224,7 +242,10 @@ class ItemAdmin(ShipmentItemAdmin):
     ordering = ("-created_at",)
     actions = ("assign_to_shipment",)
 
-    inlines = (ShipmentItemHistoryInlineAdmin,)
+    inlines = (
+        ShipmentItemHistoryInlineAdmin,
+        OfferedItemShipmentHistoryInlineAdmin,
+    )
 
     def has_add_permission(self, request):
         return False
