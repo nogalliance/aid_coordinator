@@ -423,28 +423,20 @@ class Claim(models.Model):
         default=1,
         help_text=_("The amount of items claimed"),
     )
-    shipment_item = models.ForeignKey(
-        "logistics.ShipmentItem",
-        verbose_name=_("shipment item"),
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
     when = models.DateField(verbose_name=_("when"), auto_now_add=True)
 
     class Meta:
         verbose_name = _("claim")
         verbose_name_plural = _("claims")
-        # db_table = "logistics_claim"
 
     def __str__(self):
         if self.requested_item:
-            return f"{self.amount} x {self.offered_item} for request {self.requested_item}"
-        return f"{self.amount} x {self.offered_item} not requested"
+            return f"{self.amount}x {self.offered_item}"
+        return f"{self.amount}x {self.offered_item} not requested"
 
     @property
     def is_processed(self):
-        if self.shipment_item:
+        if self.shipment_item__set:
             return True
         return False
 

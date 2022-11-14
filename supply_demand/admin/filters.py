@@ -38,11 +38,10 @@ class ProcessedClaimListFilter(admin.SimpleListFilter):
 
     def queryset(self, request: HttpRequest, queryset: QuerySet):
         if self.value() == "yes":
-            return queryset.filter(shipment_item_id__isnull=False)
-        if self.value() == "yes":
-            return queryset.filter(shipment_item_id__isnull=True)
-        else:
-            return queryset
+            return queryset.filter(shipmentitem__isnull=False).distinct()
+        if self.value() == "no":
+            return queryset.filter(shipmentitem__isnull=True).distinct()
+        return queryset
 
 
 class LocationFilter(InputFilter):

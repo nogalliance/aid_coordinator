@@ -8,7 +8,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
-from supply_demand.models import OfferItem
+from supply_demand.models import Claim, OfferItem
 
 
 class LocationType(models.IntegerChoices):
@@ -113,7 +113,8 @@ class ShipmentItem(models.Model):
     shipment = models.ForeignKey(
         verbose_name=_("shipment"), to=Shipment, blank=True, null=True, on_delete=models.SET_NULL
     )
-    offered_item = models.ForeignKey(verbose_name=_("offered item"), to=OfferItem, on_delete=models.RESTRICT)
+    # offered_item = models.ForeignKey(verbose_name=_("offered item"), to=OfferItem, on_delete=models.RESTRICT)
+    claim = models.ForeignKey(Claim, verbose_name=_("claim"), on_delete=models.RESTRICT)
     amount = models.PositiveIntegerField(
         verbose_name=_("amount"),
         default=1,
@@ -148,7 +149,7 @@ class ShipmentItem(models.Model):
         verbose_name_plural = _("shipment items")
 
     def __str__(self):
-        return f"{self.offered_item.amount}x {self.offered_item}"
+        return f"{self.claim}"
 
     @cached_property
     def available(self):
@@ -175,5 +176,5 @@ class Item(ShipmentItem):
     class Meta:
         proxy = True
 
-        verbose_name = _("available item")
-        verbose_name_plural = _("available items")
+        verbose_name = _("shipment history")
+        verbose_name_plural = _("history of shipments")

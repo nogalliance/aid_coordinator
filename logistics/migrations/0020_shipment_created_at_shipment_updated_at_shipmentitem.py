@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(verbose_name='created at')),
                 ('updated_at', models.DateTimeField(verbose_name='updated at')),
                 ('current_location', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='logistics.location', verbose_name='current location')),
-                ('offered_item', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='supply_demand.offeritem', verbose_name='offered item')),
+                ('claim', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='supply_demand.claim', verbose_name='claimed item')),
                 ('shipment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='logistics.shipment', verbose_name='shipment')),
             ],
             options={

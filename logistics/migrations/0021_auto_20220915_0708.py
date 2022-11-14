@@ -11,7 +11,7 @@ def fill_shipment_item(apps, schema_editor):
     for item in Claim.objects.all().select_related("offered_item", "requested_item"):
         ShipmentItem.objects.create(
             shipment=item.shipment,
-            offered_item=item.offered_item,
+            claim=item,
             amount=item.amount,
             when=item.when,
             current_location=item.current_location,

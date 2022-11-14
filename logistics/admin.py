@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
-from django.forms.models import BaseInlineFormSet
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
 from django.templatetags.static import static
@@ -76,7 +75,7 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
     extra = 0
     max_num = 0
     readonly_fields = (
-        "offered_item",
+        "claim",
         "amount",
         "last_location",
     )
@@ -109,7 +108,7 @@ class ShipmentAdmin(admin.ModelAdmin):
 @admin.register(ShipmentItem)
 class ShipmentItemAdmin(ExportActionModelAdmin):
     list_display = (
-        "offered_item",
+        "claim",
         "amount",
         "shipment",
         "last_location",
@@ -119,19 +118,19 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         "last_location",
         "shipment__is_delivered",
         (
-            "offered_item__offer__contact__organisation",
+            "claim__offered_item__offer__contact__organisation",
             admin.RelatedOnlyFieldListFilter,
         ),
     )
     search_fields = (
         "shipment__name",
-        "offered_item__brand",
-        "offered_item__model",
-        "offered_item__offer__contact__organisation__name",
+        "claim__offered_item__brand",
+        "claim__offered_item__model",
+        "claim__offered_item__offer__contact__organisation__name",
         "last_location__name",
     )
     autocomplete_fields = (
-        "offered_item",
+        "claim",
         "parent_shipment_item",
     )
     ordering = ("-created_at",)
@@ -144,7 +143,7 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
             super()
             .get_queryset(request)
             .select_related(
-                "offered_item",
+                "claim__offered_item",
                 "last_location",
                 "shipment__from_location",
                 "shipment__to_location",
@@ -166,7 +165,7 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
     max_num = 0
     can_delete = False
     fields = (
-        "offered_item",
+        "claim",
         "amount",
         "last_location",
         "shipment",
@@ -195,7 +194,7 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
         ids = [shipment_item.id for shipment_item in ShipmentItem.objects.raw(query, [obj.id])]
 
         return ShipmentItem.objects.filter(id__in=ids).select_related(
-            "offered_item",
+            "claim__offered_item",
             "last_location",
             "shipment__from_location",
             "shipment__to_location",
@@ -210,16 +209,16 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
         return text
 
 
-class OfferedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
-    verbose_name = _("Shipment History of the Offered Item")
-    verbose_name_plural = _("Shipment History of the Offered Items")
+class ClaimedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
+    verbose_name = _("Shipment History of the Claimed Item")
+    verbose_name_plural = _("Shipment History of the Claimed Items")
 
     def get_form_queryset(self, obj):
         return (
-            ShipmentItem.objects.filter(offered_item=obj.offered_item)
+            ShipmentItem.objects.filter(claim=obj.claim)
             .order_by("when", "created_at")
             .select_related(
-                "offered_item",
+                "claim__offered_item",
                 "last_location",
                 "shipment__from_location",
                 "shipment__to_location",
@@ -231,7 +230,7 @@ class OfferedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
 @admin.register(Item)
 class ItemAdmin(ShipmentItemAdmin):
     list_display = (
-        "offered_item",
+        "claim",
         "available",
         "amount",
         "last_location",
@@ -244,7 +243,7 @@ class ItemAdmin(ShipmentItemAdmin):
 
     inlines = (
         ShipmentItemHistoryInlineAdmin,
-        OfferedItemShipmentHistoryInlineAdmin,
+        ClaimedItemShipmentHistoryInlineAdmin,
     )
 
     def has_add_permission(self, request):
@@ -276,7 +275,7 @@ class ItemAdmin(ShipmentItemAdmin):
                 amount = amount_list[index]
                 ShipmentItem.objects.create(
                     shipment=shipment,
-                    offered_item=item.offered_item,
+                    claim=item.claim,
                     amount=amount,
                     last_location=shipment.from_location,
                     parent_shipment_item_id=item.id,

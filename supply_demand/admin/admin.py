@@ -2,7 +2,7 @@ from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
-from django.db.models import Case, F, Sum, When
+from django.db.models import F, Sum, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
@@ -59,12 +59,6 @@ class RequestItemInline(CompactInline):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         qs = qs.prefetch_related("claim_set")
-        qs = qs.annotate(
-            processed=Case(
-                When(claim__shipment_item_id__isnull=True, then=True),
-                default=False,
-            ),
-        )
         return qs
 
     def has_add_permission(self, reques, obj=None):
@@ -220,7 +214,6 @@ class ClaimInlineAdmin(CompactInline):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.prefetch_related("offered_item__shipmentitem_set__shipment")
         return qs
 
     @admin.display(description=_("current location"))
@@ -264,10 +257,11 @@ class ClaimInlineAdmin(CompactInline):
 @admin.register(RequestItem)
 class RequestItemAdmin(ExportActionModelAdmin):
     list_display = (
-        "type",
-        "brand",
         "model",
+        "brand",
+        "type",
         "amount",
+        "delivered",
         "up_to",
         "assigned",
         "created_at",
@@ -296,13 +290,28 @@ class RequestItemAdmin(ExportActionModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
+        qs = qs.select_related("request__contact__organisation")
         qs = qs.annotate(assigned=Coalesce(Sum("claim__amount"), 0))
+        subquery = (
+            ShipmentItem.objects.filter(
+                claim__requested_item_id=OuterRef("id"),
+                shipment__is_delivered=True,
+                last_location__type=LocationType.REQUESTER,
+            )
+            .annotate(total=Sum("amount"))
+            .values("total")
+        )
+        qs = qs.annotate(delivered=Coalesce(Subquery(subquery), 0))
         return qs
 
     def get_resource_kwargs(self, request, *args, **kwargs):
         new_kwargs = super().get_resource_kwargs(request, *args, **kwargs)
         new_kwargs["request"] = request
         return new_kwargs
+
+    @admin.display(description=_("delivered"))
+    def delivered(self, item: RequestItem):
+        return f"{item.delivered}"
 
     @admin.display(description=_("assigned"))
     def assigned(self, item: RequestItem):
@@ -604,14 +613,15 @@ class OfferAdmin(ContactOnlyAdmin):
 @admin.register(OfferItem)
 class OfferItemAdmin(ImportExportActionModelAdmin):
     list_display = (
-        "type",
-        "brand",
         "model",
+        "brand",
+        "type",
         "notes",
         "amount",
         "claimed",
         "available",
         "rejected",
+        "delivered",
         "received",
         "item_of",
     )
@@ -649,8 +659,19 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
+        qs = qs.select_related("offer__contact__organisation")
         qs = qs.annotate(claimed=Coalesce(Sum("claim__amount"), 0))
         qs = qs.annotate(available=Coalesce(F("amount") - F("claimed"), 10))
+        subquery = (
+            ShipmentItem.objects.filter(
+                claim__offered_item_id=OuterRef("id"),
+                shipment__is_delivered=True,
+                last_location__type=LocationType.REQUESTER,
+            )
+            .annotate(total=Sum("amount"))
+            .values("total")
+        )
+        qs = qs.annotate(delivered=Coalesce(Subquery(subquery), 0))
         if request.user.is_requester:
             qs = qs.exclude(available=0)
         return qs
@@ -819,7 +840,9 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             fields = [field for field in fields if field not in ("rejected", "received", "available")]
         else:
             fields = [
-                field for field in fields if field not in ("rejected", "received", "amount", "claimed", "item_of")
+                field
+                for field in fields
+                if field not in ("rejected", "received", "amount", "claimed", "delivered", "item_of")
             ]
 
         return fields
@@ -864,6 +887,16 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             return item.claimed
         else:
             return format_html('<span style="color:red">{amount}</span>', amount=item.claimed)
+
+    @admin.display(description=_("delivered"))
+    def delivered(self, item: OfferItem):
+        if not item.amount:
+            return None
+
+        if item.amount >= item.delivered:
+            return item.delivered
+        else:
+            return format_html('<span style="color:red">{amount}</span>', amount=item.delivered)
 
     @admin.display(description=_("available"))
     def available(self, item: OfferItem):
@@ -913,7 +946,6 @@ class ClaimAdmin(ExportActionModelAdmin):
         "admin_requested_item",
         "when",
         "is_processed",
-        "shipment",
     )
     list_filter = (
         ProcessedClaimListFilter,
@@ -959,7 +991,7 @@ class ClaimAdmin(ExportActionModelAdmin):
             for item in queryset:
                 shipment_item = ShipmentItem.objects.create(
                     shipment=shipment,
-                    offered_item=item.offered_item,
+                    claim=item,
                     amount=item.amount,
                     last_location=shipment.from_location,
                 )
@@ -1004,20 +1036,9 @@ class ClaimAdmin(ExportActionModelAdmin):
 
     @admin.display(description=_("processed?"))
     def is_processed(self, claim: Claim):
-        if claim.shipment_item:
+        if claim.shipmentitem_set.exists():
             icon_url = static("admin/img/icon-yes.svg")
             return format_html('<img src="{}" alt="True">', icon_url)
         else:
             icon_url = static("admin/img/icon-no.svg")
             return format_html('<img src="{}" alt="False">', icon_url)
-
-    @admin.display(description=_("shipment_item"))
-    def shipment(self, item: Claim):
-        shipment_item = item.shipment_item
-        if not shipment_item:
-            return
-        return format_html(
-            '<a href="{url}">{shipment}</a>',
-            url=reverse("admin:logistics_item_change", args=(shipment_item.id,)),
-            shipment=shipment_item.shipment.name,
-        )
