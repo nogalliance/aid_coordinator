@@ -29,4 +29,9 @@ class Migration(migrations.Migration):
             name='to_location',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='to_location', to='logistics.location', verbose_name='to location'),
         ),
+        migrations.AlterField(
+            model_name='ShipmentItem',
+            name='claim',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='supply_demand.claim', verbose_name='claimed item'),
+        ),
     ]

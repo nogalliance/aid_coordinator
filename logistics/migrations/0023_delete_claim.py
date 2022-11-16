@@ -11,12 +11,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.SeparateDatabaseAndState(
-            state_operations=[
-                migrations.DeleteModel(
-                    name="Claim",
-                ),
-            ],
-            database_operations=[],
-        )
+        # migrations.SeparateDatabaseAndState(
+        #     state_operations=[
+        #         migrations.DeleteModel(
+        #             name="Claim",
+        #         ),
+        #     ],
+        #     database_operations=[],
+        # )
     ]

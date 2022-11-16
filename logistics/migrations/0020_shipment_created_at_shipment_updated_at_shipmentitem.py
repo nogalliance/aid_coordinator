@@ -34,12 +34,12 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(verbose_name='created at')),
                 ('updated_at', models.DateTimeField(verbose_name='updated at')),
                 ('current_location', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='logistics.location', verbose_name='current location')),
-                ('claim', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='supply_demand.claim', verbose_name='claimed item')),
+                ('claim', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='logistics.claim', verbose_name='claimed item')),
                 ('shipment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='logistics.shipment', verbose_name='shipment')),
             ],
             options={
                 'verbose_name': 'shipment item',
-                'verbose_name_plural': 'shipment items',
+                'verbose_name_plural': 'shipment items'
             },
         ),
     ]
