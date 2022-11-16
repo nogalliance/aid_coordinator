@@ -1,0 +1,31 @@
+{% extends 'admin/base_site.html' %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+        &rsaquo; <a
+            href="{% url 'admin:supply_demand_offeritem_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+        &rsaquo; {% translate 'Offer' %} {{ item }}
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h1>{% translate 'Offer' %} {{ item }}</h1>
+    {% if item.needed > 0 %}
+        <form method="post">{% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Offer items">
+            <a class="button" style="padding: 10px 15px"
+               href="{% url 'admin:supply_demand_offeritem_changelist' %}">{% translate 'Cancel' %}</a>
+        </form>
+    {% else %}
+        <p>
+            Thanks for offering but this request is closed already.
+        </p>
+        <p>
+            <a href="{% url 'admin:supply_demand_offeritem_changelist' %}">{% translate 'Return to the list' %}</a>
+        </p>
+    {% endif %}
+{% endblock %}

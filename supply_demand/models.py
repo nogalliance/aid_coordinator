@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
@@ -187,12 +188,13 @@ class RequestItem(models.Model):
         else:
             return f"{self.amount}x {self.brand} {self.model}".replace("  ", " ")
 
-    def _assigned(self):
-        return self.claim_set.count()
-
     @cached_property
     def assigned(self):
-        return self._assigned
+        return self.claim_set.aggregate(assigned=Coalesce(Sum("amount"), 0))["assigned"]
+
+    @cached_property
+    def needed(self):
+        return self.amount - self.assigned
 
     def clean(self):
         super().clean()

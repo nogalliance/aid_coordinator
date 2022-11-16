@@ -264,6 +264,7 @@ class RequestItemAdmin(ExportActionModelAdmin):
         "delivered",
         "up_to",
         "assigned",
+        "needed",
         "created_at",
         "item_of",
     )
@@ -322,6 +323,26 @@ class RequestItemAdmin(ExportActionModelAdmin):
             icon_url = static("admin/img/icon-no.svg")
             return format_html('<img src="{}" alt="False">', icon_url)
         return f"{item.assigned}/{item.amount}"
+
+    @admin.display(description=_("needed"))
+    def needed(self, item: RequestItem):
+        needed = item.amount - item.assigned
+        if needed <= 0:
+            return "0"
+
+        url = reverse("offer", kwargs={"item_id": item.id})
+
+        return format_html(
+            """
+        <div style="display: inline-flex; justify-content: space-between; align-items: center; width: 14ch">
+            <span>{needed}</span>
+            <a class="button" style="margin: -4px; margin-right: 0" href="{url}">{offer}</a>
+        </div>
+        """,
+            url=url,
+            needed=needed,
+            offer=_("Offer"),
+        )
 
     @admin.display(description=_("item of"))
     def item_of(self, item: RequestItem):

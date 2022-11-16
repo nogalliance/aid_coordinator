@@ -8,7 +8,7 @@ from rest_framework import routers
 from aid_coordinator.views import ClaimAutocompleteView
 from contacts.api import DonorOrganisationViewSet, PersonalDonorViewSet
 from contacts.forms import ContactRegistrationForm
-from logistics.views import RequestView
+from logistics.views import RequestView, OfferView
 from supply_demand.api import OfferItemViewSet, RequestItemViewSet
 
 # Change titles
@@ -32,6 +32,7 @@ urlpatterns = [
     path("accounts/", include("django_registration.backends.activation.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("admin/request/<int:item_id>/", RequestView.as_view(), name="request"),
+    path("admin/offer/<int:item_id>/", OfferView.as_view(), name="offer"),
     path(
         "admin/autocomplete/claim/",
         ClaimAutocompleteView.as_view(admin_site=admin.site),
