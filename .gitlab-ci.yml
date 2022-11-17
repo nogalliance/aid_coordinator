@@ -6,15 +6,16 @@ deploy-job:
   script:
     - mkdir -p "$HOME/private/ci/$CI_COMMIT_BRANCH"
     - rsync -av --delete
-        --exclude .git
-        --exclude static
-        --exclude media
-        --exclude aid_coordinator/local_settings.py
+        --exclude /.git
+        --exclude /.idea
+        --exclude /static
+        --exclude /media
+        --exclude /aid_coordinator/local_settings.py
         ./ "$HOME/private/ci/$CI_COMMIT_BRANCH"
     - cd "$HOME/private/ci/$CI_COMMIT_BRANCH"
     - poetry install
     - poetry run ./manage.py migrate --no-input
-    - poetry run ./manage.py --no-input
+    - poetry run ./manage.py collectstatic --no-input
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"
   tags:
