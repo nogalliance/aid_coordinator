@@ -4,7 +4,13 @@ stages:
 deploy-job:
   stage: deploy
   script:
-    - rsync -av --delete --exclude .git --exclude static --exclude media ./ "$HOME/private/ci/$CI_COMMIT_BRANCH"
+    - mkdir -p "$HOME/private/ci/$CI_COMMIT_BRANCH"
+    - rsync -av --delete \
+        --exclude .git \
+        --exclude static \
+        --exclude media \
+        --exclude aid_coordinator/local_settings.py
+        ./ "$HOME/private/ci/$CI_COMMIT_BRANCH"
     - cd "$HOME/private/ci/$CI_COMMIT_BRANCH"
     - poetry install
     - poetry run ./manage.py migrate --no-input
