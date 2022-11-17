@@ -4,8 +4,8 @@ from django.db.models.functions import Coalesce
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
 from django.templatetags.static import static
+from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 from logistics.filters import UsedChoicesFieldListFilter
@@ -110,7 +110,7 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
     list_display = (
         "claim",
         "amount",
-        "shipment",
+        "shipment_link",
         "last_location",
         "is_delivered",
     )
@@ -155,6 +155,26 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
     @admin.display(description=_("is delivered"), boolean=True)
     def is_delivered(self, item: ShipmentItem):
         return item.shipment and item.shipment.is_delivered
+
+    @admin.display(description=_("last_location"))
+    def last_location_link(self, item: ShipmentItem):
+        if not item.last_location:
+            return ""
+        return format_html(
+            '<a href="{url}">{text}</a>',
+            url=reverse("admin:logistics_location_change", args=(item.last_location_id,)),
+            text=f"{item.last_location}",
+        )
+
+    @admin.display(description=_("shipment"))
+    def shipment_link(self, item: ShipmentItem):
+        if not item.shipment:
+            return ""
+        return format_html(
+            '<a href="{url}">{text}</a>',
+            url=reverse("admin:logistics_shipment_change", args=(item.shipment_id,)),
+            text=f"{item.shipment}",
+        )
 
 
 class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
@@ -233,8 +253,8 @@ class ItemAdmin(ShipmentItemAdmin):
         "claim",
         "available",
         "amount",
-        "last_location",
-        "shipment",
+        "last_location_link",
+        "shipment_link",
         "is_delivered",
         "parent_shipment_item",
     )
