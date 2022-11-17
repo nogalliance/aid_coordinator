@@ -11,3 +11,5 @@ deploy-job:
     - poetry run ./manage.py --no-input
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"
+  tags:
+    - kuc
