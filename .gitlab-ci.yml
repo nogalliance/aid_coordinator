@@ -5,10 +5,10 @@ deploy-job:
   stage: deploy
   script:
     - mkdir -p "$HOME/private/ci/$CI_COMMIT_BRANCH"
-    - rsync -av --delete \
-        --exclude .git \
-        --exclude static \
-        --exclude media \
+    - rsync -av --delete
+        --exclude .git
+        --exclude static
+        --exclude media
         --exclude aid_coordinator/local_settings.py
         ./ "$HOME/private/ci/$CI_COMMIT_BRANCH"
     - cd "$HOME/private/ci/$CI_COMMIT_BRANCH"
