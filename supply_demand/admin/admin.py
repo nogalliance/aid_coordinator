@@ -303,6 +303,9 @@ class RequestItemAdmin(ExportActionModelAdmin):
             .values("total")
         )
         qs = qs.annotate(delivered=Coalesce(Subquery(subquery), 0))
+        qs = qs.annotate(needed=F("amount")-F("assigned"))
+        if request.user.is_donor:
+            qs = qs.exclude(needed=0)
         return qs
 
     def get_resource_kwargs(self, request, *args, **kwargs):
