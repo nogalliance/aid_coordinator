@@ -11,7 +11,7 @@ from import_export.admin import ExportActionModelAdmin, ImportExportActionModelA
 from logistics.filters import UsedChoicesFieldListFilter
 from logistics.forms import AssignToShipmentForm
 from logistics.models import EquipmentData, Item, Location, Shipment, ShipmentItem
-from logistics.resources import EquipmentDataResource
+from logistics.resources import EquipmentDataResource, ItemExportResource, ShipmentItemExportResource
 from nonrelated_inlines.admin import NonrelatedTabularInline
 
 static_import_icon = static("img/import.png")
@@ -135,8 +135,7 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
     )
     ordering = ("-created_at",)
 
-    # TODO
-    # resource_class = ShipmentItemExportResource
+    resource_class = ShipmentItemExportResource
 
     def get_queryset(self, request: HttpRequest):
         qs = (
@@ -252,7 +251,7 @@ class ItemAdmin(ShipmentItemAdmin):
     list_display = (
         "claim",
         "available",
-        "amount",
+        # "amount",
         "last_location_link",
         "shipment_link",
         "is_delivered",
@@ -265,6 +264,8 @@ class ItemAdmin(ShipmentItemAdmin):
         ShipmentItemHistoryInlineAdmin,
         ClaimedItemShipmentHistoryInlineAdmin,
     )
+
+    resource_class = ItemExportResource
 
     def has_add_permission(self, request):
         return False
@@ -320,6 +321,6 @@ class ItemAdmin(ShipmentItemAdmin):
             context={"items": queryset, "errors": errors, "form": form, "adjustable_amount": True},
         )
 
-    @admin.display(description=_("available"))
+    @admin.display(description=_("amount"))
     def available(self, item: Item):
         return item.available
