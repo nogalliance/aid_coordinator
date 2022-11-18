@@ -218,7 +218,7 @@ class ClaimInlineAdmin(CompactInline):
 
     @admin.display(description=_("current location"))
     def location(self, item: Claim):
-        shipment_items = item.offered_item.shipmentitem_set.all()
+        shipment_items = item.shipmentitem_set.all()
         if shipment_items:
             return format_html_join(
                 mark_safe("<br>"), "{}x - {}", ((item.amount, item.last_location) for item in shipment_items)
@@ -303,7 +303,7 @@ class RequestItemAdmin(ExportActionModelAdmin):
             .values("total")
         )
         qs = qs.annotate(delivered=Coalesce(Subquery(subquery), 0))
-        qs = qs.annotate(needed=F("amount")-F("assigned"))
+        qs = qs.annotate(needed=F("amount") - F("assigned"))
         if request.user.is_donor:
             qs = qs.exclude(needed=0)
         return qs
@@ -344,7 +344,7 @@ class RequestItemAdmin(ExportActionModelAdmin):
         """,
             url=url,
             needed=needed,
-            offer=_("Offer"),
+            offer=_("Donate"),
         )
 
     @admin.display(description=_("item of"))
@@ -982,6 +982,7 @@ class ClaimAdmin(ExportActionModelAdmin):
             admin.RelatedOnlyFieldListFilter,
         ),
     )
+    readonly_fields = ("when", "updated_at")
     search_fields = (
         "offered_item__brand",
         "offered_item__model",
@@ -1001,10 +1002,11 @@ class ClaimAdmin(ExportActionModelAdmin):
 
     def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)
-        qs = qs.prefetch_related(
+        qs = qs.select_related(
             "offered_item__offer__contact__organisation",
             "requested_item__request__contact__organisation",
         )
+        qs = qs.prefetch_related("shipmentitem_set")
         return qs
 
     @admin.action(description=_("Assign to shipment"))
@@ -1042,18 +1044,22 @@ class ClaimAdmin(ExportActionModelAdmin):
     @admin.display(description=_("offered item"))
     def admin_offered_item(self, claim: Claim):
         return format_html(
-            "<b>{item}</b><br>{offer}",
-            item=claim.offered_item,
-            offer=claim.offered_item.offer,
+            '<a href="{item_url}">{item_text}</a><br><a href="{offer_url}">{offer_text}</a>',
+            item_url=reverse("admin:supply_demand_offeritem_change", args=(claim.offered_item_id,)),
+            item_text=f"{claim.offered_item}",
+            offer_url=reverse("admin:supply_demand_offer_change", args=(claim.offered_item.offer_id,)),
+            offer_text=f"{claim.offered_item.offer}",
         )
 
     @admin.display(description=_("requested item"))
     def admin_requested_item(self, claim: Claim):
         if claim.requested_item_id:
             return format_html(
-                "<b>{item}</b><br>{request}",
-                item=claim.requested_item,
-                request=claim.requested_item.request,
+                '<a href="{item_url}">{item_text}</a><br><a href="{request_url}">{request_text}</a>',
+                item_url=reverse("admin:supply_demand_requestitem_change", args=(claim.requested_item_id,)),
+                item_text=f"{claim.requested_item}",
+                request_url=reverse("admin:supply_demand_request_change", args=(claim.requested_item.request_id,)),
+                request_text=f"{claim.requested_item.request}",
             )
         else:
             return mark_safe("<b>Preemptive shipment</b><br>" "Just ship it to a distribution point")

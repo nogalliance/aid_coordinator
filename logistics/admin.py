@@ -110,7 +110,7 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
     list_display = (
         "claim",
         "amount",
-        "shipment_link",
+        "admin_shipment",
         "last_location",
         "is_delivered",
     )
@@ -156,7 +156,7 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         return item.shipment and item.shipment.is_delivered
 
     @admin.display(description=_("last_location"))
-    def last_location_link(self, item: ShipmentItem):
+    def admin_last_location(self, item: ShipmentItem):
         if not item.last_location:
             return ""
         return format_html(
@@ -166,7 +166,7 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         )
 
     @admin.display(description=_("shipment"))
-    def shipment_link(self, item: ShipmentItem):
+    def admin_shipment(self, item: ShipmentItem):
         if not item.shipment:
             return ""
         return format_html(
@@ -252,8 +252,8 @@ class ItemAdmin(ShipmentItemAdmin):
         "claim",
         "available",
         # "amount",
-        "last_location_link",
-        "shipment_link",
+        "admin_last_location",
+        "admin_shipment",
         "is_delivered",
         "parent_shipment_item",
     )
