@@ -2,7 +2,7 @@ from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
-from django.db.models import F, Sum, OuterRef, Subquery
+from django.db.models import F, Sum, OuterRef, Subquery, Case, When
 from django.db.models.functions import Coalesce
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
@@ -261,9 +261,9 @@ class RequestItemAdmin(ExportActionModelAdmin):
         "brand",
         "type",
         "amount",
-        "delivered",
         "up_to",
         "assigned",
+        "delivered",
         "needed",
         "created_at",
         "item_of",
@@ -303,7 +303,12 @@ class RequestItemAdmin(ExportActionModelAdmin):
             .values("total")
         )
         qs = qs.annotate(delivered=Coalesce(Subquery(subquery), 0))
-        qs = qs.annotate(needed=F("amount") - F("assigned"))
+        qs = qs.annotate(
+            needed=Case(
+                When(up_to__isnull=False, then=F("up_to") - F("assigned")),
+                default=F("amount") - F("assigned"),
+            )
+        )
         if request.user.is_donor:
             qs = qs.exclude(needed=0)
         return qs
@@ -315,6 +320,14 @@ class RequestItemAdmin(ExportActionModelAdmin):
 
     @admin.display(description=_("delivered"))
     def delivered(self, item: RequestItem):
+        if item.delivered == item.amount:
+            icon_url = static("admin/img/icon-yes.svg")
+            return format_html('<img src="{}" alt="True">', icon_url)
+        elif item.delivered == 0:
+            icon_url = static("admin/img/icon-no.svg")
+            return format_html('<img src="{}" alt="False">', icon_url)
+        return f"{item.delivered}/{item.amount}"
+
         return f"{item.delivered}"
 
     @admin.display(description=_("assigned"))
@@ -329,21 +342,20 @@ class RequestItemAdmin(ExportActionModelAdmin):
 
     @admin.display(description=_("needed"))
     def needed(self, item: RequestItem):
-        needed = item.amount - item.assigned
-        if needed <= 0:
+        if item.needed <= 0:
             return "0"
 
         url = reverse("offer", kwargs={"item_id": item.id})
 
         return format_html(
             """
-        <div style="display: inline-flex; justify-content: space-between; align-items: center; width: 14ch">
-            <span>{needed}</span>
-            <a class="button" style="margin: -4px; margin-right: 0" href="{url}">{offer}</a>
-        </div>
-        """,
+            <div style="display: inline-flex; justify-content: space-between; align-items: center; width: 14ch">
+                <span>{needed}</span>
+                <a class="button" style="margin: -4px; margin-right: 0" href="{url}">{offer}</a>
+            </div>
+            """,
             url=url,
-            needed=needed,
+            needed=item.needed,
             offer=_("Donate"),
         )
 
@@ -457,7 +469,11 @@ class RequestItemAdmin(ExportActionModelAdmin):
         fields = super().get_list_display(request)
 
         user = request.user
-        if not user.is_superuser and not user.is_viewer:
+        if user.is_superuser:
+            fields = [field for field in fields if field not in ("needed",)]
+        elif user.is_viewer:
+            fields = [field for field in fields if field not in ("needed",)]
+        else:
             fields = [
                 field for field in fields if field not in ("request", "created_at", "assigned", "delivered", "item_of")
             ]

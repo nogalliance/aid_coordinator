@@ -185,8 +185,7 @@ class RequestItem(models.Model):
     def counted_name(self):
         if self.up_to:
             return f"{self.up_to}x {self.brand} {self.model}".replace("  ", " ")
-        else:
-            return f"{self.amount}x {self.brand} {self.model}".replace("  ", " ")
+        return f"{self.amount}x {self.brand} {self.model}".replace("  ", " ")
 
     @cached_property
     def assigned(self):
@@ -194,6 +193,8 @@ class RequestItem(models.Model):
 
     @cached_property
     def needed(self):
+        if self.up_to:
+            return self.up_to - self.assigned
         return self.amount - self.assigned
 
     def clean(self):

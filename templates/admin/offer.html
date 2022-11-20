@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1>{% translate 'Offer' %} {{ item }}</h1>
+    <h1>{% translate 'Donate' %} {{ item }}</h1>
     {% if item.needed > 0 %}
         <form method="post">{% csrf_token %}
             {{ form.as_p }}
@@ -22,7 +22,9 @@
         </form>
     {% else %}
         <p>
-            Thanks for offering but this request is closed already.
+            {% blocktranslate trimmed %}
+                Thanks for donating but this request is closed already. Try to find another request or create an offer.
+            {% endblocktranslate %}
         </p>
         <p>
             <a href="{% url 'admin:supply_demand_offeritem_changelist' %}">{% translate 'Return to the list' %}</a>

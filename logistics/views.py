@@ -89,8 +89,10 @@ class OfferView(AdminFormView):
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         form.fields["amount"] = forms.IntegerField(
-            label=_('How many of "{item}{notes}" would you like to offer?').format(
-                item=self.item, notes=f" ({self.item.notes})" if self.item.notes else ""
+            label=_('How many of "{item}{notes}" would you like to donate({needed} max)?').format(
+                item=self.item,
+                notes=f" ({self.item.notes})" if self.item.notes else "",
+                needed=self.item.needed,
             ),
             initial=self.item.needed,
             min_value=1,
