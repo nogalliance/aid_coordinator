@@ -246,7 +246,7 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
             offered_item=item.claim.offered_item,
         )
 
-    @admin.display(description=_("shipment_dates"))
+    @admin.display(description=_("shipment dates"))
     def shipment_dates(self, item: Item):
         text = f"{item.shipment.shipment_date} -> {item.shipment.delivery_date}"
         if not item.shipment.is_delivered:
@@ -283,6 +283,46 @@ class ItemAdmin(ShipmentItemAdmin):
         "is_delivered",
         "parent_shipment_item",
     )
+
+    basic_fields = (
+        "admin_claim",
+        "available",
+        "last_location",
+        "shipment",
+        "shipment_date",
+        "delivery_date",
+    )
+
+    fieldsets = (
+        (None, {"fields": basic_fields}),
+        (
+            _("Request"),
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "admin_request",
+                    "admin_request_by",
+                    "admin_request_email",
+                    "admin_request_phone",
+                ),
+            },
+        ),
+        (
+            _("Offer"),
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "admin_offer",
+                    "admin_offer_by",
+                    "admin_offer_email",
+                    "admin_offer_phone",
+                ),
+            },
+        ),
+    )
+
+    readonly_fields = basic_fields
+
     ordering = ("-created_at",)
     actions = ("assign_to_shipment",)
 
@@ -340,6 +380,66 @@ class ItemAdmin(ShipmentItemAdmin):
             context={"items": queryset, "errors": errors, "form": form, "adjustable_amount": True},
         )
 
+    @admin.display(description=_("shipment date"))
+    def shipment_date(self, item: Item):
+        if item.shipment.shipment_date:
+            return item.shipment.shipment_date
+        return _("Not shipped yet")
+
+    @admin.display(description=_("delivery date"))
+    def delivery_date(self, item: Item):
+        if item.shipment.shipment_date:
+            if item.shipment.delivery_date:
+                if item.shipment.is_delivered:
+                    text = item.shipment.delivery_date
+                else:
+                    text = _("On the way (estimated date is {date})").format(date=item.shipment.delivery_date)
+            else:
+                text = _("On the way")
+        else:
+            text = _("Unknown")
+        return text
+
+    @admin.display(description=_("shipment item"), ordering="claim")
+    def admin_claim(self, item: ShipmentItem):
+        return format_html(
+            '<a href="{item_url}">{offered_item}</a>',
+            item_url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
+            offered_item=item.claim.offered_item,
+        )
+
     @admin.display(description=_("amount"))
     def available(self, item: Item):
         return item.available
+
+    @admin.display(description=_("Initial Request"))
+    def admin_request(self, item: Item):
+        return item.claim.requested_item.request
+
+    @admin.display(description=_("Requested by"))
+    def admin_request_by(self, item: Item):
+        return item.claim.requested_item.request.contact
+
+    @admin.display(description=_("email"))
+    def admin_request_email(self, item: Item):
+        return item.claim.requested_item.request.contact.email
+
+    @admin.display(description=_("phone"))
+    def admin_request_phone(self, item: Item):
+        return item.claim.requested_item.request.contact.phone
+
+    @admin.display(description=_("Initial Offer"))
+    def admin_offer(self, item: Item):
+        return item.claim.offered_item.offer
+
+    @admin.display(description=_("offered by"))
+    def admin_offer_by(self, item: Item):
+        return item.claim.offered_item.offer.contact
+
+    @admin.display(description=_("email"))
+    def admin_offer_email(self, item: Item):
+        return item.claim.offered_item.offer.contact.email
+
+    @admin.display(description=_("phone"))
+    def admin_offer_phone(self, item: Item):
+        return item.claim.offered_item.offer.contact.phone

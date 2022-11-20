@@ -106,7 +106,7 @@ class Shipment(models.Model):
         verbose_name_plural = _("shipments")
 
     def __str__(self):
-        return f"{self.name}({self.from_location} -> {self.to_location})"
+        return f"{self.name} ({self.from_location} -> {self.to_location})"
 
 
 class ShipmentItemManager(models.Manager):
@@ -161,7 +161,7 @@ class ShipmentItem(models.Model):
         verbose_name_plural = _("shipment items")
 
     def __str__(self):
-        return f"{self.claim}"
+        return f"{self.claim.offered_item}"
 
     @cached_property
     def available(self):
@@ -188,5 +188,5 @@ class Item(ShipmentItem):
     class Meta:
         proxy = True
 
-        verbose_name = _("shipment history")
-        verbose_name_plural = _("history of shipments")
+        verbose_name = _("shipment item")
+        verbose_name_plural = _("shipping logistics")
