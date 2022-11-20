@@ -2,13 +2,13 @@ from contacts.models import Organisation
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, F
 from django.db.models.functions import Coalesce
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
-from supply_demand.models import Claim, OfferItem
+from supply_demand.models import Claim
 
 
 class LocationType(models.IntegerChoices):
@@ -109,11 +109,21 @@ class Shipment(models.Model):
         return f"{self.name}({self.from_location} -> {self.to_location})"
 
 
+class ShipmentItemManager(models.Manager):
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .annotate(sent=Coalesce(Sum("sent_items__amount"), 0))
+            .prefetch_related("sent_items")
+            .annotate(available=F("amount") - F("sent"))
+        )
+
+
 class ShipmentItem(models.Model):
     shipment = models.ForeignKey(
         verbose_name=_("shipment"), to=Shipment, blank=True, null=True, on_delete=models.SET_NULL
     )
-    # offered_item = models.ForeignKey(verbose_name=_("offered item"), to=OfferItem, on_delete=models.RESTRICT)
     claim = models.ForeignKey(Claim, verbose_name=_("claim"), on_delete=models.RESTRICT)
     amount = models.PositiveIntegerField(
         verbose_name=_("amount"),
@@ -143,6 +153,8 @@ class ShipmentItem(models.Model):
 
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name=_("updated at"), auto_now=True)
+
+    objects = ShipmentItemManager()
 
     class Meta:
         verbose_name = _("shipment item")

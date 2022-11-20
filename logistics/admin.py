@@ -74,16 +74,34 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
     model = ShipmentItem
     extra = 0
     max_num = 0
-    readonly_fields = (
-        "claim",
+    fields = (
+        "admin_claim",
         "amount",
         "last_location",
     )
-    exclude = ("parent_shipment_item",)
+
+    readonly_fields = fields
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request).select_related("shipment")
+        qs = (
+            super()
+            .get_queryset(request)
+            .select_related(
+                "shipment",
+                "claim__offered_item",
+                "last_location",
+                "claim__requested_item",
+            )
+        )
         return qs
+
+    @admin.display(description=_("shipment item"), ordering="claim")
+    def admin_claim(self, item: ShipmentItem):
+        return format_html(
+            '<a href="{item_url}">{offered_item}</a>',
+            item_url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
+            offered_item=item.claim.offered_item,
+        )
 
 
 @admin.register(Shipment)
@@ -184,7 +202,7 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
     max_num = 0
     can_delete = False
     fields = (
-        "claim",
+        "admin_claim",
         "amount",
         "last_location",
         "shipment",
@@ -218,6 +236,14 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
             "shipment__from_location",
             "shipment__to_location",
             "parent_shipment_item",
+        )
+
+    @admin.display(description=_("shipment item"), ordering="claim")
+    def admin_claim(self, item: ShipmentItem):
+        return format_html(
+            '<a href="{item_url}">{offered_item}</a>',
+            item_url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
+            offered_item=item.claim.offered_item,
         )
 
     @admin.display(description=_("shipment_dates"))
@@ -267,6 +293,9 @@ class ItemAdmin(ShipmentItemAdmin):
 
     resource_class = ItemExportResource
 
+    def get_queryset(self, request: HttpRequest):
+        return super().get_queryset(request).filter(available__gt=0)
+
     def has_add_permission(self, request):
         return False
 
@@ -275,16 +304,6 @@ class ItemAdmin(ShipmentItemAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        qs = (
-            qs.annotate(sent=Coalesce(Sum("sent_items__amount"), 0))
-            .prefetch_related("sent_items")
-            .annotate(available=F("amount") - F("sent"))
-            .filter(available__gt=0)
-        )
-        return qs
 
     @admin.action(description=_("Assign to shipment"))
     def assign_to_shipment(self, request, queryset):

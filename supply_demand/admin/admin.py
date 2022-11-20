@@ -2,7 +2,7 @@ from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
 from django.contrib import admin
-from django.db.models import F, Sum, OuterRef, Subquery, Case, When
+from django.db.models import F, Sum, OuterRef, Case, When
 from django.db.models.functions import Coalesce
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
@@ -13,6 +13,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
+from aid_coordinator.helpers import SubquerySum
 from logistics.forms import AssignToShipmentForm
 from logistics.models import LocationType, ShipmentItem, Shipment
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
@@ -218,10 +219,10 @@ class ClaimInlineAdmin(CompactInline):
 
     @admin.display(description=_("current location"))
     def location(self, item: Claim):
-        shipment_items = item.shipmentitem_set.all()
+        shipment_items = item.shipmentitem_set.all().filter(available__gt=0)
         if shipment_items:
             return format_html_join(
-                mark_safe("<br>"), "{}x - {}", ((item.amount, item.last_location) for item in shipment_items)
+                mark_safe("<br>"), "{}x - {}", ((item.available, item.last_location) for item in shipment_items)
             )
         return _("donor")
 
@@ -293,16 +294,12 @@ class RequestItemAdmin(ExportActionModelAdmin):
         qs = super().get_queryset(request)
         qs = qs.select_related("request__contact__organisation")
         qs = qs.annotate(assigned=Coalesce(Sum("claim__amount"), 0))
-        subquery = (
-            ShipmentItem.objects.filter(
-                claim__requested_item_id=OuterRef("id"),
-                shipment__is_delivered=True,
-                last_location__type=LocationType.REQUESTER,
-            )
-            .annotate(total=Sum("amount"))
-            .values("total")
+        subquery = ShipmentItem.objects.filter(
+            claim__requested_item_id=OuterRef("id"),
+            shipment__is_delivered=True,
+            last_location__type=LocationType.REQUESTER,
         )
-        qs = qs.annotate(delivered=Coalesce(Subquery(subquery), 0))
+        qs = qs.annotate(delivered=Coalesce(SubquerySum(subquery, 'amount'), 0))
         qs = qs.annotate(
             needed=Case(
                 When(up_to__isnull=False, then=F("up_to") - F("assigned")),
@@ -702,16 +699,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         qs = qs.select_related("offer__contact__organisation")
         qs = qs.annotate(claimed=Coalesce(Sum("claim__amount"), 0))
         qs = qs.annotate(available=Coalesce(F("amount") - F("claimed"), 10))
-        subquery = (
-            ShipmentItem.objects.filter(
-                claim__offered_item_id=OuterRef("id"),
-                shipment__is_delivered=True,
-                last_location__type=LocationType.REQUESTER,
-            )
-            .annotate(total=Sum("amount"))
-            .values("total")
+        subquery = ShipmentItem.objects.filter(
+            claim__offered_item_id=OuterRef("id"),
+            shipment__is_delivered=True,
+            last_location__type=LocationType.REQUESTER,
         )
-        qs = qs.annotate(delivered=Coalesce(Subquery(subquery), 0))
+        qs = qs.annotate(delivered=Coalesce(SubquerySum(subquery, "amount"), 0))
         if request.user.is_requester:
             qs = qs.exclude(available=0)
         return qs

@@ -449,21 +449,6 @@ class Claim(models.Model):
             return True
         return False
 
-    @property
-    def location(self):
-        shipment_items = self.offered_item.shipmentitem_set.all()
-        locations = []
-        for item in shipment_items:
-            if item.shipment.is_delivered:
-                location = item.shipment.to_location
-            else:
-                location = item.shipment.from_location
-            if not location:
-                location = _("Donor")
-            locations.append(f"{item.amount}x - {location}")
-        locations = "<br>".join(locations)
-        return format_html(locations)
-
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)
 
