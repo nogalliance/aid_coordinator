@@ -3,14 +3,12 @@
 
 {% block content %}
   {% if not errors %}
+    <a class="" href="{% url 'admin:logistics_shipment_add' %}" target="_blank" title="{% translate "Add new Shipment" %}">
+      <img src="/static/admin/img/icon-addlink.svg" alt="Add"> {% translate "Create New Shipment" %}
+    </a>({% translate "refresh page after new shipment has been created" %})
+    <br>
+    <br>
 
-    {% if not form.fields.shipment.choices %}
-      <p style="color: red;">{% translate "Create Shipment first" %}</p>
-    {% endif %}
-      <a class="" href="{% url 'admin:logistics_shipment_add' %}" target="_blank" title="{% translate "Add new Shipment" %}">
-        <img src="/static/admin/img/icon-addlink.svg" alt="Add"> {% translate "Create New Shipment" %}
-      </a>({% translate "refresh page after new shipment has been created" %})
-      <p></p>
     <form action="" method="post">
       {% csrf_token %}
       {{ form }}
@@ -30,6 +28,7 @@
   {% else %}
     {% for error in errors %}
       <p style="color: red;">{{ error }}</p>
+      <a href="{{request.META.HTTP_REFERER}}">{% translate "Go back" %}</a>
     {% endfor %}
   {% endif %}
 {% endblock %}

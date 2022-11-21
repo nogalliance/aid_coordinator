@@ -1,21 +1,22 @@
 from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
+from aid_coordinator.helpers import SubquerySum
 from django.contrib import admin
-from django.db.models import F, Sum, OuterRef, Case, When
+from django.db.models import Case, F, OuterRef, Sum, When
 from django.db.models.functions import Coalesce
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
 from django.templatetags.static import static
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
-from aid_coordinator.helpers import SubquerySum
 from logistics.forms import AssignToShipmentForm
-from logistics.models import LocationType, ShipmentItem, Shipment
+from logistics.models import Location, LocationType, Shipment, ShipmentItem
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter, ProcessedClaimListFilter
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm, RequestItemInlineFormSet
@@ -299,7 +300,7 @@ class RequestItemAdmin(ExportActionModelAdmin):
             shipment__is_delivered=True,
             last_location__type=LocationType.REQUESTER,
         )
-        qs = qs.annotate(delivered=Coalesce(SubquerySum(subquery, 'amount'), 0))
+        qs = qs.annotate(delivered=Coalesce(SubquerySum(subquery, "amount"), 0))
         qs = qs.annotate(
             needed=Case(
                 When(up_to__isnull=False, then=F("up_to") - F("assigned")),
@@ -1022,7 +1023,18 @@ class ClaimAdmin(ExportActionModelAdmin):
     def assign_to_shipment(self, request, queryset):
 
         if "apply" in request.POST:
-            shipment = Shipment.objects.get(id=request.POST["shipment"])
+            if request.POST["shipment"] == "new":
+                contact = queryset.first().offered_item.offer.contact
+                today = timezone.now()
+                shipment, created = Shipment.objects.get_or_create(
+                    name=f"Offer from donor {contact} - {today:%Y-%m-%d}",
+                    defaults={
+                        "shipment_date": today.date(),
+                        "from_location": Location.objects.filter(type=LocationType.DONOR).first(),
+                    },
+                )
+            else:
+                shipment = Shipment.objects.get(id=request.POST["shipment"])
             for item in queryset:
                 shipment_item = ShipmentItem.objects.create(
                     shipment=shipment,
@@ -1033,6 +1045,8 @@ class ClaimAdmin(ExportActionModelAdmin):
                 item.shipment_item = shipment_item
                 item.save()
 
+            if created:
+                return HttpResponseRedirect(reverse("admin:logistics_shipment_change", args=[shipment.id]))
             return HttpResponseRedirect(request.get_full_path())
 
         errors = []
@@ -1040,6 +1054,8 @@ class ClaimAdmin(ExportActionModelAdmin):
 
         if len(set(queryset.values_list("offered_item__offer__contact", flat=True))) > 1:
             errors.append(_("Choosen items are offered by different donors."))
+        if len([item for item in queryset.values_list("shipmentitem", flat=True) if item is not None]) > 0:
+            errors.append(_("One or more claims from the list are already processed"))
         if not errors:
             shipment_queryset = Shipment.objects.filter(from_location__type=LocationType.DONOR)
             form = AssignToShipmentForm(initial=dict(shipment_queryset=shipment_queryset))

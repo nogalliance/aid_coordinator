@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from logistics.models import ShipmentItem, Shipment
 
@@ -13,8 +14,10 @@ class AssignToShipmentForm(forms.ModelForm):
         shipment_queryset = kwargs.get("initial", {}).get("shipment_queryset", None)
         if shipment_queryset is None:
             shipment_queryset = Shipment.objects.filter()
-        shipment_choices = shipment_queryset.filter(is_delivered=False).values_list("id", "name")
-        self.fields["shipment"].choices = shipment_choices
+        shipments = shipment_queryset.filter(is_delivered=False)
+        choices = [(shipment.id, shipment.name) for shipment in shipments]
+        choices.insert(0, ("new", _("New shipment")))
+        self.fields["shipment"].choices = choices
 
 
 class RequestForm(forms.Form):

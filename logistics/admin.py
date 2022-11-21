@@ -1,16 +1,15 @@
 from django.contrib import admin
-from django.db.models import F, Sum
-from django.db.models.functions import Coalesce
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
 from django.templatetags.static import static
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 from logistics.filters import UsedChoicesFieldListFilter
 from logistics.forms import AssignToShipmentForm
-from logistics.models import EquipmentData, Item, Location, Shipment, ShipmentItem
+from logistics.models import EquipmentData, Item, Location, LocationType, Shipment, ShipmentItem
 from logistics.resources import EquipmentDataResource, ItemExportResource, ShipmentItemExportResource
 from nonrelated_inlines.admin import NonrelatedTabularInline
 
@@ -349,7 +348,17 @@ class ItemAdmin(ShipmentItemAdmin):
     def assign_to_shipment(self, request, queryset):
 
         if "apply" in request.POST:
-            shipment = Shipment.objects.get(id=request.POST["shipment"])
+            if request.POST["shipment"] == "new":
+                today = timezone.now()
+                shipment, created = Shipment.objects.get_or_create(
+                    name=f"Shipment {request.user} - {today:%Y-%m-%d}",
+                    defaults={
+                        "shipment_date": today.date(),
+                        "from_location": queryset.first().last_location,
+                    },
+                )
+            else:
+                shipment = Shipment.objects.get(id=request.POST["shipment"])
             amount_list = request.POST.getlist("amount")
             for index, item in enumerate(queryset):
                 amount = amount_list[index]
@@ -361,6 +370,8 @@ class ItemAdmin(ShipmentItemAdmin):
                     parent_shipment_item_id=item.id,
                 )
 
+            if created:
+                return HttpResponseRedirect(reverse("admin:logistics_shipment_change", args=[shipment.id]))
             return HttpResponseRedirect(request.get_full_path())
 
         errors = []
