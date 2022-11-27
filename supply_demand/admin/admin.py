@@ -1,9 +1,11 @@
 from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Exists, OuterRef, Sum
+from django.forms import forms
 from django.http import HttpRequest
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
@@ -14,7 +16,7 @@ from aid_coordinator.widgets import ClaimAutocompleteSelect
 from logistics.models import Claim
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter
-from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm
+from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm, change_type_form_factory
 from supply_demand.admin.resources import (
     CustomConfirmImportForm,
     CustomImportForm,
@@ -551,8 +553,36 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "set_not_rejected",
         "set_received",
         "set_not_received",
+        "new_type_admin_action",
     )
     inlines = (ClaimInlineAdmin,)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.action_form = change_type_form_factory(self.action_form)
+
+    @property
+    def media(self):
+        super_media = super().media
+        # noinspection PyProtectedMember
+        return forms.Media(
+            js=super_media._js + ['supply_demand/action_itemtype.js'],
+            css=super_media._css
+        )
+
+    @admin.action(
+        permissions=['change'],
+        description='Change item type',
+    )
+    def new_type_admin_action(self, request, queryset):
+        new_type_id = request.POST['new_type']
+        if not new_type_id:
+            messages.error(request, "No new item type selected")
+            return
+
+        new_type = ItemType.objects.get(pk=new_type_id)
+        count = queryset.update(type=new_type)
+        messages.info(request, f"{count} item(s) updated")
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
