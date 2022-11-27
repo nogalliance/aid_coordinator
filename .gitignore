@@ -212,3 +212,6 @@ cython_debug/
 
 # Django static
 /static
+
+# macOS stuff
+.DS_Store
