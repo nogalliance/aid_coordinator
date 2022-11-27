@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.views import PasswordResetView
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
-from django.views.generic.base import RedirectView
+from django.views.generic import RedirectView
 from django_registration.backends.activation.views import RegistrationView
 from rest_framework import routers
 
@@ -48,6 +48,5 @@ urlpatterns = [
     path("api/", include(router.urls)),
     path("i18n/", include("django.conf.urls.i18n")),
     path("__debug__/", include("debug_toolbar.urls")),
-    path('index.html', RedirectView.as_view(url='/admin/')),
-    path('', RedirectView.as_view(url='/admin/')),
+    path('', RedirectView.as_view(url='/admin/'), name='go-to-admin'),
 ]

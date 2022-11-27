@@ -12,11 +12,10 @@ class EquipmentDataResource(resources.ModelResource):
 
 
 class ShipmentItemExportResource(resources.ModelResource):
-    type = fields.Field(attribute="claim__offered_item__get_type_display")
-    brand = fields.Field(attribute="claim__offered_item__brand")
-    model = fields.Field(attribute="claim__offered_item__model")
-
     amount = fields.Field(attribute="amount", widget=IntegerWidget())
+    type = fields.Field(attribute="offered_item__type__name")
+    brand = fields.Field(attribute="offered_item__brand")
+    model = fields.Field(attribute="offered_item__model")
     shipment = fields.Field(attribute="shipment")
     from_location = fields.Field(attribute="shipment__from_location")
     to_location = fields.Field(attribute="shipment__to_location")
