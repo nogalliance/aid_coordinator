@@ -26,6 +26,24 @@ class OverclaimedListFilter(admin.SimpleListFilter):
             return queryset
 
 
+class ReceivedClaimListFilter(admin.SimpleListFilter):
+    title = _("received")
+    parameter_name = "received"
+
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin):
+        return (
+            ("yes", _("Yes")),
+            ("no", _("No")),
+        )
+
+    def queryset(self, request: HttpRequest, queryset: QuerySet):
+        if self.value() == "yes":
+            return queryset.filter(shipment_item__shipment__is_delivered=True).distinct()
+        if self.value() == "no":
+            return queryset.filter(shipment_item__shipment__is_delivered=False).distinct()
+        return queryset
+
+
 class ProcessedClaimListFilter(admin.SimpleListFilter):
     title = _("processed")
     parameter_name = "processed"
@@ -38,9 +56,9 @@ class ProcessedClaimListFilter(admin.SimpleListFilter):
 
     def queryset(self, request: HttpRequest, queryset: QuerySet):
         if self.value() == "yes":
-            return queryset.filter(shipmentitem__isnull=False).distinct()
+            return queryset.filter(shipment_item__isnull=False).distinct()
         if self.value() == "no":
-            return queryset.filter(shipmentitem__isnull=True).distinct()
+            return queryset.filter(shipment_item__isnull=True).distinct()
         return queryset
 
 

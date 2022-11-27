@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 from logistics.filters import UsedChoicesFieldListFilter
 from logistics.forms import AssignToShipmentForm
-from logistics.models import EquipmentData, Item, Location, LocationType, Shipment, ShipmentItem
+from logistics.models import EquipmentData, Item, Location, Shipment, ShipmentItem
 from logistics.resources import EquipmentDataResource, ItemExportResource, ShipmentItemExportResource
 from nonrelated_inlines.admin import NonrelatedTabularInline
 
@@ -74,7 +74,7 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
     extra = 0
     max_num = 0
     fields = (
-        "admin_claim",
+        "admin_offered_item",
         "amount",
         "last_location",
     )
@@ -87,19 +87,19 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
             .get_queryset(request)
             .select_related(
                 "shipment",
-                "claim__offered_item",
+                "offered_item",
                 "last_location",
-                "claim__requested_item",
+                # "claim__requested_item",
             )
         )
         return qs
 
-    @admin.display(description=_("shipment item"), ordering="claim")
-    def admin_claim(self, item: ShipmentItem):
+    @admin.display(description=_("shipment item"), ordering="offered_item")
+    def admin_offered_item(self, item: ShipmentItem):
         return format_html(
             '<a href="{item_url}">{offered_item}</a>',
             item_url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
-            offered_item=item.claim.offered_item,
+            offered_item=item.offered_item,
         )
 
 
@@ -119,35 +119,39 @@ class ShipmentAdmin(admin.ModelAdmin):
         "from_location__country",
     )
 
+    save_on_top = True
+
     inlines = (ShipmentItemInlineAdmin,)
 
 
 @admin.register(ShipmentItem)
 class ShipmentItemAdmin(ExportActionModelAdmin):
     list_display = (
-        "claim",
+        "offered_item",
         "amount",
         "admin_shipment",
         "last_location",
         "is_delivered",
     )
     list_filter = (
-        "last_location",
         "shipment__is_delivered",
+        "last_location",
+        "shipment__to_location",
+        "shipment__from_location",
         (
-            "claim__offered_item__offer__contact__organisation",
+            "offered_item__offer__contact__organisation",
             admin.RelatedOnlyFieldListFilter,
         ),
     )
     search_fields = (
         "shipment__name",
-        "claim__offered_item__brand",
-        "claim__offered_item__model",
-        "claim__offered_item__offer__contact__organisation__name",
+        "offered_item__brand",
+        "offered_item__model",
+        "offered_item__offer__contact__organisation__name",
         "last_location__name",
     )
     autocomplete_fields = (
-        "claim",
+        "offered_item",
         "parent_shipment_item",
     )
     ordering = ("-created_at",)
@@ -159,7 +163,7 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
             super()
             .get_queryset(request)
             .select_related(
-                "claim__offered_item",
+                "offered_item__offer__contact__organisation",
                 "last_location",
                 "shipment__from_location",
                 "shipment__to_location",
@@ -201,7 +205,7 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
     max_num = 0
     can_delete = False
     fields = (
-        "admin_claim",
+        "admin_offered_item",
         "amount",
         "last_location",
         "shipment",
@@ -230,19 +234,19 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
         ids = [shipment_item.id for shipment_item in ShipmentItem.objects.raw(query, [obj.id])]
 
         return ShipmentItem.objects.filter(id__in=ids).select_related(
-            "claim__offered_item",
+            "offered_item",
             "last_location",
             "shipment__from_location",
             "shipment__to_location",
             "parent_shipment_item",
         )
 
-    @admin.display(description=_("shipment item"), ordering="claim")
-    def admin_claim(self, item: ShipmentItem):
+    @admin.display(description=_("shipment item"), ordering="offered_item")
+    def admin_offered_item(self, item: ShipmentItem):
         return format_html(
             '<a href="{item_url}">{offered_item}</a>',
             item_url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
-            offered_item=item.claim.offered_item,
+            offered_item=item.offered_item,
         )
 
     @admin.display(description=_("shipment dates"))
@@ -253,16 +257,16 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
         return text
 
 
-class ClaimedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
-    verbose_name = _("Shipment History of the Claimed Item")
-    verbose_name_plural = _("Shipment History of the Claimed Items")
+class OfferedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
+    verbose_name = _("Shipment History of the Donated Item")
+    verbose_name_plural = _("Shipment History of the Donated Items")
 
     def get_form_queryset(self, obj):
         return (
-            ShipmentItem.objects.filter(claim=obj.claim)
+            ShipmentItem.objects.filter(offered_item=obj.offered_item)
             .order_by("when", "created_at")
             .select_related(
-                "claim__offered_item",
+                "offered_item",
                 "last_location",
                 "shipment__from_location",
                 "shipment__to_location",
@@ -274,17 +278,15 @@ class ClaimedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
 @admin.register(Item)
 class ItemAdmin(ShipmentItemAdmin):
     list_display = (
-        "claim",
+        "offered_item",
         "available",
-        # "amount",
         "admin_last_location",
         "admin_shipment",
         "is_delivered",
-        "parent_shipment_item",
     )
 
     basic_fields = (
-        "admin_claim",
+        "admin_offered_item",
         "available",
         "last_location",
         "shipment",
@@ -294,18 +296,6 @@ class ItemAdmin(ShipmentItemAdmin):
 
     fieldsets = (
         (None, {"fields": basic_fields}),
-        (
-            _("Request"),
-            {
-                "classes": ("collapse",),
-                "fields": (
-                    "admin_request",
-                    "admin_request_by",
-                    "admin_request_email",
-                    "admin_request_phone",
-                ),
-            },
-        ),
         (
             _("Offer"),
             {
@@ -327,13 +317,14 @@ class ItemAdmin(ShipmentItemAdmin):
 
     inlines = (
         ShipmentItemHistoryInlineAdmin,
-        ClaimedItemShipmentHistoryInlineAdmin,
+        # OfferedItemShipmentHistoryInlineAdmin,
     )
 
     resource_class = ItemExportResource
 
     def get_queryset(self, request: HttpRequest):
-        return super().get_queryset(request).filter(available__gt=0)
+        qs = super().get_queryset(request).filter(available__gt=0)
+        return qs
 
     def has_add_permission(self, request):
         return False
@@ -364,7 +355,7 @@ class ItemAdmin(ShipmentItemAdmin):
                 amount = amount_list[index]
                 ShipmentItem.objects.create(
                     shipment=shipment,
-                    claim=item.claim,
+                    offered_item_id=item.offered_item_id,
                     amount=amount,
                     last_location=shipment.from_location,
                     parent_shipment_item_id=item.id,
@@ -411,46 +402,34 @@ class ItemAdmin(ShipmentItemAdmin):
             text = _("Unknown")
         return text
 
-    @admin.display(description=_("shipment item"), ordering="claim")
-    def admin_claim(self, item: ShipmentItem):
+    @admin.display(description=_("shipment item"), ordering="offered_item")
+    def admin_offered_item(self, item: ShipmentItem):
         return format_html(
             '<a href="{item_url}">{offered_item}</a>',
             item_url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
-            offered_item=item.claim.offered_item,
+            offered_item=item.offered_item,
         )
 
     @admin.display(description=_("amount"))
     def available(self, item: Item):
         return item.available
 
-    @admin.display(description=_("Initial Request"))
-    def admin_request(self, item: Item):
-        return item.claim.requested_item.request
-
-    @admin.display(description=_("Requested by"))
-    def admin_request_by(self, item: Item):
-        return item.claim.requested_item.request.contact
-
-    @admin.display(description=_("email"))
-    def admin_request_email(self, item: Item):
-        return item.claim.requested_item.request.contact.email
-
-    @admin.display(description=_("phone"))
-    def admin_request_phone(self, item: Item):
-        return item.claim.requested_item.request.contact.phone
-
     @admin.display(description=_("Initial Offer"))
     def admin_offer(self, item: Item):
-        return item.claim.offered_item.offer
+        return format_html(
+            '<a href="{offer_url}">{offer_text}</a>',
+            offer_url=reverse("admin:supply_demand_offeritem_change", args=(item.offered_item_id,)),
+            offer_text=f"{item.offered_item.offer}",
+        )
 
     @admin.display(description=_("offered by"))
     def admin_offer_by(self, item: Item):
-        return item.claim.offered_item.offer.contact
+        return item.offered_item.offer.contact
 
     @admin.display(description=_("email"))
     def admin_offer_email(self, item: Item):
-        return item.claim.offered_item.offer.contact.email
+        return item.offered_item.offer.contact.email
 
     @admin.display(description=_("phone"))
     def admin_offer_phone(self, item: Item):
-        return item.claim.offered_item.offer.contact.phone
+        return item.offered_item.offer.contact.phone

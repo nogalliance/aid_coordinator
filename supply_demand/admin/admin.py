@@ -18,7 +18,12 @@ from import_export.admin import ExportActionModelAdmin, ImportExportActionModelA
 from logistics.forms import AssignToShipmentForm
 from logistics.models import Location, LocationType, Shipment, ShipmentItem
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
-from supply_demand.admin.filters import LocationFilter, OverclaimedListFilter, ProcessedClaimListFilter
+from supply_demand.admin.filters import (
+    LocationFilter,
+    OverclaimedListFilter,
+    ProcessedClaimListFilter,
+    ReceivedClaimListFilter,
+)
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm, RequestItemInlineFormSet
 from supply_demand.admin.resources import (
     CustomConfirmImportForm,
@@ -124,6 +129,7 @@ class RequestAdmin(ContactOnlyAdmin):
     @admin.display(description=_("items"))
     def admin_items(self, request: Request):
         def prefix(my_item: RequestItem) -> str:
+            # TODO - reduce number of queries
             if my_item.assigned:
                 return "✅ "
             else:
@@ -210,27 +216,36 @@ class RequestAdmin(ContactOnlyAdmin):
 class ClaimInlineAdmin(CompactInline):
     model = Claim
     extra = 0
-    readonly_fields = (
-        "requested_item",
+    fields = (
         "offered_item",
+        "admin_requested_item",
         "amount",
-        "location",
+        "shipment",
         "requester",
         "donor",
     )
 
+    readonly_fields = fields
+
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        qs = super().get_queryset(request).select_related()
         return qs
 
-    @admin.display(description=_("current location"))
-    def location(self, item: Claim):
-        shipment_items = item.shipmentitem_set.all().filter(available__gt=0)
-        if shipment_items:
-            return format_html_join(
-                mark_safe("<br>"), "{}x - {}", ((item.available, item.last_location) for item in shipment_items)
+    @admin.display(description=_("requested item"))
+    def admin_requested_item(self, item: Claim):
+        if not item.requested_item_id:
+            return mark_safe("<b>Preemptive shipment</b><br>" "Just ship it to a distribution point")
+        return item.requested_item
+
+    @admin.display(description=_("shipment"))
+    def shipment(self, item: Claim):
+        if item.shipment_item:
+            return format_html(
+                '<a href="{url}">{shipment_item}</a>',
+                url=reverse("admin:logistics_item_change", args=(item.shipment_item_id,)),
+                shipment_item=f"{item.shipment_item.shipment.name}",
             )
-        return _("donor")
+        return _("not shipped yet")
 
     @admin.display(description=_("requester"))
     def requester(self, item: Claim):
@@ -270,7 +285,7 @@ class RequestItemAdmin(ExportActionModelAdmin):
         "amount",
         "up_to",
         "assigned",
-        "delivered",
+        # "delivered",
         "needed",
         "created_at",
         "item_of",
@@ -300,12 +315,12 @@ class RequestItemAdmin(ExportActionModelAdmin):
         qs = super().get_queryset(request)
         qs = qs.select_related("request__contact__organisation")
         qs = qs.annotate(assigned=Coalesce(Sum("claim__amount"), 0))
-        subquery = ShipmentItem.objects.filter(
-            claim__requested_item_id=OuterRef("id"),
-            shipment__is_delivered=True,
-            last_location__type=LocationType.REQUESTER,
-        )
-        qs = qs.annotate(delivered=Coalesce(SubquerySum(subquery, "amount"), 0))
+        # subquery = ShipmentItem.objects.filter(
+        #     requested_item_id=OuterRef("id"),
+        #     shipment__is_delivered=True,
+        #     last_location__type=LocationType.REQUESTER,
+        # )
+        # qs = qs.annotate(delivered=Coalesce(SubquerySum(subquery, "amount"), 0))
         qs = qs.annotate(
             needed=Case(
                 When(up_to__isnull=False, then=F("up_to") - F("assigned")),
@@ -321,17 +336,17 @@ class RequestItemAdmin(ExportActionModelAdmin):
         new_kwargs["request"] = request
         return new_kwargs
 
-    @admin.display(description=_("delivered"))
-    def delivered(self, item: RequestItem):
-        if item.delivered == item.amount:
-            icon_url = static("admin/img/icon-yes.svg")
-            return format_html('<img src="{}" alt="True">', icon_url)
-        elif item.delivered == 0:
-            icon_url = static("admin/img/icon-no.svg")
-            return format_html('<img src="{}" alt="False">', icon_url)
-        return f"{item.delivered}/{item.amount}"
+    # @admin.display(description=_("delivered"))
+    # def delivered(self, item: RequestItem):
+    #     if item.delivered == item.amount:
+    #         icon_url = static("admin/img/icon-yes.svg")
+    #         return format_html('<img src="{}" alt="True">', icon_url)
+    #     elif item.delivered == 0:
+    #         icon_url = static("admin/img/icon-no.svg")
+    #         return format_html('<img src="{}" alt="False">', icon_url)
+    #     return f"{item.delivered}/{item.amount}"
 
-        return f"{item.delivered}"
+    #     return f"{item.delivered}"
 
     @admin.display(description=_("assigned"))
     def assigned(self, item: RequestItem):
@@ -666,10 +681,11 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         qs = qs.select_related("offer__contact__organisation")
+        qs = qs.prefetch_related("shipmentitem_set")
         qs = qs.annotate(claimed=Coalesce(Sum("claim__amount"), 0))
         qs = qs.annotate(available=Coalesce(F("amount") - F("claimed"), 10))
         subquery = ShipmentItem.objects.filter(
-            claim__offered_item_id=OuterRef("id"),
+            offered_item_id=OuterRef("id"),
             shipment__is_delivered=True,
             last_location__type=LocationType.REQUESTER,
         )
@@ -911,9 +927,12 @@ class ClaimAdmin(ExportActionModelAdmin):
         "admin_requested_item",
         "when",
         "is_processed",
+        "is_received",
+        "shipment",
     )
     list_filter = (
         ProcessedClaimListFilter,
+        ReceivedClaimListFilter,
         (
             "offered_item__offer__contact__organisation",
             admin.RelatedOnlyFieldListFilter,
@@ -946,8 +965,11 @@ class ClaimAdmin(ExportActionModelAdmin):
         qs = qs.select_related(
             "offered_item__offer__contact__organisation",
             "requested_item__request__contact__organisation",
+            "shipment_item__shipment",
         )
-        qs = qs.prefetch_related("shipmentitem_set")
+        qs = qs.prefetch_related(
+            "offered_item__shipmentitem_set",
+        )
         return qs
 
     @admin.action(description=_("Assign to shipment"))
@@ -966,10 +988,11 @@ class ClaimAdmin(ExportActionModelAdmin):
                 )
             else:
                 shipment = Shipment.objects.get(id=request.POST["shipment"])
+
             for item in queryset:
                 shipment_item = ShipmentItem.objects.create(
                     shipment=shipment,
-                    claim=item,
+                    offered_item=item.offered_item,
                     amount=item.amount,
                     last_location=shipment.from_location,
                 )
@@ -984,8 +1007,8 @@ class ClaimAdmin(ExportActionModelAdmin):
         form = None
 
         if len(set(queryset.values_list("offered_item__offer__contact", flat=True))) > 1:
-            errors.append(_("Choosen items are offered by different donors."))
-        if len([item for item in queryset.values_list("shipmentitem", flat=True) if item is not None]) > 0:
+            errors.append(_("Choosen items are offered by different donors. Ship them separately please."))
+        if len([item for item in queryset.values_list("shipment_item", flat=True) if item is not None]) > 0:
             errors.append(_("One or more claims from the list are already processed"))
         if not errors:
             shipment_queryset = Shipment.objects.filter(from_location__type=LocationType.DONOR)
@@ -1022,9 +1045,30 @@ class ClaimAdmin(ExportActionModelAdmin):
 
     @admin.display(description=_("processed?"))
     def is_processed(self, claim: Claim):
-        if claim.shipmentitem_set.exists():
+        if claim.shipment_item:
             icon_url = static("admin/img/icon-yes.svg")
             return format_html('<img src="{}" alt="True">', icon_url)
         else:
             icon_url = static("admin/img/icon-no.svg")
             return format_html('<img src="{}" alt="False">', icon_url)
+
+    @admin.display(description=_("received?"))
+    def is_received(self, claim: Claim):
+        if claim.shipment_item_id and claim.shipment_item.shipment.is_delivered:
+            icon_url = static("admin/img/icon-yes.svg")
+            return format_html('<img src="{}" alt="True">', icon_url)
+        else:
+            icon_url = static("admin/img/icon-no.svg")
+            return format_html('<img src="{}" alt="False">', icon_url)
+
+    @admin.display(description=_("shipment_item"))
+    def shipment(self, item: Claim):
+        shipment_item = item.shipment_item
+        if not shipment_item:
+            return
+        shipment_name = shipment_item.shipment.name if shipment_item.shipment else _("No shipment")
+        return format_html(
+            '<a href="{url}">{shipment}</a>',
+            url=reverse("admin:logistics_item_change", args=(shipment_item.id,)),
+            shipment=shipment_name,
+        )

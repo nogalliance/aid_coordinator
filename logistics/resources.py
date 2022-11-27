@@ -12,24 +12,19 @@ class EquipmentDataResource(resources.ModelResource):
 
 
 class ShipmentItemExportResource(resources.ModelResource):
-    amount = fields.Field(attribute="amount", widget=IntegerWidget())
-    type = fields.Field(attribute="offered_item__type__name")
+    type = fields.Field(attribute="offered_item__get_type_display")
     brand = fields.Field(attribute="offered_item__brand")
     model = fields.Field(attribute="offered_item__model")
+    amount = fields.Field(attribute="amount", widget=IntegerWidget())
     shipment = fields.Field(attribute="shipment")
     from_location = fields.Field(attribute="shipment__from_location")
     to_location = fields.Field(attribute="shipment__to_location")
     # is_delivered = fields.Field(attribute="is_delivered")
 
-    donor_first_name = fields.Field(attribute="claim__offered_item__offer__contact__first_name")
-    donor_last_name = fields.Field(attribute="claim__offered_item__offer__contact__last_name")
-    donor_email = fields.Field(attribute="claim__offered_item__offer__contact__email")
-    donor_organisation = fields.Field(attribute="claim__offered_item__offer__contact__organisation__name")
-
-    requester_first_name = fields.Field(attribute="claim__requested_item__request__contact__first_name")
-    requester_last_name = fields.Field(attribute="claim__requested_item__request__contact__last_name")
-    requester_email = fields.Field(attribute="claim__requested_item__request__contact__email")
-    requester_organisation = fields.Field(attribute="claim__requested_item__request__contact__organisation__name")
+    donor_first_name = fields.Field(attribute="offered_item__offer__contact__first_name")
+    donor_last_name = fields.Field(attribute="offered_item__offer__contact__last_name")
+    donor_email = fields.Field(attribute="offered_item__offer__contact__email")
+    donor_organisation = fields.Field(attribute="offered_item__offer__contact__organisation__name")
 
     class Meta:
         model = ShipmentItem
@@ -45,12 +40,8 @@ class ShipmentItemExportResource(resources.ModelResource):
             "donor_last_name",
             "donor_email",
             "donor_organisation",
-            "requester_first_name",
-            "requester_last_name",
-            "requester_email",
-            "requester_organisation",
         )
 
 
-class ItemExportResource(resources.ModelResource):
+class ItemExportResource(ShipmentItemExportResource):
     amount = fields.Field(attribute="available", widget=IntegerWidget())

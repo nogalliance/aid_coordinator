@@ -28,7 +28,9 @@
   {% else %}
     {% for error in errors %}
       <p style="color: red;">{{ error }}</p>
-      <a href="{{request.META.HTTP_REFERER}}">{% translate "Go back" %}</a>
     {% endfor %}
+    {% if errors %}
+      <a href="{{request.META.HTTP_REFERER}}">{% translate "Go back" %}</a>
+    {% endif %}
   {% endif %}
 {% endblock %}
