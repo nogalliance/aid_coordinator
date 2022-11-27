@@ -236,8 +236,36 @@ class RequestItemAdmin(ExportActionModelAdmin):
         "set_type_software",
         "set_type_service",
         "set_type_other",
+        "new_type_admin_action",
     )
     inlines = (ClaimInlineAdmin,)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.action_form = change_type_form_factory(self.action_form)
+
+    @property
+    def media(self):
+        super_media = super().media
+        # noinspection PyProtectedMember
+        return forms.Media(
+            js=super_media._js + ['supply_demand/action_itemtype.js'],
+            css=super_media._css
+        )
+
+    @admin.action(
+        permissions=['change'],
+        description='Change item type',
+    )
+    def new_type_admin_action(self, request, queryset):
+        new_type_id = request.POST['new_type']
+        if not new_type_id:
+            messages.error(request, "No new item type selected")
+            return
+
+        new_type = ItemType.objects.get(pk=new_type_id)
+        count = queryset.update(type=new_type)
+        messages.info(request, f"{count} item(s) updated")
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
