@@ -7,7 +7,7 @@ from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext_lazy as _, ngettext
+from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 
 from aid_coordinator.widgets import ClaimAutocompleteSelect
@@ -26,12 +26,16 @@ from supply_demand.models import (
     Change,
     ChangeAction,
     ChangeType,
-    ItemType,
-    Offer,
+    ItemType, Offer,
     OfferItem,
     Request,
     RequestItem,
 )
+
+
+@admin.register(ItemType)
+class ItemTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'order')
 
 
 class RequestItemInline(CompactInline):
@@ -262,43 +266,6 @@ class RequestItemAdmin(ExportActionModelAdmin):
             name=item.request,
         )
 
-    def set_type_action(self, request: HttpRequest, queryset: RequestItem.objects, item_type: ItemType):
-        count = 0
-        for item in queryset:
-            item.type = item_type
-            item.save()
-
-            count += 1
-
-        self.message_user(
-            request,
-            ngettext(
-                "%(count)s item set to type %(type)s",
-                "%(count)s items set to type %(type)s",
-                count,
-            )
-            % {
-                "count": count,
-                "type": item_type.label,
-            },
-        )
-
-    @admin.action(description=_("Set type to other"))
-    def set_type_other(self, request: HttpRequest, queryset: RequestItem.objects):
-        self.set_type_action(request, queryset, ItemType.OTHER)
-
-    @admin.action(description=_("Set type to hardware"))
-    def set_type_hardware(self, request: HttpRequest, queryset: RequestItem.objects):
-        self.set_type_action(request, queryset, ItemType.HARDWARE)
-
-    @admin.action(description=_("Set type to software"))
-    def set_type_software(self, request: HttpRequest, queryset: RequestItem.objects):
-        self.set_type_action(request, queryset, ItemType.SOFTWARE)
-
-    @admin.action(description=_("Set type to service"))
-    def set_type_service(self, request: HttpRequest, queryset: RequestItem.objects):
-        self.set_type_action(request, queryset, ItemType.SERVICE)
-
     def has_add_permission(self, request):
         return request.user.is_superuser
 
@@ -308,14 +275,14 @@ class RequestItemAdmin(ExportActionModelAdmin):
             return user.is_superuser or user.is_donor or user.is_viewer
 
         return (
-            user.is_superuser
-            or user.is_donor
-            or user.is_viewer
-            or obj.request.contact == user
-            or (
-                obj.request.contact.organisation_id is not None
-                and obj.request.contact.organisation_id == user.organisation_id
-            )
+                user.is_superuser
+                or user.is_donor
+                or user.is_viewer
+                or obj.request.contact == user
+                or (
+                        obj.request.contact.organisation_id is not None
+                        and obj.request.contact.organisation_id == user.organisation_id
+                )
         )
 
     def has_change_permission(self, request, obj=None):
@@ -323,12 +290,12 @@ class RequestItemAdmin(ExportActionModelAdmin):
             return request.user.is_superuser
 
         return (
-            request.user.is_superuser
-            or obj.request.contact == request.user
-            or (
-                obj.request.contact.organisation_id is not None
-                and obj.request.contact.organisation_id == request.user.organisation_id
-            )
+                request.user.is_superuser
+                or obj.request.contact == request.user
+                or (
+                        obj.request.contact.organisation_id is not None
+                        and obj.request.contact.organisation_id == request.user.organisation_id
+                )
         )
 
     def has_delete_permission(self, request, obj=None):
@@ -336,12 +303,12 @@ class RequestItemAdmin(ExportActionModelAdmin):
             return request.user.is_superuser
 
         return (
-            request.user.is_superuser
-            or obj.request.contact == request.user
-            or (
-                obj.request.contact.organisation_id is not None
-                and obj.request.contact.organisation_id == request.user.organisation_id
-            )
+                request.user.is_superuser
+                or obj.request.contact == request.user
+                or (
+                        obj.request.contact.organisation_id is not None
+                        and obj.request.contact.organisation_id == request.user.organisation_id
+                )
         )
 
     def get_actions(self, request):
@@ -592,43 +559,6 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         qs = qs.annotate(claimed=Sum("claim__amount"))
         return qs
 
-    def set_type_action(self, request: HttpRequest, queryset: RequestItem.objects, item_type: ItemType):
-        count = 0
-        for item in queryset:
-            item.type = item_type
-            item.save()
-
-            count += 1
-
-        self.message_user(
-            request,
-            ngettext(
-                "%(count)s item set to type %(type)s",
-                "%(count)s items set to type %(type)s",
-                count,
-            )
-            % {
-                "count": count,
-                "type": item_type.label,
-            },
-        )
-
-    @admin.action(description=_("Set type to other"))
-    def set_type_other(self, request: HttpRequest, queryset: RequestItem.objects):
-        self.set_type_action(request, queryset, ItemType.OTHER)
-
-    @admin.action(description=_("Set type to hardware"))
-    def set_type_hardware(self, request: HttpRequest, queryset: RequestItem.objects):
-        self.set_type_action(request, queryset, ItemType.HARDWARE)
-
-    @admin.action(description=_("Set type to software"))
-    def set_type_software(self, request: HttpRequest, queryset: RequestItem.objects):
-        self.set_type_action(request, queryset, ItemType.SOFTWARE)
-
-    @admin.action(description=_("Set type to service"))
-    def set_type_service(self, request: HttpRequest, queryset: RequestItem.objects):
-        self.set_type_action(request, queryset, ItemType.SERVICE)
-
     @admin.action(description=_("Set to rejected"))
     def set_rejected(self, _request: HttpRequest, queryset: RequestItem.objects):
         queryset.update(rejected=True)
@@ -689,14 +619,14 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             return user.is_superuser or user.is_requester or user.is_viewer
 
         return (
-            user.is_superuser
-            or user.is_requester
-            or user.is_viewer
-            or obj.offer.contact == user
-            or (
-                obj.offer.contact.organisation_id is not None
-                and obj.offer.contact.organisation_id == user.organisation_id
-            )
+                user.is_superuser
+                or user.is_requester
+                or user.is_viewer
+                or obj.offer.contact == user
+                or (
+                        obj.offer.contact.organisation_id is not None
+                        and obj.offer.contact.organisation_id == user.organisation_id
+                )
         )
 
     def has_change_permission(self, request, obj=None):
@@ -704,12 +634,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             return request.user.is_superuser
 
         return (
-            request.user.is_superuser
-            or obj.offer.contact == request.user
-            or (
-                obj.offer.contact.organisation_id is not None
-                and obj.offer.contact.organisation_id == request.user.organisation_id
-            )
+                request.user.is_superuser
+                or obj.offer.contact == request.user
+                or (
+                        obj.offer.contact.organisation_id is not None
+                        and obj.offer.contact.organisation_id == request.user.organisation_id
+                )
         )
 
     def has_delete_permission(self, request, obj=None):
@@ -717,12 +647,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             return request.user.is_superuser
 
         return (
-            request.user.is_superuser
-            or obj.offer.contact == request.user
-            or (
-                obj.offer.contact.organisation_id is not None
-                and obj.offer.contact.organisation_id == request.user.organisation_id
-            )
+                request.user.is_superuser
+                or obj.offer.contact == request.user
+                or (
+                        obj.offer.contact.organisation_id is not None
+                        and obj.offer.contact.organisation_id == request.user.organisation_id
+                )
         )
 
     def get_inlines(self, request, obj):

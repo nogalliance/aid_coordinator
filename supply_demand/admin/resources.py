@@ -15,12 +15,10 @@ class MyModelResource(resources.ModelResource):
 
 
 class RequestItemResource(MyModelResource):
-    type = fields.Field(attribute="get_type_display", column_name="type")
-
     class Meta:
         model = RequestItem
-        fields = (
-            "type",
+        fields = [
+            "type__name",
             "brand",
             "model",
             "amount",
@@ -31,7 +29,7 @@ class RequestItemResource(MyModelResource):
             "request__contact__last_name",
             "request__contact__email",
             "request__contact__organisation__name",
-        )
+        ]
 
     def get_fields(self):
         my_fields = super().get_fields()
@@ -67,12 +65,10 @@ class OfferItemImportResource(MyModelResource):
 
 
 class OfferItemExportResource(MyModelResource):
-    type = fields.Field(attribute="get_type_display", column_name="type")
-
     class Meta:
         model = OfferItem
-        fields = (
-            "type",
+        fields = [
+            "type__name",
             "brand",
             "model",
             "amount",
@@ -82,7 +78,7 @@ class OfferItemExportResource(MyModelResource):
             "offer__contact__last_name",
             "offer__contact__email",
             "offer__contact__organisation__name",
-        )
+        ]
 
     def get_fields(self):
         my_fields = super().get_fields()

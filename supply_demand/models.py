@@ -1,18 +1,9 @@
-import sys
-
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
 
 from contacts.models import Contact, Organisation
-
-
-class ItemType(models.IntegerChoices):
-    OTHER = 0, _("Other")
-    HARDWARE = 100, _("Hardware")
-    SOFTWARE = 200, _("Software")
-    SERVICE = 300, _("Service")
 
 
 class DeliveryMethod(models.IntegerChoices):
@@ -39,6 +30,19 @@ class ChangeAction(models.IntegerChoices):
 class ChangeType(models.IntegerChoices):
     OFFER = 1, _("Offer")
     REQUEST = 2, _("Request")
+
+
+class ItemType(models.Model):
+    name = models.CharField(verbose_name=_('name'), max_length=50, unique=True)
+    order = models.PositiveIntegerField(verbose_name=_('order'), default=50)
+
+    class Meta:
+        verbose_name = _('item type')
+        verbose_name_plural = _('item types')
+        ordering = ('order', 'name')
+
+    def __str__(self):
+        return self.name
 
 
 class RequestManager(models.Manager):
@@ -125,7 +129,7 @@ class RequestItem(models.Model):
         related_name="items",
         on_delete=models.CASCADE,
     )
-    type = models.PositiveIntegerField(verbose_name=_("type"), choices=ItemType.choices, default=ItemType.HARDWARE)
+    type = models.ForeignKey(verbose_name=_('type'), to=ItemType, on_delete=models.RESTRICT)
     brand = models.CharField(
         verbose_name=_("brand"),
         max_length=50,
@@ -316,7 +320,7 @@ class OfferItem(models.Model):
         related_name="items",
         on_delete=models.CASCADE,
     )
-    type = models.PositiveIntegerField(verbose_name=_("type"), choices=ItemType.choices, default=ItemType.HARDWARE)
+    type = models.ForeignKey(verbose_name=_('type'), to=ItemType, on_delete=models.RESTRICT)
     brand = models.CharField(verbose_name=_("brand"), max_length=50, blank=True)
     model = models.CharField(verbose_name=_("model"), max_length=100)
     amount = models.PositiveIntegerField(verbose_name=_("# offered"), null=True, blank=True)
