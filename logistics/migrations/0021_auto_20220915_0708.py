@@ -9,6 +9,8 @@ def fill_shipment_item(apps, schema_editor):
     Shipment = apps.get_model("logistics", "Shipment")
 
     for item in Claim.objects.all().select_related("offered_item", "requested_item"):
+        if not item.shipment:
+            continue
         ShipmentItem.objects.create(
             shipment=item.shipment,
             claim=item,
