@@ -1,9 +1,8 @@
 from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
-from aid_coordinator.helpers import SubquerySum
 from django.contrib import admin
-from django.db.models import Case, F, OuterRef, Sum, When
+from django.db.models import Case, F, OuterRef, Subquery, Sum, When
 from django.db.models.functions import Coalesce
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
@@ -48,7 +47,7 @@ from supply_demand.resources import ClaimExportResource
 
 @admin.register(ItemType)
 class ItemTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'order')
+    list_display = ("name", "order")
 
 
 class RequestItemInline(CompactInline):
@@ -394,14 +393,14 @@ class RequestItemAdmin(ExportActionModelAdmin):
             return user.is_superuser or user.is_donor or user.is_viewer
 
         return (
-                user.is_superuser
-                or user.is_donor
-                or user.is_viewer
-                or obj.request.contact == user
-                or (
-                        obj.request.contact.organisation_id is not None
-                        and obj.request.contact.organisation_id == user.organisation_id
-                )
+            user.is_superuser
+            or user.is_donor
+            or user.is_viewer
+            or obj.request.contact == user
+            or (
+                obj.request.contact.organisation_id is not None
+                and obj.request.contact.organisation_id == user.organisation_id
+            )
         )
 
     def has_change_permission(self, request, obj=None):
@@ -409,12 +408,12 @@ class RequestItemAdmin(ExportActionModelAdmin):
             return request.user.is_superuser
 
         return (
-                request.user.is_superuser
-                or obj.request.contact == request.user
-                or (
-                        obj.request.contact.organisation_id is not None
-                        and obj.request.contact.organisation_id == request.user.organisation_id
-                )
+            request.user.is_superuser
+            or obj.request.contact == request.user
+            or (
+                obj.request.contact.organisation_id is not None
+                and obj.request.contact.organisation_id == request.user.organisation_id
+            )
         )
 
     def has_delete_permission(self, request, obj=None):
@@ -422,12 +421,12 @@ class RequestItemAdmin(ExportActionModelAdmin):
             return request.user.is_superuser
 
         return (
-                request.user.is_superuser
-                or obj.request.contact == request.user
-                or (
-                        obj.request.contact.organisation_id is not None
-                        and obj.request.contact.organisation_id == request.user.organisation_id
-                )
+            request.user.is_superuser
+            or obj.request.contact == request.user
+            or (
+                obj.request.contact.organisation_id is not None
+                and obj.request.contact.organisation_id == request.user.organisation_id
+            )
         )
 
     def get_actions(self, request):
@@ -680,16 +679,21 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.select_related("offer__contact__organisation")
+        qs = qs.select_related("offer__contact__organisation", "type")
         qs = qs.prefetch_related("shipmentitem_set")
         qs = qs.annotate(claimed=Coalesce(Sum("claim__amount"), 0))
         qs = qs.annotate(available=Coalesce(F("amount") - F("claimed"), 10))
-        subquery = ShipmentItem.objects.filter(
-            offered_item_id=OuterRef("id"),
-            shipment__is_delivered=True,
-            last_location__type=LocationType.REQUESTER,
+        subquery = (
+            ShipmentItem.objects.filter(
+                offered_item_id=OuterRef("id"),
+                shipment__is_delivered=True,
+                last_location__type=LocationType.REQUESTER,
+            )
+            .values("offered_item_id")
+            .annotate(total=Sum("amount"))
+            .values("total")
         )
-        qs = qs.annotate(delivered=Coalesce(SubquerySum(subquery, "amount"), 0))
+        qs = qs.annotate(delivered=Coalesce(Subquery(subquery), 0))
         if request.user.is_requester:
             qs = qs.exclude(available=0)
         return qs
@@ -754,14 +758,14 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             return user.is_superuser or user.is_requester or user.is_viewer
 
         return (
-                user.is_superuser
-                or user.is_requester
-                or user.is_viewer
-                or obj.offer.contact == user
-                or (
-                        obj.offer.contact.organisation_id is not None
-                        and obj.offer.contact.organisation_id == user.organisation_id
-                )
+            user.is_superuser
+            or user.is_requester
+            or user.is_viewer
+            or obj.offer.contact == user
+            or (
+                obj.offer.contact.organisation_id is not None
+                and obj.offer.contact.organisation_id == user.organisation_id
+            )
         )
 
     def has_change_permission(self, request, obj=None):
@@ -769,12 +773,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             return request.user.is_superuser
 
         return (
-                request.user.is_superuser
-                or obj.offer.contact == request.user
-                or (
-                        obj.offer.contact.organisation_id is not None
-                        and obj.offer.contact.organisation_id == request.user.organisation_id
-                )
+            request.user.is_superuser
+            or obj.offer.contact == request.user
+            or (
+                obj.offer.contact.organisation_id is not None
+                and obj.offer.contact.organisation_id == request.user.organisation_id
+            )
         )
 
     def has_delete_permission(self, request, obj=None):
@@ -782,12 +786,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             return request.user.is_superuser
 
         return (
-                request.user.is_superuser
-                or obj.offer.contact == request.user
-                or (
-                        obj.offer.contact.organisation_id is not None
-                        and obj.offer.contact.organisation_id == request.user.organisation_id
-                )
+            request.user.is_superuser
+            or obj.offer.contact == request.user
+            or (
+                obj.offer.contact.organisation_id is not None
+                and obj.offer.contact.organisation_id == request.user.organisation_id
+            )
         )
 
     def get_inlines(self, request, obj):
