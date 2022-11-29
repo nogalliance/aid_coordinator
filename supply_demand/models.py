@@ -331,6 +331,7 @@ class OfferItem(models.Model):
     )
 
     rejected = models.BooleanField(verbose_name=_("rejected"), default=False)
+    # TODO - check if we don't need for migration and remove it
     received = models.BooleanField(verbose_name=_("received"), default=False)
 
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)

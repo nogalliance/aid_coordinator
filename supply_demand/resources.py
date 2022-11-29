@@ -6,7 +6,7 @@ from supply_demand.models import Claim
 
 class ClaimExportResource(resources.ModelResource):
     amount = fields.Field(attribute="amount", widget=IntegerWidget())
-    type = fields.Field(attribute="offered_item__get_type_display")
+    type = fields.Field(attribute="offered_item__type__name")
     brand = fields.Field(attribute="offered_item__brand")
     model = fields.Field(attribute="offered_item__model")
 

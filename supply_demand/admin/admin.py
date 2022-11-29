@@ -53,7 +53,7 @@ class ItemTypeAdmin(admin.ModelAdmin):
 class RequestItemInline(CompactInline):
     model = RequestItem
     formset = RequestItemInlineFormSet
-    extra = 0
+    extra = 1
 
     fields = (
         "type",
@@ -65,15 +65,7 @@ class RequestItemInline(CompactInline):
         "alternative_for",
         "assigned",
     )
-    readonly_fields = fields
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        qs = qs.prefetch_related("claim_set")
-        return qs
-
-    def has_add_permission(self, reques, obj=None):
-        return False
+    readonly_fields = ("assigned",)
 
     @admin.display(description=_("assigned"))
     def assigned(self, item: RequestItem):
@@ -278,13 +270,12 @@ class ClaimInlineAdmin(CompactInline):
 @admin.register(RequestItem)
 class RequestItemAdmin(ExportActionModelAdmin):
     list_display = (
+        "type",
         "model",
         "brand",
-        "type",
         "amount",
         "up_to",
         "assigned",
-        # "delivered",
         "needed",
         "created_at",
         "item_of",
@@ -314,12 +305,6 @@ class RequestItemAdmin(ExportActionModelAdmin):
         qs = super().get_queryset(request)
         qs = qs.select_related("request__contact__organisation")
         qs = qs.annotate(assigned=Coalesce(Sum("claim__amount"), 0))
-        # subquery = ShipmentItem.objects.filter(
-        #     requested_item_id=OuterRef("id"),
-        #     shipment__is_delivered=True,
-        #     last_location__type=LocationType.REQUESTER,
-        # )
-        # qs = qs.annotate(delivered=Coalesce(SubquerySum(subquery, "amount"), 0))
         qs = qs.annotate(
             needed=Case(
                 When(up_to__isnull=False, then=F("up_to") - F("assigned")),
@@ -334,18 +319,6 @@ class RequestItemAdmin(ExportActionModelAdmin):
         new_kwargs = super().get_resource_kwargs(request, *args, **kwargs)
         new_kwargs["request"] = request
         return new_kwargs
-
-    # @admin.display(description=_("delivered"))
-    # def delivered(self, item: RequestItem):
-    #     if item.delivered == item.amount:
-    #         icon_url = static("admin/img/icon-yes.svg")
-    #         return format_html('<img src="{}" alt="True">', icon_url)
-    #     elif item.delivered == 0:
-    #         icon_url = static("admin/img/icon-no.svg")
-    #         return format_html('<img src="{}" alt="False">', icon_url)
-    #     return f"{item.delivered}/{item.amount}"
-
-    #     return f"{item.delivered}"
 
     @admin.display(description=_("assigned"))
     def assigned(self, item: RequestItem):
@@ -633,9 +606,9 @@ class OfferAdmin(ContactOnlyAdmin):
 @admin.register(OfferItem)
 class OfferItemAdmin(ImportExportActionModelAdmin):
     list_display = (
+        "type",
         "model",
         "brand",
-        "type",
         "notes",
         "amount",
         "claimed",
