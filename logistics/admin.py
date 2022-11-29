@@ -94,6 +94,11 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
         )
         return qs
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.status == ShipmentStatus.PENDING:
+            return tuple(field for field in self.readonly_fields if field not in ["amount"])
+        return self.readonly_fields
+
     @admin.display(description=_("shipment item"), ordering="offered_item")
     def admin_offered_item(self, item: ShipmentItem):
         return format_html(
