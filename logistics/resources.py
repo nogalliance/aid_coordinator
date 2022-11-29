@@ -19,7 +19,7 @@ class ShipmentItemExportResource(resources.ModelResource):
     shipment = fields.Field(attribute="shipment")
     from_location = fields.Field(attribute="shipment__from_location")
     to_location = fields.Field(attribute="shipment__to_location")
-    # is_delivered = fields.Field(attribute="is_delivered")
+    status = fields.Field(attribute="shipment__get_status_display")
 
     donor_first_name = fields.Field(attribute="offered_item__offer__contact__first_name")
     donor_last_name = fields.Field(attribute="offered_item__offer__contact__last_name")
@@ -35,7 +35,8 @@ class ShipmentItemExportResource(resources.ModelResource):
             "amount",
             "shipment",
             "from_location",
-            "to_is_delivered",
+            "to_location",
+            "status",
             "donor_first_name",
             "donor_last_name",
             "donor_email",

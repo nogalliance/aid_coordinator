@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 from logistics.filters import UsedChoicesFieldListFilter
 from logistics.forms import AssignToShipmentForm
-from logistics.models import EquipmentData, Item, Location, Shipment, ShipmentItem
+from logistics.models import EquipmentData, Item, Location, Shipment, ShipmentItem, ShipmentStatus
 from logistics.resources import EquipmentDataResource, ItemExportResource, ShipmentItemExportResource
 from nonrelated_inlines.admin import NonrelatedTabularInline
 
@@ -105,8 +105,22 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
 
 @admin.register(Shipment)
 class ShipmentAdmin(admin.ModelAdmin):
-    list_display = ("name", "shipment_date", "delivery_date", "from_location", "to_location", "is_delivered", "notes")
-    list_filter = ("is_delivered", "from_location", "to_location", "shipment_date", "delivery_date")
+    list_display = (
+        "name",
+        "shipment_date",
+        "delivery_date",
+        "from_location",
+        "to_location",
+        "status",
+        "notes",
+    )
+    list_filter = (
+        "status",
+        "from_location",
+        "to_location",
+        "shipment_date",
+        "delivery_date",
+    )
     date_hierarchy = "delivery_date"
     ordering = ("delivery_date",)
     search_fields = (
@@ -131,10 +145,10 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         "amount",
         "admin_shipment",
         "last_location",
-        "is_delivered",
+        "status",
     )
     list_filter = (
-        "shipment__is_delivered",
+        "shipment__status",
         "last_location",
         "shipment__to_location",
         "shipment__from_location",
@@ -172,9 +186,9 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
         )
         return qs
 
-    @admin.display(description=_("is delivered"), boolean=True)
-    def is_delivered(self, item: ShipmentItem):
-        return item.shipment and item.shipment.is_delivered
+    @admin.display(description=_("delivery status"))
+    def status(self, item: ShipmentItem):
+        return item.shipment and item.shipment.get_status_display()
 
     @admin.display(description=_("last_location"))
     def admin_last_location(self, item: ShipmentItem):
@@ -251,10 +265,7 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
 
     @admin.display(description=_("shipment dates"))
     def shipment_dates(self, item: Item):
-        text = f"{item.shipment.shipment_date} -> {item.shipment.delivery_date}"
-        if not item.shipment.is_delivered:
-            text = _("{text} (on the way)").format(text=text)
-        return text
+        return f"{item.shipment.shipment_date} -> {item.shipment.delivery_date} ({item.shipment.get_status_display()})"
 
 
 class OfferedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
@@ -282,7 +293,7 @@ class ItemAdmin(ShipmentItemAdmin):
         "available",
         "admin_last_location",
         "admin_shipment",
-        "is_delivered",
+        "status",
     )
 
     basic_fields = (
@@ -292,6 +303,7 @@ class ItemAdmin(ShipmentItemAdmin):
         "shipment",
         "shipment_date",
         "delivery_date",
+        "delivery_status",
     )
 
     fieldsets = (
@@ -339,6 +351,7 @@ class ItemAdmin(ShipmentItemAdmin):
     def assign_to_shipment(self, request, queryset):
 
         if "apply" in request.POST:
+            created = False
             if request.POST["shipment"] == "new":
                 today = timezone.now()
                 shipment, created = Shipment.objects.get_or_create(
@@ -368,8 +381,8 @@ class ItemAdmin(ShipmentItemAdmin):
         errors = []
         form = None
         if len(set(queryset.values_list("last_location", flat=True))) > 1:
-            errors.append(_("Choosen items are in different locations."))
-        if queryset.filter(shipment__is_delivered=False).exists():
+            errors.append(_("Chosen items are in different locations."))
+        if queryset.exclude(shipment__status=ShipmentStatus.DELIVERED).exists():
             errors.append(_("Some of items are not delivered yet or attached to another shipment."))
         if not errors:
             shipment_queryset = Shipment.objects.filter(
@@ -384,23 +397,15 @@ class ItemAdmin(ShipmentItemAdmin):
 
     @admin.display(description=_("shipment date"))
     def shipment_date(self, item: Item):
-        if item.shipment.shipment_date:
-            return item.shipment.shipment_date
-        return _("Not shipped yet")
+        return item.shipment.shipment_date
 
     @admin.display(description=_("delivery date"))
     def delivery_date(self, item: Item):
-        if item.shipment.shipment_date:
-            if item.shipment.delivery_date:
-                if item.shipment.is_delivered:
-                    text = item.shipment.delivery_date
-                else:
-                    text = _("On the way (estimated date is {date})").format(date=item.shipment.delivery_date)
-            else:
-                text = _("On the way")
-        else:
-            text = _("Unknown")
-        return text
+        return item.shipment.delivery_date
+
+    @admin.display(description=_("delivery status"))
+    def delivery_status(self, item: Item):
+        return item.shipment.get_status_display()
 
     @admin.display(description=_("shipment item"), ordering="offered_item")
     def admin_offered_item(self, item: ShipmentItem):

@@ -2,13 +2,13 @@ from contacts.models import Organisation
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum, F
+from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
-from supply_demand.models import Claim, OfferItem
+from supply_demand.models import OfferItem
 
 
 class LocationType(models.IntegerChoices):
@@ -16,6 +16,12 @@ class LocationType(models.IntegerChoices):
     COLLECTION_POINT = 2, _("Collection point")
     DISTRIBUTION_POINT = 3, _("Distribution point")
     REQUESTER = 4, _("Requester")
+
+
+class ShipmentStatus(models.IntegerChoices):
+    PENDING = 1, _("Pending")
+    ONTHEWAY = 2, _("On the Way")
+    DELIVERED = 3, _("Delivered")
 
 
 class EquipmentData(models.Model):
@@ -72,7 +78,9 @@ class Shipment(models.Model):
     shipment_date = models.DateField(verbose_name=_("shipment date"), blank=True, null=True)
     delivery_date = models.DateField(verbose_name=_("delivery date"), blank=True, null=True)
 
-    is_delivered = models.BooleanField(verbose_name=_("is delivered"), default=False)
+    status = models.PositiveIntegerField(
+        verbose_name=_("status"), choices=ShipmentStatus.choices, default=ShipmentStatus.PENDING
+    )
 
     from_location = models.ForeignKey(
         Location,

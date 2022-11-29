@@ -5,6 +5,7 @@ from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
 from aid_coordinator.filters import InputFilter
+from logistics.models import ShipmentStatus
 
 
 class OverclaimedListFilter(admin.SimpleListFilter):
@@ -38,9 +39,9 @@ class ReceivedClaimListFilter(admin.SimpleListFilter):
 
     def queryset(self, request: HttpRequest, queryset: QuerySet):
         if self.value() == "yes":
-            return queryset.filter(shipment_item__shipment__is_delivered=True).distinct()
+            return queryset.filter(shipment_item__shipment__status=ShipmentStatus.DELIVERED).distinct()
         if self.value() == "no":
-            return queryset.filter(shipment_item__shipment__is_delivered=False).distinct()
+            return queryset.exclude(shipment_item__shipment__status=ShipmentStatus.DELIVERED).distinct()
         return queryset
 
 

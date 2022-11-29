@@ -12,10 +12,9 @@ from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import ngettext
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
 from logistics.forms import AssignToShipmentForm
-from logistics.models import Location, LocationType, Shipment, ShipmentItem
+from logistics.models import Location, LocationType, Shipment, ShipmentItem, ShipmentStatus
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
 from supply_demand.admin.filters import (
     LocationFilter,
@@ -659,7 +658,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         subquery = (
             ShipmentItem.objects.filter(
                 offered_item_id=OuterRef("id"),
-                shipment__is_delivered=True,
+                shipment__status=ShipmentStatus.DELIVERED,
                 last_location__type=LocationType.REQUESTER,
             )
             .values("offered_item_id")
@@ -953,6 +952,7 @@ class ClaimAdmin(ExportActionModelAdmin):
     def assign_to_shipment(self, request, queryset):
 
         if "apply" in request.POST:
+            created = False
             if request.POST["shipment"] == "new":
                 contact = queryset.first().offered_item.offer.contact
                 today = timezone.now()
@@ -984,7 +984,7 @@ class ClaimAdmin(ExportActionModelAdmin):
         form = None
 
         if len(set(queryset.values_list("offered_item__offer__contact", flat=True))) > 1:
-            errors.append(_("Choosen items are offered by different donors. Ship them separately please."))
+            errors.append(_("Chosen items are offered by different donors. Ship them separately please."))
         if len([item for item in queryset.values_list("shipment_item", flat=True) if item is not None]) > 0:
             errors.append(_("One or more claims from the list are already processed"))
         if not errors:
@@ -1031,7 +1031,7 @@ class ClaimAdmin(ExportActionModelAdmin):
 
     @admin.display(description=_("received?"))
     def is_received(self, claim: Claim):
-        if claim.shipment_item_id and claim.shipment_item.shipment.is_delivered:
+        if claim.shipment_item_id and claim.shipment_item.shipment.status == ShipmentStatus.DELIVERED:
             icon_url = static("admin/img/icon-yes.svg")
             return format_html('<img src="{}" alt="True">', icon_url)
         else:
