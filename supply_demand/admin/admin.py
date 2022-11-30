@@ -612,9 +612,9 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "amount",
         "claimed",
         "available",
-        "rejected",
+        "collected",
         "delivered",
-        "received",
+        "rejected",
         "item_of",
     )
     list_filter = (
@@ -646,6 +646,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "set_not_rejected",
         "set_received",
         "set_not_received",
+        "assign_to_shipment",
     ]
     inlines = (ClaimInlineAdmin,)
 
@@ -654,7 +655,6 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         qs = qs.select_related("offer__contact__organisation", "type")
         qs = qs.prefetch_related("shipmentitem_set")
         qs = qs.annotate(claimed=Coalesce(Sum("claim__amount"), 0))
-        qs = qs.annotate(available=Coalesce(F("amount") - F("claimed"), 10))
         subquery = (
             ShipmentItem.objects.filter(
                 offered_item_id=OuterRef("id"),
@@ -666,6 +666,18 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             .values("total")
         )
         qs = qs.annotate(delivered=Coalesce(Subquery(subquery), 0))
+        subquery = (
+            ShipmentItem.objects.filter(
+                offered_item_id=OuterRef("id"),
+                parent_shipment_item_id__isnull=True,
+            )
+            .values("offered_item_id")
+            .annotate(total=Sum("amount"))
+            .values("total")
+        )
+        qs = qs.annotate(collected=Coalesce(Subquery(subquery), 0))
+        qs = qs.annotate(available=Coalesce(F("amount") - F("claimed"), 0))
+        qs = qs.annotate(deliverable=Coalesce(F("amount") - F("collected"), 0))
         if request.user.is_requester:
             qs = qs.exclude(available=0)
         return qs
@@ -685,6 +697,56 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     @admin.action(description=_("Set to NOT received"))
     def set_not_received(self, _request: HttpRequest, queryset: RequestItem.objects):
         queryset.update(received=False)
+
+    @admin.action(description=_("Assign to shipment"))
+    def assign_to_shipment(self, request, queryset):
+        if "apply" in request.POST:
+            created = False
+            if request.POST["shipment"] == "new":
+                contact = queryset.first().offer.contact
+                today = timezone.now()
+                shipment, created = Shipment.objects.get_or_create(
+                    name=f"Offer from donor {contact} - {today:%Y-%m-%d}",
+                    defaults={
+                        "shipment_date": today.date(),
+                        "from_location": Location.objects.filter(type=LocationType.DONOR).first(),
+                    },
+                )
+            else:
+                shipment = Shipment.objects.get(id=request.POST["shipment"])
+
+            amount_list = request.POST.getlist("amount")
+            for index, item in enumerate(queryset):
+                amount = amount_list[index]
+                if not amount:
+                    continue
+                shipment_item = ShipmentItem.objects.create(
+                    shipment=shipment,
+                    offered_item=item,
+                    amount=amount,
+                    last_location=shipment.from_location,
+                )
+                item.shipment_item = shipment_item
+                item.save()
+
+            if created:
+                return HttpResponseRedirect(reverse("admin:logistics_shipment_change", args=[shipment.id]))
+            return HttpResponseRedirect(request.get_full_path())
+
+        errors = []
+        form = None
+        # Validation
+        if len(set(queryset.values_list("offer__contact", flat=True))) > 1:
+            errors.append(_("Chosen items are offered by different donors. Ship them separately please."))
+        if not errors:
+            shipment_queryset = Shipment.objects.filter(from_location__type=LocationType.DONOR)
+            form = AssignToShipmentForm(initial=dict(shipment_queryset=shipment_queryset))
+
+        return render(
+            request,
+            "admin/assign_to_shipment.html",
+            context={"items": queryset, "errors": errors, "form": form, "is_deliverable": True},
+        )
 
     def get_import_resource_class(self):
         """
@@ -799,7 +861,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             fields = [
                 field
                 for field in fields
-                if field not in ("rejected", "received", "amount", "claimed", "delivered", "item_of")
+                if field not in ("rejected", "received", "amount", "collected", "claimed", "delivered", "item_of")
             ]
 
         return fields
@@ -847,13 +909,11 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
     @admin.display(description=_("delivered"))
     def delivered(self, item: OfferItem):
-        if not item.amount:
-            return None
+        return item.delivered
 
-        if item.amount >= item.delivered:
-            return item.delivered
-        else:
-            return format_html('<span style="color:red">{amount}</span>', amount=item.delivered)
+    @admin.display(description=_("collected"))
+    def collected(self, item: OfferItem):
+        return item.collected
 
     @admin.display(description=_("available"))
     def available(self, item: OfferItem):
@@ -933,7 +993,6 @@ class ClaimAdmin(ExportActionModelAdmin):
     )
 
     ordering = ("-when",)
-    actions = ["assign_to_shipment"]
     resource_class = ClaimExportResource
 
     def get_queryset(self, request: HttpRequest):
@@ -947,55 +1006,6 @@ class ClaimAdmin(ExportActionModelAdmin):
             "offered_item__shipmentitem_set",
         )
         return qs
-
-    @admin.action(description=_("Assign to shipment"))
-    def assign_to_shipment(self, request, queryset):
-
-        if "apply" in request.POST:
-            created = False
-            if request.POST["shipment"] == "new":
-                contact = queryset.first().offered_item.offer.contact
-                today = timezone.now()
-                shipment, created = Shipment.objects.get_or_create(
-                    name=f"Offer from donor {contact} - {today:%Y-%m-%d}",
-                    defaults={
-                        "shipment_date": today.date(),
-                        "from_location": Location.objects.filter(type=LocationType.DONOR).first(),
-                    },
-                )
-            else:
-                shipment = Shipment.objects.get(id=request.POST["shipment"])
-
-            for item in queryset:
-                shipment_item = ShipmentItem.objects.create(
-                    shipment=shipment,
-                    offered_item=item.offered_item,
-                    amount=item.amount,
-                    last_location=shipment.from_location,
-                )
-                item.shipment_item = shipment_item
-                item.save()
-
-            if created:
-                return HttpResponseRedirect(reverse("admin:logistics_shipment_change", args=[shipment.id]))
-            return HttpResponseRedirect(request.get_full_path())
-
-        errors = []
-        form = None
-
-        if len(set(queryset.values_list("offered_item__offer__contact", flat=True))) > 1:
-            errors.append(_("Chosen items are offered by different donors. Ship them separately please."))
-        if len([item for item in queryset.values_list("shipment_item", flat=True) if item is not None]) > 0:
-            errors.append(_("One or more claims from the list are already processed"))
-        if not errors:
-            shipment_queryset = Shipment.objects.filter(from_location__type=LocationType.DONOR)
-            form = AssignToShipmentForm(initial=dict(shipment_queryset=shipment_queryset))
-
-        return render(
-            request,
-            "admin/assign_to_shipment.html",
-            context={"items": queryset, "errors": errors, "form": form},
-        )
 
     @admin.display(description=_("offered item"))
     def admin_offered_item(self, claim: Claim):

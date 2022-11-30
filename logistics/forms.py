@@ -14,7 +14,7 @@ class AssignToShipmentForm(forms.ModelForm):
         shipment_queryset = kwargs.get("initial", {}).get("shipment_queryset", None)
         if shipment_queryset is None:
             shipment_queryset = Shipment.objects.filter()
-        shipments = shipment_queryset.exclude(status=ShipmentStatus.DELIVERED)
+        shipments = shipment_queryset.filter(status=ShipmentStatus.PENDING)
         choices = [(shipment.id, shipment.name) for shipment in shipments]
         choices.insert(0, ("new", _("New shipment")))
         self.fields["shipment"].choices = choices

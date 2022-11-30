@@ -173,13 +173,19 @@ class ShipmentItem(models.Model):
         return f"{self.amount}x {self.offered_item}"
 
     @cached_property
-    def available(self):
+    def max_amount(self):
         if not self.parent_shipment_item:
-            return self.amount
-        parent_amount = self.parent_shipment_item.amount
-        return self.parent_shipment_item.sent_items.exclude(id=self.id).aggregate(
-            available=parent_amount - Coalesce(Sum("amount"), 0)
-        )["available"]
+            parent_amount = self.offered_item.amount
+            qs = ShipmentItem.objects.filter(
+                offered_item_id=self.offered_item_id,
+                parent_shipment_item__isnull=True
+            )
+        else:
+            parent_amount = self.parent_shipment_item.amount
+            qs = self.parent_shipment_item.sent_items
+        return qs.exclude(id=self.id).aggregate(
+            max_amount=parent_amount - Coalesce(Sum("amount"), 0)
+        )["max_amount"]
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -187,9 +193,9 @@ class ShipmentItem(models.Model):
 
     def clean(self):
         # validate amount
-        if self.amount > self.available:
+        if self.amount > self.max_amount:
             raise ValidationError(
-                {"amount": _("You can choose max {available} units").format(available=self.available)}
+                {"amount": _("You can choose max {max_amount} units").format(max_amount=self.max_amount)}
             )
 
 

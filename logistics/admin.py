@@ -371,6 +371,8 @@ class ItemAdmin(ShipmentItemAdmin):
             amount_list = request.POST.getlist("amount")
             for index, item in enumerate(queryset):
                 amount = amount_list[index]
+                if not amount:
+                    continue
                 ShipmentItem.objects.create(
                     shipment=shipment,
                     offered_item_id=item.offered_item_id,
@@ -394,10 +396,11 @@ class ItemAdmin(ShipmentItemAdmin):
                 from_location=queryset.first().last_location,
             )
             form = AssignToShipmentForm(initial=dict(shipment_queryset=shipment_queryset))
+
         return render(
             request,
             "admin/assign_to_shipment.html",
-            context={"items": queryset, "errors": errors, "form": form, "adjustable_amount": True},
+            context={"items": queryset, "errors": errors, "form": form },
         )
 
     @admin.display(description=_("shipment date"))

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.db.models import Q, QuerySet
+from django.db.models import Q
 from django.forms import NumberInput, TextInput
 
 

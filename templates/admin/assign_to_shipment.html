@@ -14,8 +14,13 @@
       {{ form }}
       {% for item in items %}
         <p>
-          {% if adjustable_amount %}
-            <input type="number" name="amount" value="{{ item.available }}" required min="1" max="{{ item.available }}" />
+          {% comment %}
+            if assigment is done from offered_item list we have to consider deliverable
+          {% endcomment %}
+          {% if is_deliverable %}
+            <input type="number" name="amount" value="{{ item.deliverable }}" required min="1" max="{{ item.deliverable }}" />
+          {% else %}
+            <input type="number" name="amount" value="{{ item.amount }}" required min="1" max="{{ item.amount }}" />
           {% endif %}
           {{ item }}
         </p>
