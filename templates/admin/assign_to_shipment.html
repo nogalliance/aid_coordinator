@@ -3,12 +3,6 @@
 
 {% block content %}
   {% if not errors %}
-    <a class="" href="{% url 'admin:logistics_shipment_add' %}" target="_blank" title="{% translate "Add new Shipment" %}">
-      <img src="/static/admin/img/icon-addlink.svg" alt="Add"> {% translate "Create New Shipment" %}
-    </a>({% translate "refresh page after new shipment has been created" %})
-    <br>
-    <br>
-
     <form action="" method="post">
       {% csrf_token %}
       {{ form }}
