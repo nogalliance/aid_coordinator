@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from admin_wizard.admin import UpdateAction
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Case, F, OuterRef, Subquery, Sum, When
 from django.db.models.functions import Coalesce
 from django.forms import forms
@@ -11,6 +11,7 @@ from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
+from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
@@ -963,12 +964,13 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
 
     @admin.display(description=_("item of"))
     def item_of(self, item: OfferItem):
+        offeritemlist_url = reverse("admin:supply_demand_offeritem_changelist")
         return format_html(
-            '<a href="{url}">{name}</a><br><a class="button" style="text-align: center; display: block; margin: 5px 12px; 0px 20px" href="{filter_url}">{filter_text}</a>',
+            '<a href="{url}">{name}</a><div><strong><a href="{filter_url}">{filter_text}</a></strong></div>',
             url=reverse("admin:supply_demand_offer_change", args=(item.offer.id,)),
             name=item.offer,
-            filter_url=reverse("admin:supply_demand_offeritem_changelist") + f"?offer__id__exact={item.offer_id}",
-            filter_text=_("Filter"),
+            filter_url=f"{offeritemlist_url}?{urlencode(dict(offer__id__exact=item.offer_id))}",
+            filter_text=_("Filter by offer"),
         )
 
     @admin.display(description=_("claimed"))
@@ -1083,22 +1085,24 @@ class ClaimAdmin(ExportActionModelAdmin):
 
     @admin.display(description=_("offered item"))
     def admin_offered_item(self, claim: Claim):
+        offeritemlist_url = reverse("admin:supply_demand_offeritem_changelist")
         return format_html(
-            '<a href="{item_url}">{item_text}</a><br><a href="{offer_url}">{offer_text}</a>',
+            '<a href="{item_url}">{item_text}</a><div><strong><a href="{offer_url}">{offer_text}</a></strong></div>',
             item_url=reverse("admin:supply_demand_offeritem_change", args=(claim.offered_item_id,)),
             item_text=f"{claim.offered_item}",
-            offer_url=reverse("admin:supply_demand_offer_change", args=(claim.offered_item.offer_id,)),
+            offer_url=f"{offeritemlist_url}?{urlencode(dict(offer__id__exact=claim.offered_item.offer_id))}",
             offer_text=f"{claim.offered_item.offer}",
         )
 
     @admin.display(description=_("requested item"))
     def admin_requested_item(self, claim: Claim):
+        requestitemlist_url = reverse("admin:supply_demand_requestitem_changelist")
         if claim.requested_item_id:
             return format_html(
-                '<a href="{item_url}">{item_text}</a><br><a href="{request_url}">{request_text}</a>',
+                '<a href="{item_url}">{item_text}</a><div><strong><a href="{request_url}">{request_text}</a></strong></div>',
                 item_url=reverse("admin:supply_demand_requestitem_change", args=(claim.requested_item_id,)),
                 item_text=f"{claim.requested_item}",
-                request_url=reverse("admin:supply_demand_request_change", args=(claim.requested_item.request_id,)),
+                request_url=f"{requestitemlist_url}?{urlencode(dict(request__id__exact=claim.requested_item.request_id))}",
                 request_text=f"{claim.requested_item.request}",
             )
         else:
@@ -1122,14 +1126,15 @@ class ClaimAdmin(ExportActionModelAdmin):
             icon_url = static("admin/img/icon-no.svg")
             return format_html('<img src="{}" alt="False">', icon_url)
 
-    @admin.display(description=_("shipment_item"))
+    @admin.display(description=_("shipment"))
     def shipment(self, item: Claim):
         shipment_item = item.shipment_item
         if not shipment_item:
             return
         shipment_name = shipment_item.shipment.name if shipment_item.shipment else _("No shipment")
+
         return format_html(
             '<a href="{url}">{shipment}</a>',
-            url=reverse("admin:logistics_item_change", args=(shipment_item.id,)),
+            url=reverse("admin:logistics_shipment_change", args=(shipment_item.shipment.id,)),
             shipment=shipment_name,
         )
