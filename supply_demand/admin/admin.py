@@ -4,6 +4,7 @@ from admin_wizard.admin import UpdateAction
 from django.contrib import admin
 from django.db.models import Case, F, OuterRef, Subquery, Sum, When
 from django.db.models.functions import Coalesce
+from django.forms import forms
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
 from django.templatetags.static import static
@@ -23,7 +24,12 @@ from supply_demand.admin.filters import (
     ProcessedOfferedItemListFilter,
     ReceivedClaimListFilter,
 )
-from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm, RequestItemInlineFormSet
+from supply_demand.admin.forms import (
+    MoveToOfferForm,
+    MoveToRequestForm,
+    RequestItemInlineFormSet,
+    change_type_form_factory,
+)
 from supply_demand.admin.resources import (
     CustomConfirmImportForm,
     CustomImportForm,
@@ -298,8 +304,33 @@ class RequestItemAdmin(ExportActionModelAdmin):
         "set_type_software",
         "set_type_service",
         "set_type_other",
+        "new_type_admin_action",
     )
     inlines = (ClaimInlineAdmin,)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.action_form = change_type_form_factory(self.action_form)
+
+    @property
+    def media(self):
+        super_media = super().media
+        # noinspection PyProtectedMember
+        return forms.Media(js=super_media._js + ["supply_demand/action_itemtype.js"], css=super_media._css)
+
+    @admin.action(
+        permissions=["change"],
+        description="Change item type",
+    )
+    def new_type_admin_action(self, request, queryset):
+        new_type_id = request.POST["new_type"]
+        if not new_type_id:
+            messages.error(request, "No new item type selected")
+            return
+
+        new_type = ItemType.objects.get(pk=new_type_id)
+        count = queryset.update(type=new_type)
+        messages.info(request, f"{count} item(s) updated")
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -480,7 +511,9 @@ class OfferItemInline(CompactInline):
         lines = []
         for item in item.claim_set.all():
             url = reverse("admin:supply_demand_claim_change", args=(item.id,))
-            lines.append((url, f"{item.amount}x {item.requested_item.request}"),)
+            lines.append(
+                (url, f"{item.amount}x {item.requested_item.request}"),
+            )
         if not lines:
             return "-"
         return format_html_join(mark_safe("<br>"), "<a href='{}'>{}</a>", lines)
@@ -661,8 +694,33 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "set_received",
         "set_not_received",
         "assign_to_shipment",
+        "new_type_admin_action",
     ]
     inlines = (ClaimInlineAdmin,)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.action_form = change_type_form_factory(self.action_form)
+
+    @property
+    def media(self):
+        super_media = super().media
+        # noinspection PyProtectedMember
+        return forms.Media(js=super_media._js + ["supply_demand/action_itemtype.js"], css=super_media._css)
+
+    @admin.action(
+        permissions=["change"],
+        description="Change item type",
+    )
+    def new_type_admin_action(self, request, queryset):
+        new_type_id = request.POST["new_type"]
+        if not new_type_id:
+            messages.error(request, "No new item type selected")
+            return
+
+        new_type = ItemType.objects.get(pk=new_type_id)
+        count = queryset.update(type=new_type)
+        messages.info(request, f"{count} item(s) updated")
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -909,8 +967,8 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             '<a href="{url}">{name}</a><br><a class="button" style="text-align: center; display: block; margin: 5px 12px; 0px 20px" href="{filter_url}">{filter_text}</a>',
             url=reverse("admin:supply_demand_offer_change", args=(item.offer.id,)),
             name=item.offer,
-            filter_url=reverse("admin:supply_demand_offeritem_changelist")+f"?offer__id__exact={item.offer_id}",
-            filter_text=_("Filter")
+            filter_url=reverse("admin:supply_demand_offeritem_changelist") + f"?offer__id__exact={item.offer_id}",
+            filter_text=_("Filter"),
         )
 
     @admin.display(description=_("claimed"))
