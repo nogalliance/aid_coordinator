@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
-from django.db.models import F, QuerySet
+from django.db.models import F, QuerySet, Q
 from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
@@ -60,6 +60,27 @@ class ProcessedClaimListFilter(admin.SimpleListFilter):
             return queryset.filter(shipment_item__isnull=False).distinct()
         if self.value() == "no":
             return queryset.filter(shipment_item__isnull=True).distinct()
+        return queryset
+
+
+class ProcessedOfferedItemListFilter(admin.SimpleListFilter):
+    title = _("processed")
+    parameter_name = "processed"
+
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin):
+        return (
+            ("yes", _("Yes")),
+            ("partially", _("Partially")),
+            ("no", _("No")),
+        )
+
+    def queryset(self, request: HttpRequest, queryset: QuerySet):
+        if self.value() == "yes":
+            return queryset.filter(Q(processed=F("amount"))|Q(rejected=True)).distinct()
+        if self.value() == "partially":
+            return queryset.filter(processed__gt=0, processed__lt=F("amount")).distinct()
+        if self.value() == "no":
+            return queryset.filter(processed=0, rejected=False).distinct()
         return queryset
 
 

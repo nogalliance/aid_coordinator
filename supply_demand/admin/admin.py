@@ -20,6 +20,7 @@ from supply_demand.admin.filters import (
     LocationFilter,
     OverclaimedListFilter,
     ProcessedClaimListFilter,
+    ProcessedOfferedItemListFilter,
     ReceivedClaimListFilter,
 )
 from supply_demand.admin.forms import MoveToOfferForm, MoveToRequestForm, RequestItemInlineFormSet
@@ -459,18 +460,30 @@ class OfferItemInline(CompactInline):
             fields = [field for field in fields if field not in ("hold",)]
         else:
             fields = [field for field in fields if field not in ("rejected",)]
-
         return fields
 
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
-        if not request.user.is_superuser:
+        if request.user.is_superuser:
+            fields += ("admin_claims",)
+        else:
             fields += (
                 "hold",
                 "rejected",
                 "received",
             )
+
         return fields
+
+    @admin.display(description=_("Claims"))
+    def admin_claims(self, item: OfferItem):
+        lines = []
+        for item in item.claim_set.all():
+            url = reverse("admin:supply_demand_claim_change", args=(item.id,))
+            lines.append((url, f"{item.amount}x {item.requested_item.request}"),)
+        if not lines:
+            return "-"
+        return format_html_join(mark_safe("<br>"), "<a href='{}'>{}</a>", lines)
 
     @admin.display(description=_("Please hold"))
     def hold(self, item: OfferItem):
@@ -612,12 +625,13 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "amount",
         "claimed",
         "available",
-        "collected",
+        "processed",
         "delivered",
         "rejected",
         "item_of",
     )
     list_filter = (
+        ProcessedOfferedItemListFilter,
         "type",
         "rejected",
         "received",
@@ -675,9 +689,9 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             .annotate(total=Sum("amount"))
             .values("total")
         )
-        qs = qs.annotate(collected=Coalesce(Subquery(subquery), 0))
+        qs = qs.annotate(processed=Coalesce(Subquery(subquery), 0))
         qs = qs.annotate(available=Coalesce(F("amount") - F("claimed"), 0))
-        qs = qs.annotate(deliverable=Coalesce(F("amount") - F("collected"), 0))
+        qs = qs.annotate(deliverable=Coalesce(F("amount") - F("processed"), 0))
         if request.user.is_requester:
             qs = qs.exclude(available=0)
         return qs
@@ -861,7 +875,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             fields = [
                 field
                 for field in fields
-                if field not in ("rejected", "received", "amount", "collected", "claimed", "delivered", "item_of")
+                if field not in ("rejected", "received", "amount", "processed", "claimed", "delivered", "item_of")
             ]
 
         return fields
@@ -892,9 +906,11 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     @admin.display(description=_("item of"))
     def item_of(self, item: OfferItem):
         return format_html(
-            '<a href="{url}">{name}</a>',
+            '<a href="{url}">{name}</a><br><a class="button" style="text-align: center; display: block; margin: 5px 12px; 0px 20px" href="{filter_url}">{filter_text}</a>',
             url=reverse("admin:supply_demand_offer_change", args=(item.offer.id,)),
             name=item.offer,
+            filter_url=reverse("admin:supply_demand_offeritem_changelist")+f"?offer__id__exact={item.offer_id}",
+            filter_text=_("Filter")
         )
 
     @admin.display(description=_("claimed"))
@@ -911,9 +927,9 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     def delivered(self, item: OfferItem):
         return item.delivered
 
-    @admin.display(description=_("collected"))
-    def collected(self, item: OfferItem):
-        return item.collected
+    @admin.display(description=_("processed"))
+    def processed(self, item: OfferItem):
+        return item.processed
 
     @admin.display(description=_("available"))
     def available(self, item: OfferItem):
