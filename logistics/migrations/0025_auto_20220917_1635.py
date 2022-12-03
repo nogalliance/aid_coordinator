@@ -7,8 +7,14 @@ def fill_shipment_locations(apps, schema_editor):
     Shipment = apps.get_model("logistics", "Shipment")
 
     for shipment in Shipment.objects.all():
+        if shipment.id == 5:
+            shipment.from_location_id = 6
+        elif shipment.id == 2:
+            shipment.from_location_id = 2
+        else:
+            shipment.from_location_id = 5
         shipment.to_location_id = 3
-        shipment.from_location_id = 5
+        shipment.save()
 
 
 class Migration(migrations.Migration):
