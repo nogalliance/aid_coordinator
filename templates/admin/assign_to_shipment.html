@@ -14,7 +14,7 @@
           {% if is_deliverable %}
             <input type="number" name="amount" value="{{ item.deliverable }}" required min="1" max="{{ item.deliverable }}" />
           {% else %}
-            <input type="number" name="amount" value="{{ item.amount }}" required min="1" max="{{ item.amount }}" />
+            <input type="number" name="amount" value="{{ item.available }}" required min="1" max="{{ item.available }}" />
           {% endif %}
           {{ item }}
         </p>

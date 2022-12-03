@@ -132,7 +132,6 @@ class ShipmentItem(models.Model):
     shipment = models.ForeignKey(
         verbose_name=_("shipment"), to=Shipment, blank=True, null=True, on_delete=models.SET_NULL
     )
-    # claim_tmp = models.ForeignKey(Claim, verbose_name=_("claim"), on_delete=models.RESTRICT)
     offered_item = models.ForeignKey(OfferItem, verbose_name=_("offered_item"), on_delete=models.RESTRICT)
     amount = models.PositiveIntegerField(
         verbose_name=_("amount"),
@@ -140,8 +139,6 @@ class ShipmentItem(models.Model):
         help_text=_("The amount of danated items"),
         validators=[MinValueValidator(1)],
     )
-    # TODO
-    when = models.DateField(verbose_name=_("when"), auto_now_add=True)
     last_location = models.ForeignKey(
         Location,
         verbose_name=_("last location"),

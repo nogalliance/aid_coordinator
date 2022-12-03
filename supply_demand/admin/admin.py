@@ -15,6 +15,7 @@ from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ExportActionModelAdmin, ImportExportActionModelAdmin
+from logistics.admin import ShipmentItemHistoryInlineAdmin
 from logistics.forms import AssignToShipmentForm
 from logistics.models import Location, LocationType, Shipment, ShipmentItem, ShipmentStatus
 from supply_demand.admin.base import CompactInline, ContactOnlyAdmin, ReadOnlyMixin
@@ -648,6 +649,12 @@ class OfferAdmin(ContactOnlyAdmin):
         super().delete_model(request, obj)
 
 
+class OfferedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
+
+    def get_offeritem_id(self, obj):
+        return obj.id
+
+
 @admin.register(OfferItem)
 class OfferItemAdmin(ImportExportActionModelAdmin):
     list_display = (
@@ -693,7 +700,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "assign_to_shipment",
         "new_type_admin_action",
     ]
-    inlines = (ClaimInlineAdmin,)
+    inlines = (ClaimInlineAdmin, OfferedItemShipmentHistoryInlineAdmin,)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -923,13 +930,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
                 for field in fields
                 if field not in ("rejected", "amount", "processed", "claimed", "delivered", "item_of")
             ]
-
         return fields
 
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if request.user.is_superuser or request.user.is_viewer:
-            fields = list(fields) + ["created_at", "updated_at"]
+            fields = list(fields) + ["created_at", "updated_at", ]
         return fields
 
     def get_fields(self, request, obj=None):

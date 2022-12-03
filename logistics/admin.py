@@ -89,7 +89,6 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
                 "shipment",
                 "offered_item",
                 "last_location",
-                # "claim__requested_item",
             )
         )
         return qs
@@ -126,8 +125,8 @@ class ShipmentAdmin(admin.ModelAdmin):
         "shipment_date",
         "delivery_date",
     )
-    date_hierarchy = "delivery_date"
-    ordering = ("delivery_date",)
+    date_hierarchy = "shipment_date"
+    ordering = ("-shipment_date",)
     search_fields = (
         "name",
         "to_location__name",
@@ -218,8 +217,9 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
 
 class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
     model = ShipmentItem
-    verbose_name = _("Shipment History of the Item")
-    verbose_name_plural = _("Shipment History of the Items")
+    verbose_name = _("Shipment History of the Donated Item")
+    verbose_name_plural = _("Shipment History of the Donated Items")
+
     extra = 0
     max_num = 0
     can_delete = False
@@ -233,31 +233,21 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
 
     readonly_fields = fields
 
+    def get_offeritem_id(self, obj):
+        return obj.offered_item_id
+
     def get_form_queryset(self, obj):
-        query = """
-            WITH RECURSIVE parents AS (
-                SELECT logistics_shipmentitem.*, 0 AS relative_depth
-                FROM logistics_shipmentitem
-                WHERE id = %s
-
-                UNION ALL
-
-                SELECT logistics_shipmentitem.*, parents.relative_depth - 1
-                FROM logistics_shipmentitem,parents
-                WHERE logistics_shipmentitem.id = parents.parent_shipment_item_id
+        offered_item_id = self.get_offeritem_id(obj)
+        return (
+            ShipmentItem.objects.filter(offered_item_id=offered_item_id)
+            .order_by("shipment__shipment_date", "created_at")
+            .select_related(
+                "offered_item",
+                "last_location",
+                "shipment__from_location",
+                "shipment__to_location",
+                "parent_shipment_item",
             )
-            SELECT id, parent_shipment_item_id, relative_depth
-            FROM parents
-            ORDER BY relative_depth;
-        """
-        ids = [shipment_item.id for shipment_item in ShipmentItem.objects.raw(query, [obj.id])]
-
-        return ShipmentItem.objects.filter(id__in=ids).select_related(
-            "offered_item",
-            "last_location",
-            "shipment__from_location",
-            "shipment__to_location",
-            "parent_shipment_item",
         )
 
     @admin.display(description=_("shipment item"), ordering="offered_item")
@@ -271,24 +261,6 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
     @admin.display(description=_("shipment dates"))
     def shipment_dates(self, item: Item):
         return f"{item.shipment.shipment_date} -> {item.shipment.delivery_date} ({item.shipment.get_status_display()})"
-
-
-class OfferedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
-    verbose_name = _("Shipment History of the Donated Item")
-    verbose_name_plural = _("Shipment History of the Donated Items")
-
-    def get_form_queryset(self, obj):
-        return (
-            ShipmentItem.objects.filter(offered_item=obj.offered_item)
-            .order_by("when", "created_at")
-            .select_related(
-                "offered_item",
-                "last_location",
-                "shipment__from_location",
-                "shipment__to_location",
-                "parent_shipment_item",
-            )
-        )
 
 
 @admin.register(Item)
@@ -334,7 +306,6 @@ class ItemAdmin(ShipmentItemAdmin):
 
     inlines = (
         ShipmentItemHistoryInlineAdmin,
-        # OfferedItemShipmentHistoryInlineAdmin,
     )
 
     resource_class = ItemExportResource
