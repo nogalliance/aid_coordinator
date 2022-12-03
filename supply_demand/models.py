@@ -331,8 +331,6 @@ class OfferItem(models.Model):
     )
 
     rejected = models.BooleanField(verbose_name=_("rejected"), default=False)
-    # TODO - check if we don't need for migration and remove it
-    received = models.BooleanField(verbose_name=_("received"), default=False)
 
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name=_("updated at"), auto_now=True)
@@ -457,12 +455,6 @@ class Claim(models.Model):
         if self.requested_item:
             return f"{self.amount}x {self.offered_item}"
         return f"{self.amount}x {self.offered_item} not requested"
-
-    @property
-    def is_processed(self):
-        if self.shipment_item__set:
-            return True
-        return False
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)

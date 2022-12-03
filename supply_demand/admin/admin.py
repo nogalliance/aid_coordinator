@@ -502,7 +502,6 @@ class OfferItemInline(CompactInline):
             fields += (
                 "hold",
                 "rejected",
-                "received",
             )
 
         return fields
@@ -668,7 +667,6 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         ProcessedOfferedItemListFilter,
         "type",
         "rejected",
-        "received",
         OverclaimedListFilter,
         "brand",
         ("offer__contact__organisation", admin.RelatedOnlyFieldListFilter),
@@ -692,8 +690,6 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "set_type_other",
         "set_rejected",
         "set_not_rejected",
-        "set_received",
-        "set_not_received",
         "assign_to_shipment",
         "new_type_admin_action",
     ]
@@ -763,14 +759,6 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     def set_not_rejected(self, _request: HttpRequest, queryset: RequestItem.objects):
         queryset.update(rejected=False)
 
-    @admin.action(description=_("Set to received"))
-    def set_received(self, _request: HttpRequest, queryset: RequestItem.objects):
-        queryset.update(received=True)
-
-    @admin.action(description=_("Set to NOT received"))
-    def set_not_received(self, _request: HttpRequest, queryset: RequestItem.objects):
-        queryset.update(received=False)
-
     @admin.action(description=_("Assign to shipment"))
     def assign_to_shipment(self, request, queryset):
         if "apply" in request.POST:
@@ -779,7 +767,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
                 contact = queryset.first().offer.contact
                 today = timezone.now()
                 shipment, created = Shipment.objects.get_or_create(
-                    name=f"Offer from donor {contact} - {today:%Y-%m-%d}",
+                    name=f"Offer from {contact} - {today:%Y-%m-%d}",
                     defaults={
                         "shipment_date": today.date(),
                         "from_location": Location.objects.filter(type=LocationType.DONOR).first(),
@@ -799,7 +787,6 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
                     amount=amount,
                     last_location=shipment.from_location,
                 )
-                item.shipment_item = shipment_item
                 item.save()
 
             if created:
@@ -929,12 +916,12 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         if request.user.is_superuser:
             fields = [field for field in fields if field not in ("available",)]
         elif request.user.is_viewer:
-            fields = [field for field in fields if field not in ("rejected", "received", "available")]
+            fields = [field for field in fields if field not in ("rejected", "available")]
         else:
             fields = [
                 field
                 for field in fields
-                if field not in ("rejected", "received", "amount", "processed", "claimed", "delivered", "item_of")
+                if field not in ("rejected", "amount", "processed", "claimed", "delivered", "item_of")
             ]
 
         return fields
@@ -951,7 +938,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             return fields
 
         if request.user.is_viewer:
-            fields = [field for field in fields if field not in ("rejected", "received", "available")]
+            fields = [field for field in fields if field not in ("rejected", "available")]
 
         # Non-superusers don't see notes
         return [field for field in fields if field not in ("request", "notes", "alternative_for")]
@@ -1038,9 +1025,7 @@ class ClaimAdmin(ExportActionModelAdmin):
         "admin_offered_item",
         "admin_requested_item",
         "when",
-        "is_processed",
-        "is_received",
-        "shipment",
+        "processed",
     )
     list_filter = (
         ProcessedClaimListFilter,
@@ -1076,11 +1061,17 @@ class ClaimAdmin(ExportActionModelAdmin):
         qs = qs.select_related(
             "offered_item__offer__contact__organisation",
             "requested_item__request__contact__organisation",
-            "shipment_item__shipment",
         )
-        qs = qs.prefetch_related(
-            "offered_item__shipmentitem_set",
+        subquery = (
+            ShipmentItem.objects.filter(
+                offered_item_id=OuterRef("offered_item_id"),
+                shipment__from_location__type=LocationType.DONOR,
+            ).distinct()
+            .values("offered_item_id")
+            .annotate(total=Sum("amount"))
+            .values("total")
         )
+        qs = qs.annotate(processed=Coalesce(Subquery(subquery), 0))
         return qs
 
     @admin.display(description=_("offered item"))
@@ -1109,32 +1100,10 @@ class ClaimAdmin(ExportActionModelAdmin):
             return mark_safe("<b>Preemptive shipment</b><br>" "Just ship it to a distribution point")
 
     @admin.display(description=_("processed?"))
-    def is_processed(self, claim: Claim):
-        if claim.shipment_item:
+    def processed(self, claim: Claim):
+        if claim.processed:
             icon_url = static("admin/img/icon-yes.svg")
             return format_html('<img src="{}" alt="True">', icon_url)
         else:
             icon_url = static("admin/img/icon-no.svg")
             return format_html('<img src="{}" alt="False">', icon_url)
-
-    @admin.display(description=_("received?"))
-    def is_received(self, claim: Claim):
-        if claim.shipment_item_id and claim.shipment_item.shipment.status == ShipmentStatus.DELIVERED:
-            icon_url = static("admin/img/icon-yes.svg")
-            return format_html('<img src="{}" alt="True">', icon_url)
-        else:
-            icon_url = static("admin/img/icon-no.svg")
-            return format_html('<img src="{}" alt="False">', icon_url)
-
-    @admin.display(description=_("shipment"))
-    def shipment(self, item: Claim):
-        shipment_item = item.shipment_item
-        if not shipment_item:
-            return
-        shipment_name = shipment_item.shipment.name if shipment_item.shipment else _("No shipment")
-
-        return format_html(
-            '<a href="{url}">{shipment}</a>',
-            url=reverse("admin:logistics_shipment_change", args=(shipment_item.shipment.id,)),
-            shipment=shipment_name,
-        )

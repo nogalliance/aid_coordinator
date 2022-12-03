@@ -57,9 +57,9 @@ class ProcessedClaimListFilter(admin.SimpleListFilter):
 
     def queryset(self, request: HttpRequest, queryset: QuerySet):
         if self.value() == "yes":
-            return queryset.filter(shipment_item__isnull=False).distinct()
+            return queryset.filter(processed__gt=0)
         if self.value() == "no":
-            return queryset.filter(shipment_item__isnull=True).distinct()
+            return queryset.filter(processed__lte=0)
         return queryset
 
 
