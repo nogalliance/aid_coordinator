@@ -781,7 +781,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
                 amount = amount_list[index]
                 if not amount:
                     continue
-                shipment_item = ShipmentItem.objects.create(
+                ShipmentItem.objects.create(
                     shipment=shipment,
                     offered_item=item,
                     amount=amount,

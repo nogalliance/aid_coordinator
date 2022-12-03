@@ -430,13 +430,7 @@ class Claim(models.Model):
         default=1,
         help_text=_("The amount of items claimed"),
     )
-    shipment_item = models.ForeignKey(
-        "logistics.ShipmentItem",
-        verbose_name=_("shipment"),
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
+
     when = models.DateField(verbose_name=_("when"), auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name=_("updated at"), auto_now=True)
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
