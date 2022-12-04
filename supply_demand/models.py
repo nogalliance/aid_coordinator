@@ -421,9 +421,7 @@ class Claim(models.Model):
     requested_item = models.ForeignKey(
         verbose_name=_("requested item"),
         to=RequestItem,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
+        on_delete=models.RESTRICT,
     )
     amount = models.PositiveIntegerField(
         verbose_name=_("amount"),
@@ -446,9 +444,7 @@ class Claim(models.Model):
         verbose_name_plural = _("claims")
 
     def __str__(self):
-        if self.requested_item:
-            return f"{self.amount}x {self.offered_item}"
-        return f"{self.amount}x {self.offered_item} not requested"
+        return f"{self.amount}x {self.offered_item}"
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)

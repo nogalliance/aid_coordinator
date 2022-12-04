@@ -650,7 +650,6 @@ class OfferAdmin(ContactOnlyAdmin):
 
 
 class OfferedItemShipmentHistoryInlineAdmin(ShipmentItemHistoryInlineAdmin):
-
     def get_offeritem_id(self, obj):
         return obj.id
 
@@ -700,7 +699,10 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "assign_to_shipment",
         "new_type_admin_action",
     ]
-    inlines = (ClaimInlineAdmin, OfferedItemShipmentHistoryInlineAdmin,)
+    inlines = (
+        ClaimInlineAdmin,
+        OfferedItemShipmentHistoryInlineAdmin,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -935,7 +937,10 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if request.user.is_superuser or request.user.is_viewer:
-            fields = list(fields) + ["created_at", "updated_at", ]
+            fields = list(fields) + [
+                "created_at",
+                "updated_at",
+            ]
         return fields
 
     def get_fields(self, request, obj=None):
@@ -1062,6 +1067,8 @@ class ClaimAdmin(ExportActionModelAdmin):
     ordering = ("-when",)
     resource_class = ClaimExportResource
 
+    inlines = (ShipmentItemHistoryInlineAdmin,)
+
     def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)
         qs = qs.select_related(
@@ -1072,7 +1079,8 @@ class ClaimAdmin(ExportActionModelAdmin):
             ShipmentItem.objects.filter(
                 offered_item_id=OuterRef("offered_item_id"),
                 shipment__from_location__type=LocationType.DONOR,
-            ).distinct()
+            )
+            .distinct()
             .values("offered_item_id")
             .annotate(total=Sum("amount"))
             .values("total")
@@ -1094,16 +1102,13 @@ class ClaimAdmin(ExportActionModelAdmin):
     @admin.display(description=_("requested item"))
     def admin_requested_item(self, claim: Claim):
         requestitemlist_url = reverse("admin:supply_demand_requestitem_changelist")
-        if claim.requested_item_id:
-            return format_html(
-                '<a href="{item_url}">{item_text}</a><div><strong><a href="{request_url}">{request_text}</a></strong></div>',
-                item_url=reverse("admin:supply_demand_requestitem_change", args=(claim.requested_item_id,)),
-                item_text=f"{claim.requested_item}",
-                request_url=f"{requestitemlist_url}?{urlencode(dict(request__id__exact=claim.requested_item.request_id))}",
-                request_text=f"{claim.requested_item.request}",
-            )
-        else:
-            return mark_safe("<b>Preemptive shipment</b><br>" "Just ship it to a distribution point")
+        return format_html(
+            '<a href="{item_url}">{item_text}</a><div><strong><a href="{request_url}">{request_text}</a></strong></div>',
+            item_url=reverse("admin:supply_demand_requestitem_change", args=(claim.requested_item_id,)),
+            item_text=f"{claim.requested_item}",
+            request_url=f"{requestitemlist_url}?{urlencode(dict(request__id__exact=claim.requested_item.request_id))}",
+            request_text=f"{claim.requested_item.request}",
+        )
 
     @admin.display(description=_("processed?"))
     def processed(self, claim: Claim):
