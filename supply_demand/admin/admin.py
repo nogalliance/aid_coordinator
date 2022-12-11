@@ -757,6 +757,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         qs = qs.annotate(available=Coalesce(F("amount") - F("claimed"), 0))
         qs = qs.annotate(deliverable=Coalesce(F("amount") - F("processed"), 0))
         if request.user.is_requester:
+            qs = qs.exclude(rejected=True)
             qs = qs.exclude(available=0)
         return qs
 

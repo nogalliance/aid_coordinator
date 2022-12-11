@@ -62,6 +62,7 @@ class OfferItemViewSet(ReadOnlyModelViewSet):
         OfferItem.objects.select_related("type")
         .annotate(claimed=Coalesce(Sum("claim__amount"), 0))
         .annotate(available=Coalesce(F("amount") - F("claimed"), 0))
+        .exclude(rejected=True)
         .exclude(available__lte=0)
     )
     serializer_class = OfferItemSerializer
