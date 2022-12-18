@@ -128,8 +128,9 @@ class RequestAdmin(ContactOnlyAdmin):
     @admin.display(description=_("items"))
     def admin_items(self, request: Request):
         def prefix(my_item: RequestItem) -> str:
-            # TODO - reduce number of queries
-            if my_item.assigned:
+            # TODO - compare requested amount with claimed amount
+            # this check is not very precise
+            if my_item.claim_set.exists():
                 return "✅ "
             else:
                 return ""
@@ -336,7 +337,7 @@ class RequestItemAdmin(ExportActionModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.select_related("request__contact__organisation")
+        qs = qs.select_related("request__contact__organisation", "type")
         qs = qs.annotate(assigned=Coalesce(Sum("claim__amount"), 0))
         qs = qs.annotate(
             needed=Case(
