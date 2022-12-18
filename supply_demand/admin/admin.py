@@ -218,9 +218,9 @@ class ClaimInlineAdmin(CompactInline):
     extra = 0
     fields = (
         "offered_item",
-        "admin_requested_item",
+        "requested_item",
         "amount",
-        "shipment",
+        "when",
         "requester",
         "donor",
     )
@@ -228,24 +228,15 @@ class ClaimInlineAdmin(CompactInline):
     readonly_fields = fields
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request).select_related()
-        return qs
-
-    @admin.display(description=_("requested item"))
-    def admin_requested_item(self, item: Claim):
-        if not item.requested_item_id:
-            return mark_safe("<b>Preemptive shipment</b><br>" "Just ship it to a distribution point")
-        return item.requested_item
-
-    @admin.display(description=_("shipment"))
-    def shipment(self, item: Claim):
-        if item.shipment_item:
-            return format_html(
-                '<a href="{url}">{shipment_item}</a>',
-                url=reverse("admin:logistics_item_change", args=(item.shipment_item_id,)),
-                shipment_item=f"{item.shipment_item.shipment.name}",
+        qs = (
+            super()
+            .get_queryset(request)
+            .select_related(
+                "requested_item__request__contact__organisation",
+                "offered_item__offer__contact__organisation",
             )
-        return _("not shipped yet")
+        )
+        return qs
 
     @admin.display(description=_("requester"))
     def requester(self, item: Claim):
@@ -1038,7 +1029,7 @@ class ClaimAdmin(ExportActionModelAdmin):
         "admin_offered_item",
         "admin_requested_item",
         "when",
-        "processed",
+        "metadata",
     )
     list_filter = (
         ProcessedClaimListFilter,
@@ -1082,12 +1073,20 @@ class ClaimAdmin(ExportActionModelAdmin):
                 offered_item_id=OuterRef("offered_item_id"),
                 shipment__from_location__type=LocationType.DONOR,
             )
-            .distinct()
             .values("offered_item_id")
             .annotate(total=Sum("amount"))
             .values("total")
         )
         qs = qs.annotate(processed=Coalesce(Subquery(subquery), 0))
+        subquery = (
+            Claim.objects.filter(
+                offered_item_id=OuterRef("offered_item_id"),
+            )
+            .values("offered_item_id")
+            .annotate(total=Sum("amount"))
+            .values("total")
+        )
+        qs = qs.annotate(claimed=Coalesce(Subquery(subquery), 0))
         return qs
 
     @admin.display(description=_("offered item"))
@@ -1112,11 +1111,11 @@ class ClaimAdmin(ExportActionModelAdmin):
             request_text=f"{claim.requested_item.request}",
         )
 
-    @admin.display(description=_("processed?"))
-    def processed(self, claim: Claim):
-        if claim.processed:
-            icon_url = static("admin/img/icon-yes.svg")
-            return format_html('<img src="{}" alt="True">', icon_url)
-        else:
-            icon_url = static("admin/img/icon-no.svg")
-            return format_html('<img src="{}" alt="False">', icon_url)
+    @admin.display(description=_("claimed/processed/offered"))
+    def metadata(self, claim: Claim):
+        claimlist_url = reverse("admin:supply_demand_claim_changelist")
+        return format_html(
+            '<a href="{item_url}">{item_text}</a>',
+            item_url=f"{claimlist_url}?{urlencode(dict(offered_item_id__exact=claim.offered_item_id))}",
+            item_text=f"{claim.claimed}/{claim.processed}/{claim.offered_item.amount}",
+        )
