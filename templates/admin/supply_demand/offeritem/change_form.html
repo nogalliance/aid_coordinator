@@ -1,0 +1,9 @@
+{% extends 'admin/change_form.html' %}
+{% block object-tools-items %}
+<li>
+  <a href="{% url 'admin:supply_demand_offeritem_changelist' %}?offer__id__exact={{ original.offer.id }}">
+    Filter by offer
+  </a>
+</li>
+{{ block.super }}
+{% endblock %}
