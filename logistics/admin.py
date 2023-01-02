@@ -136,6 +136,9 @@ class ShipmentAdmin(admin.ModelAdmin):
         "from_location__city",
         "from_location__country",
     )
+    autocomplete_fields = (
+        "parent_shipment",
+    )
 
     save_on_top = True
 

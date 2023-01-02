@@ -100,6 +100,14 @@ class Shipment(models.Model):
         related_name="to_location",
     )
 
+    parent_shipment = models.ForeignKey(
+        "self",
+        verbose_name=_("parent shipment"),
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
     notes = models.TextField(
         verbose_name=_("notes"),
         blank=True,
@@ -129,9 +137,7 @@ class ShipmentItemManager(models.Manager):
 
 
 class ShipmentItem(models.Model):
-    shipment = models.ForeignKey(
-        verbose_name=_("shipment"), to=Shipment, blank=True, null=True, on_delete=models.SET_NULL
-    )
+    shipment = models.ForeignKey(Shipment, verbose_name=_("shipment"), on_delete=models.CASCADE)
     offered_item = models.ForeignKey(OfferItem, verbose_name=_("offered_item"), on_delete=models.RESTRICT)
     amount = models.PositiveIntegerField(
         verbose_name=_("amount"),
