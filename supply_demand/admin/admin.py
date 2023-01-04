@@ -758,7 +758,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             ShipmentItem.objects.filter(
                 offered_item_id=OuterRef("id"),
                 shipment__status=ShipmentStatus.DELIVERED,
-                last_location__type=LocationType.REQUESTER,
+                last_location__type=LocationType.DISTRIBUTION_POINT,
             )
             .values("offered_item_id")
             .annotate(total=Sum("amount"))
