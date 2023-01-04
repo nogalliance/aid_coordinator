@@ -69,6 +69,14 @@ class Contact(AbstractUser):
     )
     phone = models.CharField(verbose_name=_("phone"), max_length=50, blank=True)
 
+    contact_through = models.ForeignKey(
+        "self",
+        verbose_name=_("contacted through"),
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
     objects = ContactManager()
 
     def __init__(self, *args, **kwargs):

@@ -56,7 +56,7 @@ class ContactAdmin(UserAdmin):
         (
             _("Contact"),
             {
-                "fields": ("email", "phone"),
+                "fields": ("email", "phone", "contact_through"),
             },
         ),
         (
@@ -94,7 +94,7 @@ class ContactAdmin(UserAdmin):
         (
             _("Contact"),
             {
-                "fields": ("email", "phone"),
+                "fields": ("email", "phone", "contact_through"),
             },
         ),
         (
@@ -128,7 +128,7 @@ class ContactAdmin(UserAdmin):
         (
             _("Contact"),
             {
-                "fields": ("email", "phone"),
+                "fields": ("email", "phone", "contact_through"),
             },
         ),
         (
@@ -147,7 +147,7 @@ class ContactAdmin(UserAdmin):
     formfield_overrides = {
         models.ManyToManyField: {"widget": forms.CheckboxSelectMultiple},
     }
-
+    autocomplete_fields = ("contact_through",)
     actions = ("send_welcome_email", "send_custom_email")
 
     def get_urls(self):

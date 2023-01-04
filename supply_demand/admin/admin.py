@@ -661,6 +661,35 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "rejected",
         "item_of",
     )
+
+    basic_fields = (
+        "offer",
+        "type",
+        "brand",
+        "model",
+        "amount",
+        "notes",
+        "rejected",
+        "updated_at",
+        "created_at",
+    )
+
+    contact_fieldsets = (
+        (None, {"fields": basic_fields}),
+        (
+            _("Contact"),
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "admin_offer_contact",
+                    "admin_offer_email",
+                    "admin_offer_phone",
+                    "admin_offer_contact_through",
+                ),
+            },
+        ),
+    )
+
     list_filter = (
         ProcessedOfferedItemListFilter,
         "type",
@@ -933,6 +962,10 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
             fields = list(fields) + [
                 "created_at",
                 "updated_at",
+                "admin_offer_email",
+                "admin_offer_phone",
+                "admin_offer_contact",
+                "admin_offer_contact_through",
             ]
         return fields
 
@@ -947,18 +980,53 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         # Non-superusers don't see notes
         return [field for field in fields if field not in ("request", "notes", "alternative_for")]
 
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            return self.contact_fieldsets
+        return fieldsets
+
     def get_list_filter(self, request):
         if not request.user.is_superuser:
             return ["type", "brand"]
 
         return super().get_list_filter(request)
 
+    @admin.display(description=_("email"))
+    def admin_offer_email(self, item: OfferItem):
+        return item.offer.contact.email
+
+    @admin.display(description=_("phone"))
+    def admin_offer_phone(self, item: OfferItem):
+        return item.offer.contact.phone
+
+    @admin.display(description=_("contact"))
+    def admin_offer_contact(self, item: OfferItem):
+        return format_html(
+            '<a href="{url}">{name}</a>',
+            url=reverse("admin:contacts_contact_change", args=(item.offer.contact_id,)),
+            name=item.offer.contact,
+        )
+        return item.offer.contact
+
+    @admin.display(description=_("contacted through"))
+    def admin_offer_contact_through(self, item: OfferItem):
+        contact_through = item.offer.contact.contact_through
+        if not contact_through:
+            return ""
+        return format_html(
+            '<a href="{url}">{name}</a>',
+            url=reverse("admin:contacts_contact_change", args=(contact_through.id,)),
+            name=contact_through,
+        )
+        return contact_through
+
     @admin.display(description=_("item of"))
     def item_of(self, item: OfferItem):
         offeritemlist_url = reverse("admin:supply_demand_offeritem_changelist")
         return format_html(
             '<a href="{url}">{name}</a><div><strong><a href="{filter_url}">{filter_text}</a></strong></div>',
-            url=reverse("admin:supply_demand_offer_change", args=(item.offer.id,)),
+            url=reverse("admin:supply_demand_offer_change", args=(item.offer_id,)),
             name=item.offer,
             filter_url=f"{offeritemlist_url}?{urlencode(dict(offer__id__exact=item.offer_id))}",
             filter_text=_("Filter by offer"),

@@ -297,6 +297,7 @@ class ItemAdmin(ShipmentItemAdmin):
                     "admin_offer_by",
                     "admin_offer_email",
                     "admin_offer_phone",
+                    "admin_offer_contact_through",
                 ),
             },
         ),
@@ -420,3 +421,15 @@ class ItemAdmin(ShipmentItemAdmin):
     @admin.display(description=_("phone"))
     def admin_offer_phone(self, item: Item):
         return item.offered_item.offer.contact.phone
+
+    @admin.display(description=_("contacted through"))
+    def admin_offer_contact_through(self, item: Item):
+        contact_through = item.offered_item.offer.contact.contact_through
+        if not contact_through:
+            return ""
+        return format_html(
+            '<a href="{url}">{name}</a>',
+            url=reverse("admin:contacts_contact_change", args=(contact_through.id,)),
+            name=contact_through,
+        )
+        return contact_through
