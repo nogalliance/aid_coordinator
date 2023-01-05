@@ -10,6 +10,15 @@ def migrate_shipment(apps, schema_editor):
     Shipment = apps.get_model("logistics", "Shipment")
 
     for shipment_item in ShipmentItem.objects.all().select_related("offered_item"):
+        # RENE UA and Microsoft are direct shipments from Donor->DEPS
+        if shipment_item.shipment_id in [1, 2]:
+            if shipment_item.shipment.status == ShipmentStatus.DELIVERED:
+                shipment_item.last_location = shipment_item.shipment.to_location
+            else:
+                shipment_item.last_location = shipment_item.shipment.from_location
+            shipment_item.save()
+            continue
+
         offered_item = shipment_item.offered_item
         contact = offered_item.offer.contact
         if contact.first_name or contact.last_name:

@@ -7,10 +7,12 @@ def fill_shipment_locations(apps, schema_editor):
     Shipment = apps.get_model("logistics", "Shipment")
 
     for shipment in Shipment.objects.all():
-        if shipment.id == 5:
-            shipment.from_location_id = 6
+        if shipment.id == 1:
+            shipment.from_location_id = 1
         elif shipment.id == 2:
-            shipment.from_location_id = 2
+            shipment.from_location_id = 1
+        elif shipment.id == 5:
+            shipment.from_location_id = 6
         else:
             shipment.from_location_id = 5
         shipment.to_location_id = 3

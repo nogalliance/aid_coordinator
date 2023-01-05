@@ -98,11 +98,11 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
             return tuple(field for field in self.readonly_fields if field not in ["amount"])
         return self.readonly_fields
 
-    @admin.display(description=_("shipment item"), ordering="offered_item")
+    @admin.display(description=_("offered item"), ordering="offered_item")
     def admin_offered_item(self, item: ShipmentItem):
         return format_html(
             '<a href="{item_url}">{offered_item}</a>',
-            item_url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
+            item_url=reverse("admin:supply_demand_offeritem_change", args=(item.offered_item_id,)),
             offered_item=item.offered_item,
         )
 
