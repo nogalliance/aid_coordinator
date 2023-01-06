@@ -109,9 +109,9 @@ class ShipmentItemInlineAdmin(admin.TabularInline):
     @admin.display(description=_("offered item"), ordering="offered_item")
     def admin_offered_item(self, item: ShipmentItem):
         return format_html(
-            '<a href="{item_url}">{offered_item}</a>',
-            item_url=reverse("admin:supply_demand_offeritem_change", args=(item.offered_item_id,)),
-            offered_item=item.offered_item,
+            '<a href="{url}">{text}</a>',
+            url=reverse("admin:supply_demand_offeritem_change", args=(item.offered_item_id,)),
+            text=item.offered_item,
         )
 
 
@@ -154,8 +154,8 @@ class ShipmentAdmin(admin.ModelAdmin):
 @admin.register(ShipmentItem)
 class ShipmentItemAdmin(ExportActionModelAdmin):
     list_display = (
-        "offered_item",
-        "amount",
+        "admin_offered_item",
+        "admin_amount",
         "admin_shipment",
         "last_location",
         "status",
@@ -223,6 +223,22 @@ class ShipmentItemAdmin(ExportActionModelAdmin):
             text=f"{item.shipment}",
         )
 
+    @admin.display(description=_("offered item"), ordering="offered_item")
+    def admin_offered_item(self, item: ShipmentItem):
+        return format_html(
+            '<a href="{url}">{text}</a>',
+            url=reverse("admin:supply_demand_offeritem_change", args=(item.offered_item_id,)),
+            text=item.offered_item,
+        )
+
+    @admin.display(description=_("amount"))
+    def admin_amount(self, item: ShipmentItem):
+        return format_html(
+            '<a href="{url}">{text}</a>',
+            url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
+            text=item.available,
+        )
+
 
 class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
     model = ShipmentItem
@@ -262,9 +278,9 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
     @admin.display(description=_("shipment item"), ordering="offered_item")
     def admin_offered_item(self, item: ShipmentItem):
         return format_html(
-            '<a href="{item_url}">{offered_item}</a>',
-            item_url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
-            offered_item=item.offered_item,
+            '<a href="{url}">{text}</a>',
+            url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
+            text=item.offered_item,
         )
 
     @admin.display(description=_("shipment dates"))
@@ -275,16 +291,16 @@ class ShipmentItemHistoryInlineAdmin(NonrelatedTabularInline):
 @admin.register(Item)
 class ItemAdmin(ShipmentItemAdmin):
     list_display = (
-        "offered_item",
-        "available",
+        "admin_offered_item",
+        "admin_available",
         "admin_last_location",
         "admin_shipment",
         "status",
     )
 
     basic_fields = (
-        "admin_offered_item",
-        "available",
+        "admin_shipment_item",
+        "admin_available",
         "last_location",
         "shipment",
         "shipment_date",
@@ -395,23 +411,27 @@ class ItemAdmin(ShipmentItemAdmin):
         return item.shipment.get_status_display()
 
     @admin.display(description=_("shipment item"), ordering="offered_item")
-    def admin_offered_item(self, item: ShipmentItem):
+    def admin_shipment_item(self, item: Item):
         return format_html(
-            '<a href="{item_url}">{offered_item}</a>',
-            item_url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
-            offered_item=item.offered_item,
+            '<strong><a href="{url}">{text}</a></strong>',
+            url=reverse("admin:logistics_shipmentitem_change", args=(item.id,)),
+            text=item,
         )
 
     @admin.display(description=_("amount"))
-    def available(self, item: Item):
-        return item.available
+    def admin_available(self, item: Item):
+        return format_html(
+            '<a href="{url}">{text}</a>',
+            url=reverse("admin:logistics_item_change", args=(item.id,)),
+            text=item.available,
+        )
 
     @admin.display(description=_("Initial Offer"))
     def admin_offer(self, item: Item):
         return format_html(
-            '<a href="{offer_url}">{offer_text}</a>',
-            offer_url=reverse("admin:supply_demand_offeritem_change", args=(item.offered_item_id,)),
-            offer_text=f"{item.offered_item.offer}",
+            '<a href="{url}">{text}</a>',
+            url=reverse("admin:supply_demand_offeritem_change", args=(item.offered_item_id,)),
+            text=f"{item.offered_item.offer}",
         )
 
     @admin.display(description=_("offered by"))
@@ -432,8 +452,8 @@ class ItemAdmin(ShipmentItemAdmin):
         if not contact_through:
             return ""
         return format_html(
-            '<a href="{url}">{name}</a>',
+            '<a href="{url}">{text}</a>',
             url=reverse("admin:contacts_contact_change", args=(contact_through.id,)),
-            name=contact_through,
+            text=contact_through,
         )
         return contact_through
