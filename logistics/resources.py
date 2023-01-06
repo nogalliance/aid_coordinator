@@ -44,5 +44,33 @@ class ShipmentItemExportResource(resources.ModelResource):
         )
 
 
-class ItemExportResource(ShipmentItemExportResource):
+class ItemExportResource(resources.ModelResource):
+    type = fields.Field(attribute="offered_item__type__name")
+    brand = fields.Field(attribute="offered_item__brand")
+    model = fields.Field(attribute="offered_item__model")
     amount = fields.Field(attribute="available", widget=IntegerWidget())
+    width = fields.Field(attribute="offered_item__equipment_data__width")
+    height = fields.Field(attribute="offered_item__equipment_data__height")
+    depth = fields.Field(attribute="offered_item__equipment_data__depth")
+    weight = fields.Field(attribute="offered_item__equipment_data__weight")
+    shipment = fields.Field(attribute="shipment")
+    from_location = fields.Field(attribute="shipment__from_location")
+    to_location = fields.Field(attribute="shipment__to_location")
+    status = fields.Field(attribute="shipment__get_status_display")
+
+    class Meta:
+        model = ShipmentItem
+        fields = (
+            "type",
+            "brand",
+            "model",
+            "amount",
+            "width",
+            "height",
+            "depth",
+            "weight",
+            "shipment",
+            "from_location",
+            "to_location",
+            "status",
+        )

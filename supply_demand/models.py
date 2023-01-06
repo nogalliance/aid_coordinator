@@ -330,6 +330,14 @@ class OfferItem(models.Model):
         help_text=_("Any extra information that can help a requester decide if they can use this"),
     )
 
+    equipment_data = models.ForeignKey(
+        "logistics.EquipmentData",
+        verbose_name=_("equipment data"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
     rejected = models.BooleanField(verbose_name=_("rejected"), default=False)
 
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)

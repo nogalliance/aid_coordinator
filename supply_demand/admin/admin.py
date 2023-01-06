@@ -484,7 +484,7 @@ class OfferItemInline(CompactInline):
         if request.user.is_superuser:
             fields = [field for field in fields if field not in ("hold",)]
         else:
-            fields = [field for field in fields if field not in ("rejected",)]
+            fields = [field for field in fields if field not in ("rejected", "equipment_data")]
         return fields
 
     def get_readonly_fields(self, request, obj=None):
@@ -667,6 +667,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         "type",
         "brand",
         "model",
+        "equipment_data",
         "amount",
         "notes",
         "rejected",
@@ -699,7 +700,7 @@ class OfferItemAdmin(ImportExportActionModelAdmin):
         ("offer__contact__organisation", admin.RelatedOnlyFieldListFilter),
         "offer",
     )
-    autocomplete_fields = ("offer",)
+    autocomplete_fields = ("offer", "equipment_data")
     ordering = ("brand", "model")
     search_fields = (
         "brand",

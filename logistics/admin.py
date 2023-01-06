@@ -10,7 +10,11 @@ from import_export.admin import ExportActionModelAdmin, ImportExportActionModelA
 from logistics.filters import UsedChoicesFieldListFilter
 from logistics.forms import AssignToShipmentForm
 from logistics.models import EquipmentData, Item, Location, Shipment, ShipmentItem, ShipmentStatus
-from logistics.resources import EquipmentDataResource, ItemExportResource, ShipmentItemExportResource
+from logistics.resources import (
+    EquipmentDataResource,
+    ItemExportResource,
+    ShipmentItemExportResource,
+)
 from nonrelated_inlines.admin import NonrelatedTabularInline
 
 static_import_icon = static("img/import.png")
@@ -21,6 +25,10 @@ static_export_icon = static("img/export.png")
 class EquipmentDataAdmin(ImportExportActionModelAdmin):
     list_display = ("brand", "model", "admin_weight", "admin_size")
     ordering = ("brand", "model")
+    search_fields = (
+        "brand",
+        "model",
+    )
     resource_class = EquipmentDataResource
 
     @admin.display(description=_("weight"), ordering="weight")
@@ -136,9 +144,7 @@ class ShipmentAdmin(admin.ModelAdmin):
         "from_location__city",
         "from_location__country",
     )
-    autocomplete_fields = (
-        "parent_shipment",
-    )
+    autocomplete_fields = ("parent_shipment",)
 
     save_on_top = True
 
@@ -308,9 +314,7 @@ class ItemAdmin(ShipmentItemAdmin):
     ordering = ("-created_at",)
     actions = ("assign_to_shipment",)
 
-    inlines = (
-        ShipmentItemHistoryInlineAdmin,
-    )
+    inlines = (ShipmentItemHistoryInlineAdmin,)
 
     resource_class = ItemExportResource
 
@@ -375,7 +379,7 @@ class ItemAdmin(ShipmentItemAdmin):
         return render(
             request,
             "admin/assign_to_shipment.html",
-            context={"items": queryset, "errors": errors, "form": form },
+            context={"items": queryset, "errors": errors, "form": form},
         )
 
     @admin.display(description=_("shipment date"))
