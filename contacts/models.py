@@ -29,7 +29,7 @@ class Organisation(models.Model):
     name = models.CharField(verbose_name=_("name"), max_length=100)
     type = models.PositiveIntegerField(verbose_name=_("type"), choices=OrgType.choices, default=OrgType.OTHER)
     listed = models.BooleanField(
-        verbose_name=_("listed"),
+        verbose_name=_("listed on website"),
         default=False,
         help_text=_("Shown as a donor organisation on the website"),
     )
@@ -68,7 +68,7 @@ class Contact(AbstractUser):
     requested_organisation = models.CharField(verbose_name=_("requested organisation"), max_length=100, blank=True)
     role = models.CharField(verbose_name=_("role"), max_length=50, blank=True)
     listed = models.BooleanField(
-        verbose_name=_("listed"),
+        verbose_name=_("listed on website"),
         default=False,
         help_text=_("Shown as a personal donor on the website"),
     )
