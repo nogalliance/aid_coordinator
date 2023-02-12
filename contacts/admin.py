@@ -57,7 +57,7 @@ class ContactAdmin(UserAdmin):
         (
             _("Personal info"),
             {
-                "fields": ("first_name", "last_name", "listed"),
+                "fields": ("first_name", "last_name", "listed", "allow_publicity"),
             },
         ),
         (
