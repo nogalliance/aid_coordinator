@@ -30,12 +30,12 @@ class Organisation(models.Model):
     type = models.PositiveIntegerField(verbose_name=_("type"), choices=OrgType.choices, default=OrgType.OTHER)
     listed = models.BooleanField(
         verbose_name=_("listed on website"),
-        default=False,
+        null=True,
         help_text=_("Shown as a donor organisation on the website"),
     )
     allow_publicity = models.BooleanField(
         verbose_name=_("allow publicity"),
-        default=False,
+        null=True,
         help_text=_("Shown as a donor organisation in articles, presentations etc."),
     )
     website = models.URLField(verbose_name=_("website"), blank=True)
@@ -69,12 +69,12 @@ class Contact(AbstractUser):
     role = models.CharField(verbose_name=_("role"), max_length=50, blank=True)
     listed = models.BooleanField(
         verbose_name=_("listed on website"),
-        default=False,
+        null=True,
         help_text=_("Shown as a personal donor on the website"),
     )
     allow_publicity = models.BooleanField(
         verbose_name=_("allow publicity"),
-        default=False,
+        null=True,
         help_text=_("Shown as a personal donor in articles, presentations etc."),
     )
     phone = models.CharField(verbose_name=_("phone"), max_length=50, blank=True)
