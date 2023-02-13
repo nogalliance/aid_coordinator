@@ -30,7 +30,14 @@ class ContactAdmin(UserAdmin):
         "admin_groups",
         "admin_email",
     )
-    list_filter = ("is_superuser", "is_active", "groups", RequestedOrganisationFilter)
+    list_filter = (
+        "is_superuser",
+        "is_active",
+        "groups",
+        "listed",
+        "allow_publicity",
+        RequestedOrganisationFilter
+    )
     search_fields = (
         "username",
         "first_name",
@@ -50,7 +57,7 @@ class ContactAdmin(UserAdmin):
         (
             _("Personal info"),
             {
-                "fields": ("first_name", "last_name", "listed"),
+                "fields": ("first_name", "last_name", "listed", "allow_publicity"),
             },
         ),
         (
@@ -301,6 +308,10 @@ class ContactAdmin(UserAdmin):
 @admin.register(Organisation)
 class OrganisationAdmin(admin.ModelAdmin):
     list_display = ("name", "type", "admin_website")
+    list_filter = (
+        "listed",
+        "allow_publicity",
+    )
     search_fields = ("name",)
     ordering = ("name",)
 
