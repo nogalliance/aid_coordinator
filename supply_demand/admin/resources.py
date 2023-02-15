@@ -4,8 +4,8 @@ from django import forms
 from django.http import HttpRequest
 from import_export import fields, resources
 from import_export.forms import ConfirmImportForm, ImportForm
-
-from supply_demand.models import Offer, OfferItem, RequestItem
+from import_export.widgets import ForeignKeyWidget
+from supply_demand.models import ItemType, Offer, OfferItem, RequestItem
 
 
 class MyModelResource(resources.ModelResource):
@@ -54,9 +54,12 @@ class CustomConfirmImportForm(ConfirmImportForm):
 
 
 class OfferItemImportResource(MyModelResource):
+    type = fields.Field(column_name="type", attribute="type", widget=ForeignKeyWidget(ItemType, "name"))
+    notes = fields.Field(column_name="notes", attribute="notes", saves_null_values=False)
+
     class Meta:
         model = OfferItem
-        fields = ("brand", "model", "amount", "notes")
+        fields = ("brand", "model", "amount", "notes", "type")
         force_init_instance = True
 
     def after_import_instance(self, instance, new, row_number=None, **kwargs):
